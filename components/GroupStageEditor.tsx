@@ -29,7 +29,7 @@ const POSITION_STYLES = [
   'border-l-green-500 text-green-400',
   'border-l-blue-500 text-blue-400',
   'border-l-yellow-500 text-yellow-400',
-  'border-l-slate-600 text-slate-500 opacity-60',
+  'border-l-red-500 text-red-400',
 ]
 
 function SortableTeam({ teamCode, position, disabled }: { teamCode: string; position: number; disabled: boolean }) {
@@ -44,19 +44,13 @@ function SortableTeam({ teamCode, position, disabled }: { teamCode: string; posi
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-3 rounded bg-slate-800 px-3 py-2 border-l-4 ${POSITION_STYLES[position]} ${isDragging ? 'opacity-50' : ''}`}
+      {...(!disabled ? { ...attributes, ...listeners } : {})}
+      className={`flex items-center gap-3 rounded bg-slate-800 px-3 py-2 border-l-4 ${POSITION_STYLES[position]} ${isDragging ? 'opacity-50' : ''} ${!disabled ? 'cursor-grab active:cursor-grabbing select-none' : ''}`}
     >
       <span className="w-5 font-bold text-sm">{position + 1}</span>
       <span className="text-lg">{team?.flag ?? '🏳️'}</span>
       <span className="flex-1 text-sm font-medium text-slate-200">{team?.name ?? teamCode}</span>
-      {!disabled && (
-        <span
-          {...attributes}
-          {...listeners}
-          className="text-slate-500 cursor-grab select-none"
-          aria-label="drag handle"
-        >⠿</span>
-      )}
+      {!disabled && <span className="text-slate-500 select-none">⠿</span>}
     </div>
   )
 }
@@ -66,7 +60,10 @@ export function GroupStageEditor({ groupCode, order, onChange, disabled = false 
     useSensor(MouseSensor),
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
   )
-  const teams = order.length > 0 ? order : GROUPS[groupCode] ?? []
+  const allTeams = GROUPS[groupCode] ?? []
+  const teams = order.length > 0
+    ? [...order, ...allTeams.filter(c => !order.includes(c))]
+    : allTeams
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event

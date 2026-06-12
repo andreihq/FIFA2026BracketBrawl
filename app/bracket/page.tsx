@@ -50,7 +50,7 @@ export default function BracketPage() {
   const saveDraft = useCallback(async () => {
     setSaving(true)
     const groupPredictions = Object.entries(groupRankings).flatMap(([group_code, order]) =>
-      order.slice(0, 3).map((team_code, i) => ({ group_code, team_code, predicted_pos: i + 1 }))
+      order.map((team_code, i) => ({ group_code, team_code, predicted_pos: i + 1 }))
     )
     const knockoutPredictions = Object.entries(koPicks).map(([match_id, predicted_winner]) => ({
       match_id,
@@ -72,7 +72,7 @@ export default function BracketPage() {
     if (res.ok) setSubmitted(true)
   }
 
-  const groupsComplete = GROUP_CODES.every(g => (groupRankings[g]?.length ?? 0) >= 3)
+  const groupsComplete = GROUP_CODES.every(g => (groupRankings[g]?.length ?? 0) >= 4)
   const koComplete = MATCH_IDS.every(id => !!koPicks[id])
 
   if (loading) return <div className="p-8 text-slate-400">Loading…</div>
