@@ -27,7 +27,7 @@ export default async function PlayerPage({ params, searchParams }: {
       ])
     : [{ data: [] }, { data: [] }]
 
-  const backHref = searchParams.from ? `/room/${searchParams.from}` : '/dashboard'
+  const backHref = searchParams.from ? `/league/${searchParams.from}` : '/dashboard'
   const tab = (searchParams.tab === 'knockouts' ? 'knockouts' : 'groups') as 'groups' | 'knockouts'
 
   return (

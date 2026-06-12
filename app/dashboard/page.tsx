@@ -3,7 +3,7 @@ import { getSession } from '@/lib/session'
 import { createServerClient } from '@/lib/supabase'
 import { computeScore } from '@/lib/scoring'
 import Link from 'next/link'
-import { CreateJoinRoom } from './CreateJoinRoom'
+import { CreateJoinLeague } from './CreateJoinLeague'
 import { DeadlineCountdown } from './DeadlineCountdown'
 
 const DEADLINE = new Date('2026-06-15T04:59:00Z')
@@ -20,14 +20,6 @@ export default async function DashboardPage() {
     .eq('player_id', session.playerId)
     .single()
 
-  const groupComplete = bracket
-    ? (await supabase.from('group_predictions').select('id', { count: 'exact' }).eq('bracket_id', bracket.id)).count === 36
-    : false
-
-  const koComplete = bracket
-    ? (await supabase.from('knockout_predictions').select('id', { count: 'exact' }).eq('bracket_id', bracket.id)).count === 32
-    : false
-
   const { data: memberships } = await supabase
     .from('room_members')
     .select('room_id, rooms(id, name)')
@@ -35,13 +27,13 @@ export default async function DashboardPage() {
 
   const { data: actualResults } = await supabase.from('actual_results').select('*')
 
-  const roomsWithRank = await Promise.all(
+  const leaguesWithRank = await Promise.all(
     (memberships ?? []).map(async m => {
-      const room = m.rooms as any
+      const league = m.rooms as any
       const { data: members } = await supabase
         .from('room_members')
         .select('player_id, players(id, username)')
-        .eq('room_id', room.id)
+        .eq('room_id', league.id)
 
       const scores = await Promise.all(
         (members ?? []).map(async member => {
@@ -57,7 +49,7 @@ export default async function DashboardPage() {
       )
       scores.sort((a, b) => b.total - a.total)
       const rank = scores.findIndex(s => s.username === session.username) + 1
-      return { id: room.id, name: room.name, playerCount: scores.length, rank }
+      return { id: league.id, name: league.name, playerCount: scores.length, rank }
     })
   )
 
@@ -110,14 +102,14 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* My Rooms */}
+      {/* My Leagues */}
       <div className="anim-fade-up anim-delay-2 mb-5">
-        <p className="section-label mb-3">My Rooms</p>
+        <p className="section-label mb-3">My Leagues</p>
         <div className="flex flex-col gap-2">
-          {roomsWithRank.map((room, i) => (
+          {leaguesWithRank.map((league, i) => (
             <Link
-              key={room.id}
-              href={`/room/${room.id}`}
+              key={league.id}
+              href={`/league/${league.id}`}
               className="card card-lift flex items-center gap-4 px-4 py-3.5"
             >
               <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-pitch-800 border border-pitch-600">
@@ -126,15 +118,15 @@ export default async function DashboardPage() {
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-sm text-[#EBF0FF] truncate">{room.name}</div>
+                <div className="font-medium text-sm text-[#EBF0FF] truncate">{league.name}</div>
                 <div className="mt-0.5 flex items-center gap-2 text-xs text-pitch-300">
-                  <span className="font-mono text-gold text-[11px] tracking-wider">{room.id}</span>
+                  <span className="font-mono text-gold text-[11px] tracking-wider">{league.id}</span>
                   <span className="text-pitch-500">·</span>
-                  <span>{room.playerCount} players</span>
-                  {room.rank > 0 && (
+                  <span>{league.playerCount} players</span>
+                  {league.rank > 0 && (
                     <>
                       <span className="text-pitch-500">·</span>
-                      <span className="font-medium text-[#EBF0FF]">#{room.rank}</span>
+                      <span className="font-medium text-[#EBF0FF]">#{league.rank}</span>
                     </>
                   )}
                 </div>
@@ -142,17 +134,17 @@ export default async function DashboardPage() {
               <span className="text-pitch-400 text-lg">›</span>
             </Link>
           ))}
-          {roomsWithRank.length === 0 && (
+          {leaguesWithRank.length === 0 && (
             <div className="card px-4 py-6 text-center">
-              <p className="text-sm text-pitch-300">No rooms yet</p>
-              <p className="text-xs text-pitch-400 mt-1">Create one or enter a room code below</p>
+              <p className="text-sm text-pitch-300">No leagues yet</p>
+              <p className="text-xs text-pitch-400 mt-1">Create one or enter a league code below</p>
             </div>
           )}
         </div>
       </div>
 
       <div className="anim-fade-up anim-delay-3">
-        <CreateJoinRoom />
+        <CreateJoinLeague />
       </div>
     </div>
   )

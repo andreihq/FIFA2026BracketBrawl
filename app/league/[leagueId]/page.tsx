@@ -4,7 +4,7 @@ import { createServerClient } from '@/lib/supabase'
 import { computeScore } from '@/lib/scoring'
 import { Leaderboard } from '@/components/Leaderboard'
 
-export default async function RoomPage({ params }: { params: { roomId: string } }) {
+export default async function LeaguePage({ params }: { params: { leagueId: string } }) {
   const session = await getSession()
   if (!session.playerId) redirect('/')
 
@@ -12,7 +12,7 @@ export default async function RoomPage({ params }: { params: { roomId: string } 
   const { data: room } = await supabase
     .from('rooms')
     .select('id, name')
-    .eq('id', params.roomId)
+    .eq('id', params.leagueId)
     .single()
 
   if (!room) redirect('/dashboard')
@@ -20,7 +20,7 @@ export default async function RoomPage({ params }: { params: { roomId: string } 
   const { data: members } = await supabase
     .from('room_members')
     .select('player_id, players(id, username)')
-    .eq('room_id', params.roomId)
+    .eq('room_id', params.leagueId)
 
   const { data: actualResults } = await supabase.from('actual_results').select('*')
 
@@ -43,7 +43,7 @@ export default async function RoomPage({ params }: { params: { roomId: string } 
     <div className="min-h-screen p-5 max-w-2xl mx-auto">
 
       <div className="anim-fade-up pt-2 mb-7">
-        <p className="section-label mb-1">Room</p>
+        <p className="section-label mb-1">League</p>
         <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none mb-3">
           {room.name}
         </h1>

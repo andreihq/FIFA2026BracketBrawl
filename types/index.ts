@@ -4,14 +4,14 @@ export interface Player {
   created_at: string
 }
 
-export interface Room {
+export interface League {
   id: string
   name: string
   created_by: string
   created_at: string
 }
 
-export interface RoomMember {
+export interface LeagueMember {
   room_id: string
   player_id: string
   joined_at: string

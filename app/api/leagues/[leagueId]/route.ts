@@ -3,20 +3,20 @@ import { getSession } from '@/lib/session'
 import { createServerClient } from '@/lib/supabase'
 import { computeScore } from '@/lib/scoring'
 
-export async function GET(req: NextRequest, { params }: { params: { roomId: string } }) {
+export async function GET(req: NextRequest, { params }: { params: { leagueId: string } }) {
   const session = await getSession()
   if (!session.playerId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const supabase = createServerClient()
-  const { roomId } = params
+  const { leagueId } = params
 
-  const { data: room } = await supabase.from('rooms').select('id, name').eq('id', roomId).single()
-  if (!room) return NextResponse.json({ error: 'Room not found' }, { status: 404 })
+  const { data: room } = await supabase.from('rooms').select('id, name').eq('id', leagueId).single()
+  if (!room) return NextResponse.json({ error: 'League not found' }, { status: 404 })
 
   const { data: members } = await supabase
     .from('room_members')
     .select('player_id, players(id, username)')
-    .eq('room_id', roomId)
+    .eq('room_id', leagueId)
 
   if (!members) return NextResponse.json({ room, leaderboard: [] })
 

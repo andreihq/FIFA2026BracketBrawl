@@ -1,23 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/session'
 import { createServerClient } from '@/lib/supabase'
-import { generateRoomCode } from '@/lib/room-code'
+import { generateLeagueCode } from '@/lib/league-code'
 
 export async function POST(req: NextRequest) {
   const session = await getSession()
   if (!session.playerId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { name } = await req.json()
-  if (!name?.trim()) return NextResponse.json({ error: 'Room name required' }, { status: 400 })
+  if (!name?.trim()) return NextResponse.json({ error: 'League name required' }, { status: 400 })
 
   const supabase = createServerClient()
 
-  let id = generateRoomCode()
+  let id = generateLeagueCode()
   let attempts = 0
   while (attempts < 5) {
     const { data: existing } = await supabase.from('rooms').select('id').eq('id', id).single()
     if (!existing) break
-    id = generateRoomCode()
+    id = generateLeagueCode()
     attempts++
   }
 
@@ -27,9 +27,9 @@ export async function POST(req: NextRequest) {
     .select()
     .single()
 
-  if (error || !room) return NextResponse.json({ error: 'Failed to create room' }, { status: 500 })
+  if (error || !room) return NextResponse.json({ error: 'Failed to create league' }, { status: 500 })
 
   await supabase.from('room_members').insert({ room_id: room.id, player_id: session.playerId })
 
-  return NextResponse.json({ roomId: room.id })
+  return NextResponse.json({ leagueId: room.id })
 }
