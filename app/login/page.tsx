@@ -8,7 +8,7 @@ export default function LoginPage() {
   const searchParams = useSearchParams()
   const join = searchParams.get('join')
   const [username, setUsername] = useState('')
-  const [pin, setPin] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -19,7 +19,7 @@ export default function LoginPage() {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, pin }),
+      body: JSON.stringify({ username, password }),
     })
     const data = await res.json()
     if (!res.ok) { setError(data.error); setLoading(false); return }
@@ -63,14 +63,13 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label className="section-label mb-2 block">PIN</label>
+              <label className="section-label mb-2 block">Password</label>
               <input
-                className="field font-mono tracking-[0.4em] text-center text-lg"
+                className="field"
                 type="password"
-                inputMode="numeric"
-                value={pin}
-                onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                placeholder="· · · ·"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Min. 4 characters"
                 required
               />
             </div>

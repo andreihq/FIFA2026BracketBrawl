@@ -8,8 +8,8 @@ export default function RegisterPage() {
   const searchParams = useSearchParams()
   const join = searchParams.get('join')
   const [username, setUsername] = useState('')
-  const [pin, setPin] = useState('')
-  const [confirmPin, setConfirmPin] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [availability, setAvailability] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -34,13 +34,13 @@ export default function RegisterPage() {
     e.preventDefault()
     setError('')
     if (availability !== 'available') return
-    if (pin !== confirmPin) { setError('PINs do not match'); return }
-    if (!/^\d{4}$/.test(pin)) { setError('PIN must be exactly 4 digits'); return }
+    if (password.length < 4) { setError('Password must be at least 4 characters'); return }
+    if (password !== confirmPassword) { setError('Passwords do not match'); return }
     setLoading(true)
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, pin }),
+      body: JSON.stringify({ username, password }),
     })
     const data = await res.json()
     if (!res.ok) { setError(data.error); setLoading(false); return }
@@ -95,27 +95,25 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="section-label mb-2 block">4-digit PIN</label>
+              <label className="section-label mb-2 block">Password</label>
               <input
-                className="field font-mono tracking-[0.4em] text-center text-lg"
+                className="field"
                 type="password"
-                inputMode="numeric"
-                value={pin}
-                onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                placeholder="· · · ·"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Min. 4 characters"
                 required
               />
             </div>
 
             <div>
-              <label className="section-label mb-2 block">Confirm PIN</label>
+              <label className="section-label mb-2 block">Confirm Password</label>
               <input
-                className="field font-mono tracking-[0.4em] text-center text-lg"
+                className="field"
                 type="password"
-                inputMode="numeric"
-                value={confirmPin}
-                onChange={e => setConfirmPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                placeholder="· · · ·"
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                placeholder="Repeat your password"
                 required
               />
             </div>
