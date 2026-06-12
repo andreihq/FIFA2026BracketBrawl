@@ -92,7 +92,7 @@ function SlotDropdown({ slotLabel, matchId, groupRankings, picks, thirdPicks, on
   )
 }
 
-function ThirdPlaceTeamPicker({ matchId, slotLabel, groupRankings, thirdPicks, onThirdPick, disabled, showValidation, correctPicks }: {
+function ThirdPlaceTeamPicker({ matchId, slotLabel, groupRankings, thirdPicks, onThirdPick, disabled, showValidation }: {
   matchId: string
   slotLabel: string
   groupRankings: Record<string, string[]>
@@ -100,7 +100,6 @@ function ThirdPlaceTeamPicker({ matchId, slotLabel, groupRankings, thirdPicks, o
   onThirdPick: (matchId: string, teamCode: string | null) => void
   disabled: boolean
   showValidation: boolean
-  correctPicks?: Record<string, string>
 }) {
   const groups = slotLabel.replace('Best 3rd ', '').split('')
   const pickedElsewhere = new Set(
@@ -110,8 +109,7 @@ function ThirdPlaceTeamPicker({ matchId, slotLabel, groupRankings, thirdPicks, o
   const selected = thirdPicks[matchId] ?? null
 
   if (disabled) {
-    const isCorrect = !!(selected && correctPicks?.[`${matchId}:3rd`] === selected)
-    return <TeamRow teamCode={selected} label={`3rd: ${groups.join('/')}`} correct={isCorrect} />
+    return <TeamRow teamCode={selected} label={`3rd: ${groups.join('/')}`} />
   }
 
   const isError = showValidation && !selected
@@ -187,7 +185,6 @@ function MatchCard({ match, groupRankings, picks, thirdPicks, onPick, onThirdPic
           onThirdPick={onThirdPick}
           disabled={disabled}
           showValidation={showValidation}
-          correctPicks={correctPicks}
         />
       ) : isR32 ? (
         <TeamRow
