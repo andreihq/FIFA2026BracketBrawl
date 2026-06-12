@@ -3,7 +3,6 @@ import { getSession } from '@/lib/session'
 import { createServerClient } from '@/lib/supabase'
 import { computeScore } from '@/lib/scoring'
 import { Leaderboard } from '@/components/Leaderboard'
-import Link from 'next/link'
 
 export default async function RoomPage({ params }: { params: { roomId: string } }) {
   const session = await getSession()
@@ -42,9 +41,6 @@ export default async function RoomPage({ params }: { params: { roomId: string } 
 
   return (
     <div className="min-h-screen p-6 max-w-2xl mx-auto">
-      <div className="flex items-center gap-3 mb-2">
-        <Link href="/dashboard" className="text-slate-500 hover:text-slate-300 text-sm">← Dashboard</Link>
-      </div>
       <h1 className="text-2xl font-bold mb-1">{room.name}</h1>
       <p className="text-slate-500 text-sm mb-6">
         Code: <span className="font-mono text-yellow-400">{room.id}</span>

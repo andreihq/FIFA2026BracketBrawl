@@ -66,10 +66,7 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen p-6 max-w-xl mx-auto">
       <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold">Hey, {session.username} 👋</h1>
-          <p className="text-slate-500 text-sm mt-1">FIFA World Cup 2026 Predictor</p>
-        </div>
+        <h1 className="text-2xl font-bold">Hey, {session.username} 👋</h1>
         <form action="/api/auth/logout" method="POST">
           <button className="text-sm text-slate-500 hover:text-slate-300 bg-slate-800 px-3 py-1.5 rounded">
             Log out

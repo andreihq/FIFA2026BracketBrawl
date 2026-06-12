@@ -81,31 +81,6 @@ export default function BracketPage() {
     <div className="min-h-screen p-4 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">My Bracket</h1>
-        <div className="flex items-center gap-3">
-          {saveMsg && <span className="text-sm text-green-400">{saveMsg}</span>}
-          {!isDisabled && (
-            <>
-              <button
-                onClick={saveDraft}
-                disabled={saving}
-                className="rounded bg-slate-700 px-4 py-2 text-sm hover:bg-slate-600 disabled:opacity-50"
-              >
-                {saving ? 'Saving…' : 'Save draft'}
-              </button>
-              {!submitted && (
-                <button
-                  onClick={handleSubmit}
-                  disabled={!groupsComplete || !koComplete}
-                  className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold hover:bg-blue-500 disabled:opacity-50"
-                >
-                  Submit bracket
-                </button>
-              )}
-            </>
-          )}
-          {submitted && <span className="text-sm text-green-400 font-medium">Submitted ✓</span>}
-          {isDisabled && !submitted && <span className="text-sm text-yellow-400">Deadline passed</span>}
-        </div>
       </div>
 
       <div className="flex gap-1 mb-6">
@@ -123,7 +98,7 @@ export default function BracketPage() {
       </div>
 
       {tab === 'groups' && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {GROUP_CODES.map(g => (
             <GroupStageEditor
               key={g}
@@ -151,6 +126,30 @@ export default function BracketPage() {
           />
         </div>
       )}
+
+      {!isDisabled && (
+        <div className="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-slate-800">
+          {saveMsg && <span className="text-sm text-green-400">{saveMsg}</span>}
+          <button
+            onClick={saveDraft}
+            disabled={saving}
+            className="rounded bg-slate-700 px-4 py-2 text-sm hover:bg-slate-600 disabled:opacity-50"
+          >
+            {saving ? 'Saving…' : 'Save draft'}
+          </button>
+          {!submitted && (
+            <button
+              onClick={handleSubmit}
+              disabled={!groupsComplete || !koComplete}
+              className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold hover:bg-blue-500 disabled:opacity-50"
+            >
+              Submit bracket
+            </button>
+          )}
+        </div>
+      )}
+      {submitted && <p className="mt-8 text-center text-sm text-green-400 font-medium">Submitted ✓</p>}
+      {isDisabled && !submitted && <p className="mt-8 text-center text-sm text-yellow-400">Deadline passed</p>}
     </div>
   )
 }
