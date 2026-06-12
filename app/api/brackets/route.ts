@@ -24,6 +24,7 @@ export async function GET() {
 
   return NextResponse.json({
     bracket,
+    username: session.username,
     groupPredictions: groupPredictions ?? [],
     knockoutPredictions: knockoutPredictions ?? [],
   })

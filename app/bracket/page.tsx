@@ -4,6 +4,8 @@ import { GROUP_CODES, GROUPS } from '@/data/groups'
 import { KNOCKOUT_MATCHES, buildPicks } from '@/data/bracket'
 import { GroupStageEditor } from '@/components/GroupStageEditor'
 import { KnockoutBracket } from '@/components/KnockoutBracket'
+import { DeadlineCountdown } from '@/components/DeadlineCountdown'
+import { ShareBracketModal } from '@/components/ShareBracketModal'
 
 type Tab = 'groups' | 'knockouts'
 
@@ -14,7 +16,10 @@ export default function BracketPage() {
   const [winners, setWinners] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
   const [locked, setLocked] = useState(false)
+  const [username, setUsername] = useState('')
+  const [showShare, setShowShare] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
   const [showValidation, setShowValidation] = useState(false)
   const [deadline, setDeadline] = useState<string | null>(null)
@@ -32,7 +37,9 @@ export default function BracketPage() {
     fetch('/api/brackets')
       .then(r => r.json())
       .then(data => {
+        setSubmitted(!!data.bracket)
         setLocked(!!data.bracket?.locked)
+        setUsername(data.username ?? '')
 
         const rankings: Record<string, string[]> = {}
         for (const group of GROUP_CODES) {
@@ -56,6 +63,14 @@ export default function BracketPage() {
         setLoading(false)
       })
   }, [])
+
+  const bracketState = !submitted ? 'empty' : isDisabled ? 'locked' : 'active'
+  const badgeStyles = {
+    empty:  'bg-gold/10 border-gold/20 text-gold',
+    active: 'bg-[#34D399]/15 border-[#34D399]/25 text-[#34D399]',
+    locked: 'bg-[#34D399]/15 border-[#34D399]/25 text-[#34D399]',
+  }[bracketState]
+  const badgeLabel = { empty: 'Not Submitted', active: 'Submitted', locked: 'Locked ✓' }[bracketState]
 
   const groupsComplete = GROUP_CODES.every(g => (groupRankings[g]?.length ?? 0) >= 4)
   const koComplete = KNOCKOUT_MATCHES.every(m => !!picks[m.id]?.winner)
@@ -99,13 +114,28 @@ export default function BracketPage() {
 
   return (
     <div className="min-h-screen p-5 max-w-6xl mx-auto">
+      {showShare && username && <ShareBracketModal username={username} onClose={() => setShowShare(false)} />}
 
       {/* Page header */}
-      <div className="anim-fade-up flex items-center justify-between mb-6 pt-2">
-        <div>
-          <p className="section-label mb-1">Bracket</p>
-          <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">My Predictions</h1>
+      <div className="anim-fade-up mb-12 pt-2">
+        <p className="section-label mb-1">Bracket</p>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">My Predictions</h1>
+            <span className={`rounded-lg border px-2.5 py-1 text-xs font-semibold ${badgeStyles}`}>
+              {badgeLabel}
+            </span>
+          </div>
+          {submitted && (
+            <button
+              onClick={() => setShowShare(true)}
+              className="text-xs uppercase tracking-widest px-4 py-1.5 rounded-lg border border-[#34D399]/30 bg-[#34D399]/10 text-[#34D399] hover:bg-[#34D399]/20 transition-colors"
+            >
+              Share
+            </button>
+          )}
         </div>
+        {deadline && !isDisabled && <div className="mt-4"><DeadlineCountdown deadline={deadline} /></div>}
       </div>
 
       {/* Tabs */}

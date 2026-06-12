@@ -4,7 +4,7 @@ import { createServerClient } from '@/lib/supabase'
 import { computeScore } from '@/lib/scoring'
 import Link from 'next/link'
 import { CreateJoinLeague } from './CreateJoinLeague'
-import { DeadlineCountdown } from './DeadlineCountdown'
+import { DeadlineCountdown } from '@/components/DeadlineCountdown'
 
 export default async function DashboardPage() {
   const session = await getSession()

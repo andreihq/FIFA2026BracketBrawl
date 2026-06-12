@@ -43,8 +43,8 @@ export function CreateJoinLeague() {
         <button onClick={() => setMode('create')} className="btn-gold flex-1 py-2.5 text-xs uppercase tracking-widest">
           + Create League
         </button>
-        <button onClick={() => setMode('join')} className="btn-ghost flex-1 py-2.5 text-xs">
-          Enter Code
+        <button onClick={() => setMode('join')} className="btn-ghost flex-1 py-2.5 text-xs uppercase tracking-widest">
+          Join League
         </button>
       </div>
     )
