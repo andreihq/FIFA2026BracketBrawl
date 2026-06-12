@@ -36,11 +36,16 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-6">
-      <div className="w-full max-w-sm anim-fade-up">
+    <main className="relative flex min-h-screen flex-col items-center justify-start overflow-hidden p-6 pt-14 sm:pt-20 md:pt-28">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[520px] w-[520px] rounded-full bg-gold/10 blur-[120px]" />
+        <div className="absolute bottom-0 left-0 h-64 w-64 rounded-full bg-blue-600/8 blur-[80px]" />
+        <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-blue-600/6 blur-[80px]" />
+      </div>
+      <div className="relative z-10 w-full max-w-sm anim-fade-up">
 
         <div className="mb-8 text-center">
-          <img src="/trophy.png" alt="FIFA World Cup trophy" className="mb-4 w-14 h-14 object-contain mx-auto" />
+          <img src="/trophy.png" alt="FIFA World Cup trophy" className="mb-4 w-[80px] h-[80px] sm:w-[110px] sm:h-[110px] md:w-[140px] md:h-[140px] object-contain mx-auto" />
           <h1 className="font-display text-5xl tracking-wider text-[#EBF0FF] leading-none">Welcome back</h1>
           <p className="mt-2 text-sm text-pitch-300">Sign in to your predictor account</p>
         </div>

@@ -7,7 +7,7 @@ export default async function LandingPage() {
   if (session.playerId) redirect('/dashboard')
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6">
+    <main className="relative flex min-h-screen flex-col items-center justify-start overflow-hidden px-6 pt-14 sm:pt-20 md:pt-28">
 
       {/* Ambient background glows */}
       <div className="pointer-events-none absolute inset-0">
@@ -20,7 +20,7 @@ export default async function LandingPage() {
 
         {/* Logo badge */}
         <div className="anim-fade-up mb-8">
-          <img src="/trophy.png" alt="FIFA World Cup trophy" className="w-20 h-20 object-contain" />
+          <img src="/trophy.png" alt="FIFA World Cup trophy" className="w-[100px] h-[100px] sm:w-[140px] sm:h-[140px] md:w-[180px] md:h-[180px] object-contain" />
         </div>
 
         {/* Hero heading */}
