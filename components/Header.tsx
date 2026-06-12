@@ -17,7 +17,7 @@ export function Header({ isLoggedIn }: { isLoggedIn: boolean }) {
     <header className="sticky top-0 z-50 border-b border-pitch-600 bg-pitch-950/90 backdrop-blur-md">
       <div className="max-w-6xl mx-auto w-full flex items-center justify-between px-5 py-3">
         <Link href={isLoggedIn ? '/dashboard' : '/'} className="flex items-center gap-3 group">
-          <img src="/ball.png" alt="FIFA World Cup 2026 ball" className="w-9 h-9 object-contain flex-shrink-0" />
+          <img src="/trophy.png" alt="FIFA World Cup trophy" className="w-9 h-9 object-contain flex-shrink-0" />
           <div>
             <p className="font-display text-base leading-none tracking-widest text-[#EBF0FF]">FIFA 2026</p>
             <p className="text-[10px] leading-none mt-0.5 tracking-widest uppercase text-pitch-300">World Cup Predictor</p>

@@ -20,7 +20,7 @@ export default async function LandingPage() {
 
         {/* Logo badge */}
         <div className="anim-fade-up mb-8">
-          <img src="/ball.png" alt="FIFA World Cup 2026 ball" className="w-20 h-20 object-contain" />
+          <img src="/trophy.png" alt="FIFA World Cup trophy" className="w-20 h-20 object-contain" />
         </div>
 
         {/* Hero heading */}

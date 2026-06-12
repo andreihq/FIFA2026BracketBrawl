@@ -40,7 +40,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm anim-fade-up">
 
         <div className="mb-8 text-center">
-          <img src="/ball.png" alt="FIFA World Cup 2026 ball" className="mb-4 w-14 h-14 object-contain mx-auto" />
+          <img src="/trophy.png" alt="FIFA World Cup trophy" className="mb-4 w-14 h-14 object-contain mx-auto" />
           <h1 className="font-display text-5xl tracking-wider text-[#EBF0FF] leading-none">Welcome back</h1>
           <p className="mt-2 text-sm text-pitch-300">Sign in to your predictor account</p>
         </div>
