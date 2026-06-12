@@ -45,14 +45,13 @@ export default async function PlayerPage({ params, searchParams }: {
         <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">
           {player.username}
         </h1>
-        {!bracket?.submitted_at && (
-          <p className="mt-2 text-sm font-medium text-gold">
-            This player hasn&apos;t submitted their bracket yet.
-          </p>
-        )}
       </div>
 
-      {bracket && (
+      {!bracket ? (
+        <div className="flex items-center justify-center py-24">
+          <p className="text-sm text-pitch-300">This user hasn&apos;t submitted their bracket yet.</p>
+        </div>
+      ) : (
         <div>
           <div className="anim-fade-up anim-delay-1 mb-6">
             <p className="section-label mb-3">Points Scored</p>

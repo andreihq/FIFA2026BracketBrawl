@@ -26,28 +26,25 @@ export function Header() {
           </div>
         </Link>
 
-        <div className="flex items-center gap-2">
-          <nav className="flex items-center gap-1">
-            {NAV.map(({ label, href }) => {
-              const active = pathname === href || pathname.startsWith(href + '/')
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`tab-btn ${active ? 'tab-active' : 'tab-inactive'}`}
-                >
-                  {label}
-                </Link>
-              )
-            })}
-          </nav>
-          <div className="w-px h-4 bg-pitch-600 mx-1" />
-          <form action="/api/auth/logout" method="POST">
-            <button className="tab-btn tab-inactive text-xs px-3 py-1.5">
-              Log out
+        <nav className="flex items-center gap-5">
+          {NAV.map(({ label, href }) => {
+            const active = pathname === href || pathname.startsWith(href + '/')
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`text-xs uppercase tracking-widest transition-colors ${active ? 'text-[#EBF0FF]' : 'text-pitch-300 hover:text-[#EBF0FF]'}`}
+              >
+                {label}
+              </Link>
+            )
+          })}
+          <form action="/api/auth/logout" method="POST" className="flex items-center">
+            <button className="text-xs uppercase tracking-widest text-pitch-300 hover:text-[#EBF0FF] transition-colors">
+              Logout
             </button>
           </form>
-        </div>
+        </nav>
       </div>
     </header>
   )
