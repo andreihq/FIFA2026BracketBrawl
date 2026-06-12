@@ -1,6 +1,10 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { getSession } from '@/lib/session'
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const session = await getSession()
+  if (session.playerId) redirect('/dashboard')
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-8 p-8">
       <div className="text-center">
