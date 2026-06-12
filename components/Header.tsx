@@ -14,8 +14,8 @@ export function Header({ isLoggedIn }: { isLoggedIn: boolean }) {
   if (HIDE_ON.includes(pathname)) return null
 
   return (
-    <header className="sticky top-0 z-50 border-b border-pitch-600 bg-pitch-950/90 backdrop-blur-md px-5 py-3">
-      <div className="max-w-6xl mx-auto flex items-center justify-between">
+    <header className="sticky top-0 z-50 border-b border-pitch-600 bg-pitch-950/90 backdrop-blur-md">
+      <div className="max-w-6xl mx-auto w-full flex items-center justify-between px-5 py-3">
         <Link href={isLoggedIn ? '/dashboard' : '/'} className="flex items-center gap-3 group">
           <div className="w-8 h-8 rounded-full bg-gold flex items-center justify-center flex-shrink-0 group-hover:bg-gold-hover transition-colors">
             <span className="font-display text-[13px] text-pitch-950 leading-none">26</span>
