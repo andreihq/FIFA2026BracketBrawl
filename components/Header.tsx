@@ -9,14 +9,14 @@ const NAV = [
 
 const HIDE_ON = ['/', '/login', '/register']
 
-export function Header() {
+export function Header({ isLoggedIn }: { isLoggedIn: boolean }) {
   const pathname = usePathname()
   if (HIDE_ON.includes(pathname)) return null
 
   return (
     <header className="sticky top-0 z-50 border-b border-pitch-600 bg-pitch-950/90 backdrop-blur-md px-5 py-3">
       <div className="max-w-6xl mx-auto flex items-center justify-between">
-        <Link href="/dashboard" className="flex items-center gap-3 group">
+        <Link href={isLoggedIn ? '/dashboard' : '/'} className="flex items-center gap-3 group">
           <div className="w-8 h-8 rounded-full bg-gold flex items-center justify-center flex-shrink-0 group-hover:bg-gold-hover transition-colors">
             <span className="font-display text-[13px] text-pitch-950 leading-none">26</span>
           </div>
@@ -27,23 +27,34 @@ export function Header() {
         </Link>
 
         <nav className="flex items-center gap-5">
-          {NAV.map(({ label, href }) => {
-            const active = pathname === href || pathname.startsWith(href + '/')
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={`text-xs uppercase tracking-widest transition-colors ${active ? 'text-[#EBF0FF]' : 'text-pitch-300 hover:text-[#EBF0FF]'}`}
-              >
-                {label}
-              </Link>
-            )
-          })}
-          <form action="/api/auth/logout" method="POST" className="flex items-center">
-            <button className="text-xs uppercase tracking-widest text-pitch-300 hover:text-[#EBF0FF] transition-colors">
-              Logout
-            </button>
-          </form>
+          {isLoggedIn ? (
+            <>
+              {NAV.map(({ label, href }) => {
+                const active = pathname === href || pathname.startsWith(href + '/')
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`text-xs uppercase tracking-widest transition-colors ${active ? 'text-[#EBF0FF]' : 'text-pitch-300 hover:text-[#EBF0FF]'}`}
+                  >
+                    {label}
+                  </Link>
+                )
+              })}
+              <form action="/api/auth/logout" method="POST" className="flex items-center">
+                <button className="text-xs uppercase tracking-widest text-pitch-300 hover:text-[#EBF0FF] transition-colors">
+                  Logout
+                </button>
+              </form>
+            </>
+          ) : (
+            <Link
+              href="/login"
+              className="text-xs uppercase tracking-widest text-pitch-300 hover:text-[#EBF0FF] transition-colors"
+            >
+              Login
+            </Link>
+          )}
         </nav>
       </div>
     </header>

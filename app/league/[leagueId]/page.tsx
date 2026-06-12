@@ -1,12 +1,12 @@
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/session'
 import { createServerClient } from '@/lib/supabase'
+
 import { computeScore } from '@/lib/scoring'
 import { Leaderboard } from '@/components/Leaderboard'
 
 export default async function LeaguePage({ params }: { params: { leagueId: string } }) {
   const session = await getSession()
-  if (!session.playerId) redirect('/')
 
   const supabase = createServerClient()
   const { data: room } = await supabase
@@ -15,7 +15,7 @@ export default async function LeaguePage({ params }: { params: { leagueId: strin
     .eq('id', params.leagueId)
     .single()
 
-  if (!room) redirect('/dashboard')
+  if (!room) redirect('/')
 
   const { data: members } = await supabase
     .from('league_members')

@@ -14,6 +14,8 @@ export async function middleware(req: NextRequest) {
   // Allow public paths and all API routes
   if (
     PUBLIC_PATHS.includes(pathname) ||
+    pathname.startsWith('/player/') ||
+    pathname.startsWith('/league/') ||
     pathname.startsWith('/api/') ||
     pathname.startsWith('/_next/')
   ) {

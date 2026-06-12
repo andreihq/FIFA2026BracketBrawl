@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/session'
 import { createServerClient } from '@/lib/supabase'
 import { computeScore } from '@/lib/scoring'
 import { BracketView } from '@/components/BracketView'
@@ -9,9 +8,6 @@ export default async function PlayerPage({ params, searchParams }: {
   params: { username: string }
   searchParams: { from?: string; tab?: string }
 }) {
-  const session = await getSession()
-  if (!session.playerId) redirect('/')
-
   const supabase = createServerClient()
   const { data: player } = await supabase
     .from('players').select('id, username').eq('username', params.username).single()
