@@ -63,16 +63,18 @@ export async function PUT(req: NextRequest) {
   if (!bracket) return NextResponse.json({ error: 'Failed to create bracket' }, { status: 500 })
   if (bracket.locked) return NextResponse.json({ error: 'Bracket is locked' }, { status: 403 })
 
-  // Upsert group predictions
+  // Replace group predictions (delete + insert so removed picks don't linger)
+  await supabase.from('group_predictions').delete().eq('bracket_id', bracket.id)
   if (groupPredictions.length > 0) {
     const rows = groupPredictions.map(p => ({ ...p, bracket_id: bracket!.id }))
-    await supabase.from('group_predictions').upsert(rows, { onConflict: 'bracket_id,group_code,predicted_pos' })
+    await supabase.from('group_predictions').insert(rows)
   }
 
-  // Upsert knockout predictions
+  // Replace knockout predictions (delete + insert so stale thirdPicks don't persist)
+  await supabase.from('knockout_predictions').delete().eq('bracket_id', bracket.id)
   if (knockoutPredictions.length > 0) {
     const rows = knockoutPredictions.map(p => ({ ...p, bracket_id: bracket!.id }))
-    await supabase.from('knockout_predictions').upsert(rows, { onConflict: 'bracket_id,match_id' })
+    await supabase.from('knockout_predictions').insert(rows)
   }
 
   return NextResponse.json({ ok: true })
