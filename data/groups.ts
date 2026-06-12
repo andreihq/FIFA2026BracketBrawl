@@ -1,17 +1,16 @@
-// Array order does NOT imply seeding — players rank teams themselves.
 export const GROUPS: Record<string, string[]> = {
-  A: ['MEX', 'JAM', 'HON', 'VEN'],
-  B: ['USA', 'CAN', 'PAN', 'CUB'],
-  C: ['BRA', 'COL', 'PAR', 'BOL'],
-  D: ['ARG', 'CHI', 'PER', 'ECU'],
-  E: ['ESP', 'MAR', 'BEL', 'NZL'],
-  F: ['GER', 'JPN', 'CMR', 'KSA'],
-  G: ['FRA', 'SEN', 'URU', 'UKR'],
-  H: ['POR', 'POL', 'ALG', 'NGA'],
-  I: ['ENG', 'SRB', 'IRI', 'CRC'],
-  J: ['NED', 'AUS', 'RSA', 'CGO'],
-  K: ['ITA', 'CRO', 'EGY', 'MEX2'],  // verify
-  L: ['POR2', 'TBD2', 'TBD3', 'TBD4'], // verify
+  A: ['CZE', 'MEX', 'RSA', 'KOR'],
+  B: ['BIH', 'CAN', 'QAT', 'SUI'],
+  C: ['BRA', 'HAI', 'MAR', 'SCO'],
+  D: ['AUS', 'PAR', 'TUR', 'USA'],
+  E: ['CIV', 'CUW', 'ECU', 'GER'],
+  F: ['JPN', 'NED', 'SWE', 'TUN'],
+  G: ['BEL', 'EGY', 'IRN', 'NZL'],
+  H: ['CPV', 'ESP', 'KSA', 'URU'],
+  I: ['FRA', 'IRQ', 'NOR', 'SEN'],
+  J: ['ALG', 'ARG', 'AUT', 'JOR'],
+  K: ['COD', 'COL', 'POR', 'UZB'],
+  L: ['CRO', 'ENG', 'GHA', 'PAN'],
 }
 
 export const GROUP_CODES = Object.keys(GROUPS) as string[]

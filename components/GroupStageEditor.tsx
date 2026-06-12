@@ -2,7 +2,8 @@
 import {
   DndContext,
   closestCenter,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -61,7 +62,10 @@ function SortableTeam({ teamCode, position, disabled }: { teamCode: string; posi
 }
 
 export function GroupStageEditor({ groupCode, order, onChange, disabled = false }: Props) {
-  const sensors = useSensors(useSensor(PointerSensor))
+  const sensors = useSensors(
+    useSensor(MouseSensor),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
+  )
   const teams = order.length > 0 ? order : GROUPS[groupCode] ?? []
 
   function handleDragEnd(event: DragEndEvent) {

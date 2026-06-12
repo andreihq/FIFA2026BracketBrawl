@@ -25,7 +25,10 @@ export async function POST(req: NextRequest) {
     .select()
     .single()
 
-  if (error || !player) return NextResponse.json({ error: 'Registration failed' }, { status: 500 })
+  if (error || !player) {
+    console.error('[register] insert error:', error)
+    return NextResponse.json({ error: 'Registration failed', detail: error?.message }, { status: 500 })
+  }
 
   const session = await getSession()
   session.playerId = player.id
