@@ -102,7 +102,10 @@ function ThirdPlaceTeamPicker({ matchId, slotLabel, groupRankings, thirdPicks, o
   showValidation: boolean
 }) {
   const groups = slotLabel.replace('Best 3rd ', '').split('')
-  const eligible = groups.map(g => groupRankings[g]?.[2]).filter(Boolean) as string[]
+  const pickedElsewhere = new Set(
+    Object.entries(thirdPicks).filter(([id]) => id !== matchId).map(([, code]) => code)
+  )
+  const eligible = groups.map(g => groupRankings[g]?.[2]).filter(Boolean).filter(code => !pickedElsewhere.has(code)) as string[]
   const selected = thirdPicks[matchId] ?? null
   const team = selected ? TEAMS[selected] : null
 
