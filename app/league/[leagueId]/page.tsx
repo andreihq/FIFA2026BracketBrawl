@@ -60,7 +60,7 @@ export default async function LeaguePage({ params }: { params: { leagueId: strin
 
       <div className="anim-fade-up anim-delay-1">
         <p className="section-label mb-3">Leaderboard</p>
-        <Leaderboard rows={leaderboard} currentUsername={session.username} />
+        <Leaderboard rows={leaderboard} currentUsername={session.username} leagueId={params.leagueId} />
       </div>
     </div>
   )

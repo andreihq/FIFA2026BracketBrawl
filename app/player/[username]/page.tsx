@@ -38,9 +38,11 @@ export default async function PlayerPage({ params, searchParams }: {
     <div className="min-h-screen p-5 max-w-6xl mx-auto">
 
       <div className="anim-fade-up pt-2 mb-7">
-        <Link href={backHref} className="inline-flex items-center gap-1 text-xs text-pitch-300 hover:text-[#EBF0FF] transition-colors mb-4 uppercase tracking-wider">
-          ← Back
-        </Link>
+        {searchParams.from && (
+          <Link href={backHref} className="inline-flex items-center gap-1 text-xs text-pitch-300 hover:text-[#EBF0FF] transition-colors mb-4 uppercase tracking-wider">
+            ← Back
+          </Link>
+        )}
         <p className="section-label mb-1">Player Bracket</p>
         <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">
           {player.username}
