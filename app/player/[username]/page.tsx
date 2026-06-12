@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/session'
 import { createServerClient } from '@/lib/supabase'
+import { computeScore } from '@/lib/scoring'
 import { BracketView } from '@/components/BracketView'
 import Link from 'next/link'
 
@@ -28,6 +29,8 @@ export default async function PlayerPage({ params, searchParams }: {
       ])
     : [{ data: [] }, { data: [] }, { data: [] }]
 
+  const score = computeScore(groupPredictions ?? [], knockoutPredictions ?? [], actualResults ?? [])
+
   const backHref = searchParams.from ? `/league/${searchParams.from}` : '/dashboard'
   const tab = (searchParams.tab === 'knockouts' ? 'knockouts' : 'groups') as 'groups' | 'knockouts'
 
@@ -51,7 +54,22 @@ export default async function PlayerPage({ params, searchParams }: {
 
       {bracket && (
         <div>
-          <div className="anim-fade-up anim-delay-1 flex gap-1.5 mb-6">
+          <div className="anim-fade-up anim-delay-1 card grid grid-cols-3 mb-6">
+            <div className="flex flex-col items-center py-4 border-r border-pitch-600">
+              <p className="section-label mb-1">Group Stage</p>
+              <span className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">{score.groupPoints}</span>
+            </div>
+            <div className="flex flex-col items-center py-4 border-r border-pitch-600">
+              <p className="section-label mb-1">Knockout</p>
+              <span className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">{score.knockoutPoints}</span>
+            </div>
+            <div className="flex flex-col items-center py-4">
+              <p className="section-label mb-1">Total</p>
+              <span className="font-display text-4xl tracking-wider text-gold leading-none">{score.total}</span>
+            </div>
+          </div>
+
+          <div className="anim-fade-up anim-delay-2 flex gap-1.5 mb-6">
             <a
               href={`/player/${params.username}?tab=groups${searchParams.from ? `&from=${searchParams.from}` : ''}`}
               className={`tab-btn ${tab === 'groups' ? 'tab-active' : 'tab-inactive'}`}
@@ -66,7 +84,7 @@ export default async function PlayerPage({ params, searchParams }: {
             </a>
           </div>
 
-          <div className="anim-fade-up anim-delay-2">
+          <div className="anim-fade-up anim-delay-3">
             <BracketView
               groupPredictions={groupPredictions ?? []}
               knockoutPredictions={knockoutPredictions ?? []}
