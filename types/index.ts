@@ -12,7 +12,7 @@ export interface League {
 }
 
 export interface LeagueMember {
-  room_id: string
+  league_id: string
   player_id: string
   joined_at: string
 }

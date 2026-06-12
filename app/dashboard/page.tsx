@@ -21,19 +21,19 @@ export default async function DashboardPage() {
     .single()
 
   const { data: memberships } = await supabase
-    .from('room_members')
-    .select('room_id, rooms(id, name)')
+    .from('league_members')
+    .select('league_id, leagues(id, name)')
     .eq('player_id', session.playerId)
 
   const { data: actualResults } = await supabase.from('actual_results').select('*')
 
   const leaguesWithRank = await Promise.all(
     (memberships ?? []).map(async m => {
-      const league = m.rooms as any
+      const league = m.leagues as any
       const { data: members } = await supabase
-        .from('room_members')
+        .from('league_members')
         .select('player_id, players(id, username)')
-        .eq('room_id', league.id)
+        .eq('league_id', league.id)
 
       const scores = await Promise.all(
         (members ?? []).map(async member => {

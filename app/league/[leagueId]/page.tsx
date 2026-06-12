@@ -10,7 +10,7 @@ export default async function LeaguePage({ params }: { params: { leagueId: strin
 
   const supabase = createServerClient()
   const { data: room } = await supabase
-    .from('rooms')
+    .from('leagues')
     .select('id, name')
     .eq('id', params.leagueId)
     .single()
@@ -18,9 +18,9 @@ export default async function LeaguePage({ params }: { params: { leagueId: strin
   if (!room) redirect('/dashboard')
 
   const { data: members } = await supabase
-    .from('room_members')
+    .from('league_members')
     .select('player_id, players(id, username)')
-    .eq('room_id', params.leagueId)
+    .eq('league_id', params.leagueId)
 
   const { data: actualResults } = await supabase.from('actual_results').select('*')
 

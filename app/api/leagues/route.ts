@@ -15,21 +15,21 @@ export async function POST(req: NextRequest) {
   let id = generateLeagueCode()
   let attempts = 0
   while (attempts < 5) {
-    const { data: existing } = await supabase.from('rooms').select('id').eq('id', id).single()
+    const { data: existing } = await supabase.from('leagues').select('id').eq('id', id).single()
     if (!existing) break
     id = generateLeagueCode()
     attempts++
   }
 
   const { data: room, error } = await supabase
-    .from('rooms')
+    .from('leagues')
     .insert({ id, name: name.trim(), created_by: session.playerId })
     .select()
     .single()
 
   if (error || !room) return NextResponse.json({ error: 'Failed to create league' }, { status: 500 })
 
-  await supabase.from('room_members').insert({ room_id: room.id, player_id: session.playerId })
+  await supabase.from('league_members').insert({ league_id: room.id, player_id: session.playerId })
 
   return NextResponse.json({ leagueId: room.id })
 }
