@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { GROUP_CODES, GROUPS } from '@/data/groups'
-import { MATCH_IDS, THIRD_PLACE_SLOT_MATCH_IDS, KNOCKOUT_MATCHES, resolveTeam } from '@/data/bracket'
+import { KNOCKOUT_MATCHES, resolveTeam } from '@/data/bracket'
 import { GroupStageEditor } from '@/components/GroupStageEditor'
 import { KnockoutBracket } from '@/components/KnockoutBracket'
 
@@ -14,10 +14,8 @@ export default function BracketPage() {
   const [thirdPicks, setThirdPicks] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
   const [locked, setLocked] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
-  const [showValidation, setShowValidation] = useState(false)
   const [deadline, setDeadline] = useState<string | null>(null)
 
   useEffect(() => {
@@ -54,7 +52,6 @@ export default function BracketPage() {
     fetch('/api/brackets')
       .then(r => r.json())
       .then(data => {
-        setSubmitted(!!data.bracket?.submitted_at)
         setLocked(!!data.bracket?.locked)
 
         const rankings: Record<string, string[]> = {}
@@ -102,21 +99,6 @@ export default function BracketPage() {
     setTimeout(() => setSaveMsg(''), 3000)
   }, [groupRankings, koPicks, thirdPicks])
 
-  async function handleSubmit() {
-    if (!groupsComplete || !koComplete) {
-      setShowValidation(true)
-      if (tab !== 'knockouts') setTab('knockouts')
-      return
-    }
-    await saveDraft()
-    const res = await fetch('/api/brackets/submit', { method: 'POST' })
-    if (res.ok) setSubmitted(true)
-  }
-
-  const groupsComplete = GROUP_CODES.every(g => (groupRankings[g]?.length ?? 0) >= 4)
-  const koComplete =
-    MATCH_IDS.every(id => !!koPicks[id]) &&
-    THIRD_PLACE_SLOT_MATCH_IDS.every(id => !!thirdPicks[id])
 
   if (loading) {
     return (
@@ -137,11 +119,6 @@ export default function BracketPage() {
           <p className="section-label mb-1">Bracket</p>
           <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">My Predictions</h1>
         </div>
-        {submitted && (
-          <span className="rounded-xl bg-[#34D399]/10 border border-[#34D399]/25 px-3 py-1.5 text-xs font-semibold text-[#34D399]">
-            Submitted ✓
-          </span>
-        )}
       </div>
 
       {/* Tabs */}
@@ -186,36 +163,17 @@ export default function BracketPage() {
               }
             }}
             disabled={isDisabled}
-            showValidation={showValidation}
           />
         )}
       </div>
 
       {!isDisabled && (
         <div className="flex items-center justify-end gap-3 mt-10 pt-5 border-t border-pitch-700">
-          {saveMsg && (
-            <span className="text-sm font-medium text-[#34D399]">{saveMsg}</span>
-          )}
-          <button
-            onClick={saveDraft}
-            disabled={saving}
-            className="btn-ghost px-5 py-2.5 text-xs uppercase tracking-wider"
-          >
+          {saveMsg && <span className="text-sm font-medium text-[#34D399]">{saveMsg}</span>}
+          <button onClick={saveDraft} disabled={saving} className="btn-gold px-5 py-2.5 text-xs uppercase tracking-widest">
             {saving ? 'Saving…' : 'Save Bracket'}
           </button>
-          <button
-            onClick={handleSubmit}
-            className="btn-gold px-5 py-2.5 text-xs uppercase tracking-widest"
-          >
-            Submit Bracket
-          </button>
         </div>
-      )}
-
-      {isDisabled && (
-        <p className="mt-8 text-center text-sm font-medium text-gold">
-          Prediction deadline has passed
-        </p>
       )}
     </div>
   )
