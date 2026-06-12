@@ -6,13 +6,15 @@ import Link from 'next/link'
 import { CreateJoinLeague } from './CreateJoinLeague'
 import { DeadlineCountdown } from './DeadlineCountdown'
 
-const DEADLINE = new Date('2026-06-15T04:59:00Z')
-
 export default async function DashboardPage() {
   const session = await getSession()
   if (!session.playerId) redirect('/')
 
   const supabase = createServerClient()
+
+  const { data: deadlineSetting } = await supabase
+    .from('settings').select('value').eq('key', 'deadline').single()
+  const deadline = deadlineSetting?.value ?? '2026-06-15T04:59:00.000Z'
 
   const { data: bracket } = await supabase
     .from('brackets')
@@ -53,7 +55,7 @@ export default async function DashboardPage() {
     })
   )
 
-  const isPastDeadline = new Date() > DEADLINE
+  const isPastDeadline = new Date() > new Date(deadline)
   const submitted = !!bracket?.submitted_at
 
   return (
@@ -91,7 +93,7 @@ export default async function DashboardPage() {
           </div>
 
 
-          {!isPastDeadline && !submitted && <DeadlineCountdown />}
+          {!isPastDeadline && !submitted && <DeadlineCountdown deadline={deadline} />}
 
           <Link
             href="/bracket"

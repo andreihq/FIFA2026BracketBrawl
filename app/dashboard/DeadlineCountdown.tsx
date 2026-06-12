@@ -1,9 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 
-const DEADLINE = new Date('2026-06-15T04:59:00Z')
-
-export function DeadlineCountdown() {
+export function DeadlineCountdown({ deadline }: { deadline: string }) {
   const [now, setNow] = useState<number | null>(null)
 
   useEffect(() => {
@@ -14,6 +12,7 @@ export function DeadlineCountdown() {
 
   if (now === null) return null
 
+  const DEADLINE = new Date(deadline)
   const ms = DEADLINE.getTime() - now
   if (ms <= 0) return null
 
@@ -29,6 +28,12 @@ export function DeadlineCountdown() {
     month: 'short', day: 'numeric', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   })
+
+  const offsetMins = -new Date().getTimezoneOffset()
+  const sign = offsetMins >= 0 ? '+' : '-'
+  const absH = Math.floor(Math.abs(offsetMins) / 60)
+  const absM = Math.abs(offsetMins) % 60
+  const tzLabel = absM ? `UTC${sign}${absH}:${pad(absM)}` : `UTC${sign}${absH}`
 
   const label = days > 0
     ? `${days}d ${pad(hours)}h ${pad(mins)}m ${pad(secs)}s`
@@ -47,13 +52,14 @@ export function DeadlineCountdown() {
       : 'bg-pitch-400'
 
   return (
-    <div className="flex items-center gap-2 mb-4">
+    <div className="flex items-center gap-2 mb-4 flex-wrap">
       <div className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${dotClass}`} />
       <span className="text-xs text-[#EBF0FF]">Closes in</span>
       <span className={`font-mono text-xs font-semibold rounded-lg border px-2.5 py-1 tabular-nums ${chipClass}`}>
         {label}
       </span>
       <span className="text-xs text-[#EBF0FF]">{deadlineLabel}</span>
+      <span className="text-xs text-pitch-400">{tzLabel}</span>
     </div>
   )
 }

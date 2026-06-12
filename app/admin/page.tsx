@@ -10,13 +10,14 @@ export default function AdminPage() {
   const [password, setPassword] = useState('')
   const [authed, setAuthed] = useState(false)
   const [authError, setAuthError] = useState('')
-  const [activeSection, setActiveSection] = useState<'groups' | 'knockout'>('groups')
+  const [activeSection, setActiveSection] = useState<'groups' | 'knockout' | 'settings'>('groups')
   const [selectedGroup, setSelectedGroup] = useState('A')
   const [selectedRound, setSelectedRound] = useState('R32')
   const [groupResults, setGroupResults] = useState<Record<string, Record<number, string>>>({})
   const [koResults, setKoResults] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
+  const [deadlineInput, setDeadlineInput] = useState('')
 
   async function checkPassword(e: React.FormEvent) {
     e.preventDefault()
@@ -39,6 +40,18 @@ export default function AdminPage() {
       body: JSON.stringify({ result_type: 'group', ref_id: selectedGroup, entries }),
     })
     setMsg(res.ok ? `Group ${selectedGroup} saved ✓` : 'Error saving')
+    setSaving(false)
+  }
+
+  async function saveDeadline(e: React.FormEvent) {
+    e.preventDefault()
+    setSaving(true); setMsg('')
+    const res = await fetch('/api/admin/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+      body: JSON.stringify({ deadline: deadlineInput }),
+    })
+    setMsg(res.ok ? 'Deadline saved ✓' : 'Error saving deadline')
     setSaving(false)
   }
 
@@ -98,10 +111,10 @@ export default function AdminPage() {
       )}
 
       <div className="flex gap-1.5 mb-6">
-        {(['groups', 'knockout'] as const).map(s => (
+        {(['groups', 'knockout', 'settings'] as const).map(s => (
           <button key={s} onClick={() => setActiveSection(s)}
             className={`tab-btn ${activeSection === s ? 'tab-active' : 'tab-inactive'}`}>
-            {s === 'groups' ? 'Group Stage' : 'Knockout'}
+            {s === 'groups' ? 'Group Stage' : s === 'knockout' ? 'Knockout' : 'Settings'}
           </button>
         ))}
       </div>
@@ -176,6 +189,25 @@ export default function AdminPage() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {activeSection === 'settings' && (
+        <div className="card p-5">
+          <p className="text-sm font-medium text-[#EBF0FF] mb-4">Submission Deadline</p>
+          <form onSubmit={saveDeadline} className="flex flex-col gap-3">
+            <input
+              type="datetime-local"
+              className="field"
+              value={deadlineInput}
+              onChange={e => setDeadlineInput(e.target.value)}
+              required
+            />
+            <p className="text-xs text-pitch-400">Enter the deadline in your local time. It will be stored as UTC.</p>
+            <button type="submit" disabled={saving} className="btn-gold uppercase tracking-widest text-xs">
+              {saving ? 'Saving…' : 'Save Deadline'}
+            </button>
+          </form>
         </div>
       )}
     </div>

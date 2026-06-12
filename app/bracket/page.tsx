@@ -5,8 +5,6 @@ import { MATCH_IDS, THIRD_PLACE_SLOT_MATCH_IDS, KNOCKOUT_MATCHES, resolveTeam } 
 import { GroupStageEditor } from '@/components/GroupStageEditor'
 import { KnockoutBracket } from '@/components/KnockoutBracket'
 
-const DEADLINE = new Date('2026-06-15T04:59:00Z')
-
 type Tab = 'groups' | 'knockouts'
 
 export default function BracketPage() {
@@ -20,6 +18,7 @@ export default function BracketPage() {
   const [locked, setLocked] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
   const [showValidation, setShowValidation] = useState(false)
+  const [deadline, setDeadline] = useState<string | null>(null)
 
   useEffect(() => {
     const ko = { ...koPicks }
@@ -47,10 +46,11 @@ export default function BracketPage() {
     if (thirdChanged) setThirdPicks(third)
   }, [groupRankings]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const isPastDeadline = new Date() > DEADLINE
+  const isPastDeadline = deadline ? new Date() > new Date(deadline) : false
   const isDisabled = locked || isPastDeadline
 
   useEffect(() => {
+    fetch('/api/settings').then(r => r.json()).then(d => setDeadline(d.deadline))
     fetch('/api/brackets')
       .then(r => r.json())
       .then(data => {

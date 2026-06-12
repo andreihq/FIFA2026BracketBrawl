@@ -3,8 +3,6 @@ import { getSession } from '@/lib/session'
 import { createServerClient } from '@/lib/supabase'
 import type { GroupPrediction, KnockoutPrediction } from '@/types'
 
-const DEADLINE = new Date('2026-06-15T04:59:00Z') // 2026-06-14 23:59 UTC-5 (generous buffer)
-
 export async function GET() {
   const session = await getSession()
   if (!session.playerId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -35,11 +33,12 @@ export async function PUT(req: NextRequest) {
   const session = await getSession()
   if (!session.playerId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  if (new Date() > DEADLINE) {
+  const supabase = createServerClient()
+
+  const { data: deadlineSetting } = await supabase.from('settings').select('value').eq('key', 'deadline').single()
+  if (deadlineSetting && new Date() > new Date(deadlineSetting.value)) {
     return NextResponse.json({ error: 'Submission deadline has passed' }, { status: 403 })
   }
-
-  const supabase = createServerClient()
   const { groupPredictions, knockoutPredictions } = await req.json() as {
     groupPredictions: Omit<GroupPrediction, 'id' | 'bracket_id'>[],
     knockoutPredictions: Omit<KnockoutPrediction, 'id' | 'bracket_id'>[],
