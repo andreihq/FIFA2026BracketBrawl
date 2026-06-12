@@ -304,7 +304,7 @@ export function KnockoutBracket({ groupRankings, picks, onPick, thirdPicks, onTh
   return (
     <div className="overflow-x-auto pb-2">
       {showValidation && !allPicksMade && (
-        <div ref={errorRef} className="mb-4 rounded-xl border border-red-700/50 bg-red-950/30 px-4 py-3 text-sm font-medium text-[#F87171]">
+        <div ref={errorRef} className="scroll-mt-20 mb-4 rounded-xl border border-red-700/50 bg-red-950/30 px-4 py-3 text-sm font-medium text-[#F87171]">
           Complete all picks before submitting — missing selections are highlighted.
         </div>
       )}
