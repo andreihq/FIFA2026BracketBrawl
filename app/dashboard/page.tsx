@@ -85,7 +85,7 @@ export default async function DashboardPage() {
         }`}>
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm font-medium text-[#EBF0FF]">
-              {submitted ? 'Bracket locked in' : 'Complete your bracket'}
+              {submitted ? 'Bracket locked in' : 'Pick group stage finishers and knockout winners all the way to the champion. Submit before the deadline to lock in your predictions.'}
             </p>
             {submitted ? (
               <span className="rounded-lg bg-[#34D399]/15 border border-[#34D399]/25 px-2.5 py-1 text-xs font-semibold text-[#34D399]">

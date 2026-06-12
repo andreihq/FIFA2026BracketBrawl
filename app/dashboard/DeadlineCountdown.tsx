@@ -49,11 +49,11 @@ export function DeadlineCountdown() {
   return (
     <div className="flex items-center gap-2 mb-4">
       <div className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${dotClass}`} />
-      <span className="text-xs text-pitch-400">Closes in</span>
+      <span className="text-xs text-[#EBF0FF]">Closes in</span>
       <span className={`font-mono text-xs font-semibold rounded-lg border px-2.5 py-1 tabular-nums ${chipClass}`}>
         {label}
       </span>
-      <span className="text-xs text-pitch-400">{deadlineLabel}</span>
+      <span className="text-xs text-[#EBF0FF]">{deadlineLabel}</span>
     </div>
   )
 }
