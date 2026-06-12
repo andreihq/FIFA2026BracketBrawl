@@ -98,19 +98,6 @@ export default async function DashboardPage() {
             )}
           </div>
 
-          <div className="flex gap-4 mb-4">
-            {[
-              { label: 'Group Stage', done: groupComplete },
-              { label: 'Knockouts',   done: koComplete },
-            ].map(({ label, done }) => (
-              <div key={label} className="flex items-center gap-2">
-                <div className={`h-2 w-2 rounded-full ${done ? 'bg-[#34D399]' : 'bg-pitch-500'}`} />
-                <span className={`text-xs font-medium ${done ? 'text-[#34D399]' : 'text-pitch-300'}`}>
-                  {label}
-                </span>
-              </div>
-            ))}
-          </div>
 
           {!isPastDeadline && !submitted && <DeadlineCountdown />}
 

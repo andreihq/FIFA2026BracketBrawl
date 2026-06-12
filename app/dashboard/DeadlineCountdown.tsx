@@ -25,6 +25,11 @@ export function DeadlineCountdown() {
 
   const pad = (n: number) => String(n).padStart(2, '0')
 
+  const deadlineLabel = DEADLINE.toLocaleString(undefined, {
+    month: 'short', day: 'numeric', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  })
+
   const label = days > 0
     ? `${days}d ${pad(hours)}h ${pad(mins)}m ${pad(secs)}s`
     : `${pad(hours)}:${pad(mins)}:${pad(secs)}`
@@ -48,6 +53,7 @@ export function DeadlineCountdown() {
       <span className={`font-mono text-xs font-semibold rounded-lg border px-2.5 py-1 tabular-nums ${chipClass}`}>
         {label}
       </span>
+      <span className="text-xs text-pitch-400">{deadlineLabel}</span>
     </div>
   )
 }
