@@ -56,7 +56,8 @@ export default async function DashboardPage() {
   )
 
   const isPastDeadline = new Date() > new Date(deadline)
-  const submitted = !!bracket?.submitted_at
+  const bracketCreated = !!bracket
+  const isLocked = isPastDeadline || !!bracket?.locked || !!bracket?.submitted_at
 
   return (
     <div className="min-h-screen p-5 max-w-xl mx-auto">
@@ -72,36 +73,68 @@ export default async function DashboardPage() {
       {/* My Bracket */}
       <div className="anim-fade-up anim-delay-1 mb-5">
         <p className="section-label mb-3">My Bracket</p>
-        <div className={`card p-5 ${
-          submitted
-            ? 'border-[#34D399]/25 bg-[#34D399]/5'
-            : 'border-gold/20 bg-gold/5'
-        }`}>
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-medium text-[#EBF0FF]">
-              {submitted ? 'Bracket locked in' : 'Pick group stage finishers and knockout winners all the way to the champion. Submit before the deadline to lock in your predictions.'}
-            </p>
-            {submitted ? (
-              <span className="rounded-lg bg-[#34D399]/15 border border-[#34D399]/25 px-2.5 py-1 text-xs font-semibold text-[#34D399]">
-                Submitted ✓
+
+        {/* State 1 — Not created */}
+        {!bracketCreated && (
+          <div className="card p-5 border-pitch-500/40 bg-pitch-900/60">
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div>
+                <p className="text-sm font-semibold text-[#EBF0FF] mb-1">Your bracket awaits</p>
+                <p className="text-xs text-pitch-300 leading-relaxed">
+                  Rank all 12 groups and pick knockout winners all the way to the champion. Submit before the deadline to compete.
+                </p>
+              </div>
+              <span className="shrink-0 rounded-lg bg-pitch-700 border border-pitch-500 px-2.5 py-1 text-xs font-semibold text-pitch-300">
+                Not started
               </span>
-            ) : (
-              <span className="rounded-lg bg-gold/10 border border-gold/20 px-2.5 py-1 text-xs font-semibold text-gold">
-                Pending
-              </span>
-            )}
+            </div>
+            {!isPastDeadline && <DeadlineCountdown deadline={deadline} />}
+            <Link href="/bracket" className="btn-gold w-full justify-center text-xs uppercase tracking-widest py-2.5">
+              Create My Bracket
+            </Link>
           </div>
+        )}
 
+        {/* State 2 — Created, before deadline */}
+        {bracketCreated && !isLocked && (
+          <div className="card p-5 border-gold/20 bg-gold/5">
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div>
+                <p className="text-sm font-semibold text-[#EBF0FF] mb-1">Bracket in progress</p>
+                <p className="text-xs text-pitch-300 leading-relaxed">
+                  Keep picking and submit before the deadline to lock in your predictions.
+                </p>
+              </div>
+              <span className="shrink-0 rounded-lg bg-gold/10 border border-gold/20 px-2.5 py-1 text-xs font-semibold text-gold">
+                In Progress
+              </span>
+            </div>
+            <DeadlineCountdown deadline={deadline} />
+            <Link href="/bracket" className="btn-ghost w-full justify-center text-xs uppercase tracking-wider py-2.5">
+              Edit My Bracket
+            </Link>
+          </div>
+        )}
 
-          {!isPastDeadline && !submitted && <DeadlineCountdown deadline={deadline} />}
-
-          <Link
-            href="/bracket"
-            className="btn-ghost w-full justify-center text-xs uppercase tracking-wider py-2.5"
-          >
-            {isPastDeadline || submitted ? 'View Bracket' : 'Edit Bracket'}
-          </Link>
-        </div>
+        {/* State 3 — Locked */}
+        {bracketCreated && isLocked && (
+          <div className="card p-5 border-[#34D399]/25 bg-[#34D399]/5">
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div>
+                <p className="text-sm font-semibold text-[#EBF0FF] mb-1">Bracket locked in</p>
+                <p className="text-xs text-pitch-300 leading-relaxed">
+                  Your predictions are set. Check back as results come in to see how you rank.
+                </p>
+              </div>
+              <span className="shrink-0 rounded-lg bg-[#34D399]/15 border border-[#34D399]/25 px-2.5 py-1 text-xs font-semibold text-[#34D399]">
+                Locked ✓
+              </span>
+            </div>
+            <Link href="/bracket" className="btn-ghost w-full justify-center text-xs uppercase tracking-wider py-2.5">
+              View My Bracket
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* My Leagues */}
