@@ -1,17 +1,15 @@
 'use client'
 import { useRef, useEffect } from 'react'
-import { KNOCKOUT_MATCHES, KnockoutMatch, resolveTeam } from '@/data/bracket'
+import { KNOCKOUT_MATCHES, KnockoutMatch, MatchPick } from '@/data/bracket'
 import { TEAMS } from '@/data/teams'
 
 interface Props {
   groupRankings: Record<string, string[]>
-  picks: Record<string, string>
-  onPick: (matchId: string, teamCode: string) => void
-  thirdPicks: Record<string, string>
-  onThirdPick: (matchId: string, teamCode: string | null) => void
+  picks: Record<string, MatchPick>
+  onPick: (matchId: string, field: 'teamB' | 'winner', teamCode: string) => void
   disabled?: boolean
   showValidation?: boolean
-  correctPicks?: Record<string, string>
+  correctPicks?: Record<string, MatchPick>
 }
 
 const COLUMNS = ['R32', 'R16', 'QF', 'SF', 'FINAL', 'CHAMPIONS'] as const
@@ -43,39 +41,22 @@ function TeamRow({ teamCode, label, correct }: { teamCode: string | null; label:
 
 const selectBase = `w-full text-xs rounded-lg px-2.5 py-1.5 border cursor-pointer transition-all outline-none appearance-none`
 
-function SlotDropdown({ slotLabel, matchId, groupRankings, picks, thirdPicks, onPick, disabled, showValidation, correctPicks }: {
-  slotLabel: string
-  matchId: string
-  groupRankings: Record<string, string[]>
-  picks: Record<string, string>
-  thirdPicks: Record<string, string>
-  onPick: (matchId: string, code: string) => void
-  disabled: boolean
+// Dropdown to pick the winner of a source match. Shown in the next stage's match card.
+function WinnerDropdown({ srcMatchId, picks, onPick, showValidation }: {
+  srcMatchId: string
+  picks: Record<string, MatchPick>
+  onPick: (matchId: string, field: 'teamB' | 'winner', teamCode: string) => void
   showValidation: boolean
-  correctPicks?: Record<string, string>
 }) {
-  const sourceMatch = slotLabel.match(/^Winner (M\d+)$/)
-  if (!sourceMatch) {
-    const team = resolveTeam(slotLabel, matchId, groupRankings, picks, thirdPicks)
-    return <TeamRow teamCode={team} label={slotLabel} />
-  }
-
-  const srcId = sourceMatch[1]
-  const src = KNOCKOUT_MATCHES.find(m => m.id === srcId)!
-  const teamA = resolveTeam(src.slotA, srcId, groupRankings, picks, thirdPicks)
-  const teamB = resolveTeam(src.slotB, srcId, groupRankings, picks, thirdPicks)
-  const picked = picks[srcId]
-
-  if (disabled) {
-    const isCorrect = !!(picked && correctPicks?.[srcId] === picked)
-    return <TeamRow teamCode={picked ?? null} label={slotLabel} correct={isCorrect} />
-  }
-
-  const isError = showValidation && !picked
+  const src = picks[srcMatchId]
+  const teamA = src?.teamA ?? null
+  const teamB = src?.teamB ?? null
+  const picked = src?.winner ?? null
+  const isError = showValidation && !picked && !!teamA && !!teamB
   return (
     <select
       value={picked ?? ''}
-      onChange={e => e.target.value && onPick(srcId, e.target.value)}
+      onChange={e => e.target.value && onPick(srcMatchId, 'winner', e.target.value)}
       disabled={!teamA || !teamB}
       className={`${selectBase} ${
         picked
@@ -85,68 +66,76 @@ function SlotDropdown({ slotLabel, matchId, groupRankings, picks, thirdPicks, on
             : 'bg-pitch-700 border-pitch-500 text-pitch-200'
       } hover:border-pitch-400 disabled:opacity-60 disabled:cursor-not-allowed`}
     >
-      <option value="" disabled hidden>Pick winner…</option>
+      <option value="" disabled hidden>Pick {srcMatchId} winner…</option>
       <option value={teamA ?? ''}>{teamLabel(teamA, '')}</option>
       <option value={teamB ?? ''}>{teamLabel(teamB, '')}</option>
     </select>
   )
 }
 
-function ThirdPlaceTeamPicker({ matchId, slotLabel, groupRankings, thirdPicks, onThirdPick, disabled, showValidation }: {
-  matchId: string
-  slotLabel: string
+// Dropdown to pick the Best 3rd qualifier. Shown directly in the R32 match card.
+function QualifierDropdown({ match, groupRankings, picks, onPick, showValidation }: {
+  match: KnockoutMatch
   groupRankings: Record<string, string[]>
-  thirdPicks: Record<string, string>
-  onThirdPick: (matchId: string, teamCode: string | null) => void
-  disabled: boolean
+  picks: Record<string, MatchPick>
+  onPick: (matchId: string, field: 'teamB' | 'winner', teamCode: string) => void
   showValidation: boolean
 }) {
-  const groups = slotLabel.replace('Best 3rd ', '').split('')
+  const groups = match.slotB.replace('Best 3rd ', '').split('')
   const pickedElsewhere = new Set(
-    Object.entries(thirdPicks).filter(([id]) => id !== matchId).map(([, code]) => code)
+    KNOCKOUT_MATCHES
+      .filter(m => m.round === 'R32' && m.slotB.startsWith('Best 3rd') && m.id !== match.id)
+      .map(m => picks[m.id]?.teamB)
+      .filter(Boolean) as string[]
   )
-  const eligible = groups.map(g => groupRankings[g]?.[2]).filter(Boolean).filter(code => !pickedElsewhere.has(code)) as string[]
-  const selected = thirdPicks[matchId] ?? null
+  const eligible = groups
+    .map(g => groupRankings[g]?.[2])
+    .filter((c): c is string => !!c && !pickedElsewhere.has(c))
 
-  if (disabled) {
-    return <TeamRow teamCode={selected} label={`3rd: ${groups.join('/')}`} />
-  }
-
-  const isError = showValidation && !selected
+  const picked = picks[match.id]?.teamB ?? ''
+  const isError = showValidation && !picked
   return (
     <select
-      value={selected ?? ''}
-      onChange={e => e.target.value && onThirdPick(matchId, e.target.value)}
+      value={picked}
+      onChange={e => e.target.value && onPick(match.id, 'teamB', e.target.value)}
+      disabled={eligible.length === 0}
       className={`${selectBase} ${
-        selected
+        picked
           ? 'bg-pitch-800 border-pitch-500 text-[#EBF0FF]'
           : isError
             ? 'bg-red-950/30 border-red-700 text-pitch-400'
             : 'bg-pitch-700 border-pitch-500 text-pitch-200'
-      } hover:border-pitch-400`}
+      } hover:border-pitch-400 disabled:opacity-60 disabled:cursor-not-allowed`}
     >
-      <option value="" disabled hidden>Best 3rd {groups.join('/')}…</option>
+      <option value="" disabled hidden>Pick 3rd {groups.join('/')}…</option>
       {eligible.map(code => (
-        <option key={code} value={code}>{teamLabel(code, code)}</option>
+        <option key={code} value={code}>{teamLabel(code, '')}</option>
       ))}
     </select>
   )
 }
 
-function MatchCard({ match, groupRankings, picks, thirdPicks, onPick, onThirdPick, disabled, label, showValidation, correctPicks }: {
+function MatchCard({ match, groupRankings, picks, onPick, disabled, label, showValidation, correctPicks }: {
   match: KnockoutMatch
   groupRankings: Record<string, string[]>
-  picks: Record<string, string>
-  thirdPicks: Record<string, string>
-  onPick: (matchId: string, code: string) => void
-  onThirdPick: (matchId: string, teamCode: string | null) => void
+  picks: Record<string, MatchPick>
+  onPick: (matchId: string, field: 'teamB' | 'winner', teamCode: string) => void
   disabled: boolean
   label?: string
   showValidation: boolean
-  correctPicks?: Record<string, string>
+  correctPicks?: Record<string, MatchPick>
 }) {
   const isR32 = match.round === 'R32'
   const isBest3rdB = match.slotB.startsWith('Best 3rd')
+  const mp = picks[match.id] ?? { teamA: null, teamB: null, winner: null }
+  const cp = correctPicks?.[match.id]
+
+  const srcA = match.slotA.match(/^Winner (M\d+)$/)?.[1] ?? null
+  const srcB = match.slotB.match(/^Winner (M\d+)$/)?.[1] ?? null
+
+  const slotBLabel = isBest3rdB
+    ? `3rd: ${match.slotB.replace('Best 3rd ', '').split('').join('/')}`
+    : match.slotB
 
   return (
     <div className="flex flex-col gap-0.5">
@@ -155,92 +144,66 @@ function MatchCard({ match, groupRankings, picks, thirdPicks, onPick, onThirdPic
         : <div className="text-[9px] text-pitch-600 px-0.5 mb-1 font-mono">{match.id}</div>
       }
 
-      {isR32 ? (
+      {disabled || isR32 || !srcA ? (
         <TeamRow
-          teamCode={resolveTeam(match.slotA, match.id, groupRankings, picks, thirdPicks)}
+          teamCode={mp.teamA}
           label={match.slotA}
+          correct={disabled && !!mp.teamA && mp.teamA === cp?.teamA}
         />
       ) : (
-        <SlotDropdown
-          slotLabel={match.slotA}
-          matchId={match.id}
-          groupRankings={groupRankings}
-          picks={picks}
-          thirdPicks={thirdPicks}
-          onPick={onPick}
-          disabled={disabled}
-          showValidation={showValidation}
-          correctPicks={correctPicks}
-        />
+        <WinnerDropdown srcMatchId={srcA} picks={picks} onPick={onPick} showValidation={showValidation} />
       )}
 
       <div className="h-px bg-pitch-700 mx-1.5 my-0.5" />
 
-      {isR32 && isBest3rdB ? (
-        <ThirdPlaceTeamPicker
-          matchId={match.id}
-          slotLabel={match.slotB}
-          groupRankings={groupRankings}
-          thirdPicks={thirdPicks}
-          onThirdPick={onThirdPick}
-          disabled={disabled}
-          showValidation={showValidation}
-        />
-      ) : isR32 ? (
+      {disabled ? (
         <TeamRow
-          teamCode={resolveTeam(match.slotB, match.id, groupRankings, picks, thirdPicks)}
-          label={match.slotB}
+          teamCode={mp.teamB}
+          label={slotBLabel}
+          correct={!!mp.teamB && mp.teamB === cp?.teamB}
         />
+      ) : isR32 && isBest3rdB ? (
+        <QualifierDropdown match={match} groupRankings={groupRankings} picks={picks} onPick={onPick} showValidation={showValidation} />
+      ) : isR32 || !srcB ? (
+        <TeamRow teamCode={mp.teamB} label={slotBLabel} />
       ) : (
-        <SlotDropdown
-          slotLabel={match.slotB}
-          matchId={match.id}
-          groupRankings={groupRankings}
-          picks={picks}
-          thirdPicks={thirdPicks}
-          onPick={onPick}
-          disabled={disabled}
-          showValidation={showValidation}
-          correctPicks={correctPicks}
-        />
+        <WinnerDropdown srcMatchId={srcB} picks={picks} onPick={onPick} showValidation={showValidation} />
       )}
     </div>
   )
 }
 
-function ChampionsPodium({ groupRankings, picks, thirdPicks, onPick, disabled, showValidation, correctPicks }: {
-  groupRankings: Record<string, string[]>
-  picks: Record<string, string>
-  thirdPicks: Record<string, string>
-  onPick: (matchId: string, code: string) => void
+function ChampionsPodium({ picks, onPick, disabled, showValidation, correctPicks }: {
+  picks: Record<string, MatchPick>
+  onPick: (matchId: string, field: 'teamB' | 'winner', teamCode: string) => void
   disabled: boolean
   showValidation: boolean
-  correctPicks?: Record<string, string>
+  correctPicks?: Record<string, MatchPick>
 }) {
-  const finalistA = resolveTeam('Winner M101', 'M104', groupRankings, picks, thirdPicks)
-  const finalistB = resolveTeam('Winner M102', 'M104', groupRankings, picks, thirdPicks)
-  const champion = picks['M104'] ?? null
+  const finalistA = picks['M104']?.teamA ?? null
+  const finalistB = picks['M104']?.teamB ?? null
+  const champion = picks['M104']?.winner ?? null
   const runnerUp = champion ? (champion === finalistA ? finalistB : finalistA) : null
 
-  const loserA = resolveTeam('Loser M101', 'M103', groupRankings, picks, thirdPicks)
-  const loserB = resolveTeam('Loser M102', 'M103', groupRankings, picks, thirdPicks)
-  const thirdPlace = picks['M103'] ?? null
+  const loserA = picks['M103']?.teamA ?? null
+  const loserB = picks['M103']?.teamB ?? null
+  const thirdPlace = picks['M103']?.winner ?? null
 
   return (
     <div className="flex flex-col flex-1 justify-center gap-5 px-3 pb-4">
       <div className="flex flex-col gap-1.5">
         <div className="text-[10px] font-bold text-gold uppercase tracking-widest">🥇 Champion</div>
         {disabled ? (
-          <TeamRow teamCode={champion} label="TBD" correct={!!(champion && correctPicks?.['M104'] === champion)} />
+          <TeamRow teamCode={champion} label="TBD" correct={!!(champion && correctPicks?.['M104']?.winner === champion)} />
         ) : (
           <select
             value={champion ?? ''}
-            onChange={e => e.target.value && onPick('M104', e.target.value)}
+            onChange={e => e.target.value && onPick('M104', 'winner', e.target.value)}
             disabled={!finalistA || !finalistB}
             className={`${selectBase} font-semibold ${
               champion
                 ? 'bg-gold/10 border-gold/40 text-gold'
-                : showValidation && !champion
+                : showValidation && !champion && finalistA && finalistB
                   ? 'bg-red-950/30 border-red-700 text-pitch-400'
                   : 'bg-pitch-700 border-pitch-500 text-pitch-200'
             } hover:border-gold/30 disabled:opacity-60 disabled:cursor-not-allowed`}
@@ -253,23 +216,31 @@ function ChampionsPodium({ groupRankings, picks, thirdPicks, onPick, disabled, s
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <div className="text-[10px] font-bold text-pitch-200 uppercase tracking-widest">🥈 Runner-up</div>
-        <TeamRow teamCode={runnerUp} label="Loser of Finals" />
+        <div className="text-[10px] font-bold text-[#C0C8D8] uppercase tracking-widest">🥈 Runner-up</div>
+        <div className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs ${
+          runnerUp
+            ? 'bg-[#C0C8D8]/10 border border-[#C0C8D8]/40 text-[#C0C8D8]'
+            : 'bg-pitch-800 border border-pitch-600 text-[#EBF0FF]'
+        }`}>
+          {runnerUp && TEAMS[runnerUp]
+            ? <><span className="flex-shrink-0">{TEAMS[runnerUp].flag}</span><span className="truncate font-medium">{TEAMS[runnerUp].name}</span></>
+            : <span className="text-pitch-300 truncate italic">Loser of Finals</span>}
+        </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
         <div className="text-[10px] font-bold text-[#C4834A] uppercase tracking-widest">🥉 3rd Place</div>
         {disabled ? (
-          <TeamRow teamCode={thirdPlace} label="TBD" correct={!!(thirdPlace && correctPicks?.['M103'] === thirdPlace)} />
+          <TeamRow teamCode={thirdPlace} label="TBD" correct={!!(thirdPlace && correctPicks?.['M103']?.winner === thirdPlace)} />
         ) : (
           <select
             value={thirdPlace ?? ''}
-            onChange={e => e.target.value && onPick('M103', e.target.value)}
+            onChange={e => e.target.value && onPick('M103', 'winner', e.target.value)}
             disabled={!loserA || !loserB}
             className={`${selectBase} ${
               thirdPlace
                 ? 'bg-[#3d2810]/40 border-[#C4834A]/40 text-[#C4834A] font-medium'
-                : showValidation && !thirdPlace
+                : showValidation && !thirdPlace && loserA && loserB
                   ? 'bg-red-950/30 border-red-700 text-pitch-400'
                   : 'bg-pitch-700 border-pitch-500 text-pitch-200'
             } hover:border-[#C4834A]/30 disabled:opacity-60 disabled:cursor-not-allowed`}
@@ -284,12 +255,12 @@ function ChampionsPodium({ groupRankings, picks, thirdPicks, onPick, disabled, s
   )
 }
 
-export function KnockoutBracket({ groupRankings, picks, onPick, thirdPicks, onThirdPick, disabled = false, showValidation = false, correctPicks }: Props) {
+export function KnockoutBracket({ groupRankings, picks, onPick, disabled = false, showValidation = false, correctPicks }: Props) {
   const finalMatches = KNOCKOUT_MATCHES.filter(m => m.round === 'FINAL' || m.round === '3RD')
-
-  const allPicksMade =
-    KNOCKOUT_MATCHES.every(m => !!picks[m.id]) &&
-    KNOCKOUT_MATCHES.filter(m => m.slotB.startsWith('Best 3rd')).every(m => !!thirdPicks[m.id])
+  const allPicksMade = KNOCKOUT_MATCHES.every(m => !!picks[m.id]?.winner)
+    && KNOCKOUT_MATCHES
+      .filter(m => m.round === 'R32' && m.slotB.startsWith('Best 3rd'))
+      .every(m => !!picks[m.id]?.teamB)
 
   const errorRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -314,9 +285,7 @@ export function KnockoutBracket({ groupRankings, picks, onPick, thirdPicks, onTh
 
             {col === 'CHAMPIONS' ? (
               <ChampionsPodium
-                groupRankings={groupRankings}
                 picks={picks}
-                thirdPicks={thirdPicks}
                 onPick={onPick}
                 disabled={disabled}
                 showValidation={showValidation}
@@ -331,9 +300,7 @@ export function KnockoutBracket({ groupRankings, picks, onPick, thirdPicks, onTh
                     label={match.round === 'FINAL' ? `Finals · ${match.id}` : `3rd Place · ${match.id}`}
                     groupRankings={groupRankings}
                     picks={picks}
-                    thirdPicks={thirdPicks}
                     onPick={onPick}
-                    onThirdPick={onThirdPick}
                     disabled={disabled}
                     showValidation={showValidation}
                     correctPicks={correctPicks}
@@ -348,9 +315,7 @@ export function KnockoutBracket({ groupRankings, picks, onPick, thirdPicks, onTh
                     match={match}
                     groupRankings={groupRankings}
                     picks={picks}
-                    thirdPicks={thirdPicks}
                     onPick={onPick}
-                    onThirdPick={onThirdPick}
                     disabled={disabled}
                     showValidation={showValidation}
                     correctPicks={correctPicks}

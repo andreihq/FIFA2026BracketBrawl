@@ -70,7 +70,7 @@ export async function PUT(req: NextRequest) {
     await supabase.from('group_predictions').insert(rows)
   }
 
-  // Replace knockout predictions (delete + insert so stale thirdPicks don't persist)
+  // Replace knockout predictions (delete + insert so stale picks don't persist)
   await supabase.from('knockout_predictions').delete().eq('bracket_id', bracket.id)
   if (knockoutPredictions.length > 0) {
     const rows = knockoutPredictions.map(p => ({ ...p, bracket_id: bracket!.id }))

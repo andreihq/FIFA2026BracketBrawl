@@ -1,7 +1,7 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { GROUP_CODES, GROUPS } from '@/data/groups'
-import { MATCH_IDS, THIRD_PLACE_SLOT_MATCH_IDS, KNOCKOUT_MATCHES, resolveTeam } from '@/data/bracket'
+import { KNOCKOUT_MATCHES, buildPicks } from '@/data/bracket'
 import { GroupStageEditor } from '@/components/GroupStageEditor'
 import { KnockoutBracket } from '@/components/KnockoutBracket'
 
@@ -10,8 +10,8 @@ type Tab = 'groups' | 'knockouts'
 export default function BracketPage() {
   const [tab, setTab] = useState<Tab>('groups')
   const [groupRankings, setGroupRankings] = useState<Record<string, string[]>>({})
-  const [koPicks, setKoPicks] = useState<Record<string, string>>({})
-  const [thirdPicks, setThirdPicks] = useState<Record<string, string>>({})
+  const [qualifiers, setQualifiers] = useState<Record<string, string>>({})
+  const [winners, setWinners] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [locked, setLocked] = useState(false)
@@ -19,31 +19,10 @@ export default function BracketPage() {
   const [showValidation, setShowValidation] = useState(false)
   const [deadline, setDeadline] = useState<string | null>(null)
 
-  useEffect(() => {
-    const ko = { ...koPicks }
-    const third = { ...thirdPicks }
-    let koChanged = false
-    let thirdChanged = false
-
-    for (const match of KNOCKOUT_MATCHES.filter(m => m.slotB.startsWith('Best 3rd'))) {
-      const picked = third[match.id]
-      if (!picked) continue
-      const groups = match.slotB.replace('Best 3rd ', '').split('')
-      const eligible = groups.map(g => groupRankings[g]?.[2]).filter(Boolean) as string[]
-      if (!eligible.includes(picked)) { delete third[match.id]; thirdChanged = true }
-    }
-
-    for (const match of KNOCKOUT_MATCHES) {
-      const picked = ko[match.id]
-      if (!picked) continue
-      const teamA = resolveTeam(match.slotA, match.id, groupRankings, ko, third)
-      const teamB = resolveTeam(match.slotB, match.id, groupRankings, ko, third)
-      if (picked !== teamA && picked !== teamB) { delete ko[match.id]; koChanged = true }
-    }
-
-    if (koChanged) setKoPicks(ko)
-    if (thirdChanged) setThirdPicks(third)
-  }, [groupRankings]) // eslint-disable-line react-hooks/exhaustive-deps
+  const picks = useMemo(
+    () => buildPicks(groupRankings, qualifiers, winners),
+    [groupRankings, qualifiers, winners]
+  )
 
   const isPastDeadline = deadline ? new Date() > new Date(deadline) : false
   const isDisabled = locked || isPastDeadline
@@ -66,25 +45,28 @@ export default function BracketPage() {
         }
         setGroupRankings(rankings)
 
-        const ko: Record<string, string> = {}
-        const third: Record<string, string> = {}
+        const q: Record<string, string> = {}
+        const w: Record<string, string> = {}
         for (const p of data.knockoutPredictions as any[]) {
-          if (p.match_id.endsWith(':3rd')) {
-            third[p.match_id.slice(0, -4)] = p.predicted_winner
-          } else {
-            ko[p.match_id] = p.predicted_winner
-          }
+          if (p.match_id.endsWith(':qualifier')) q[p.match_id.replace(':qualifier', '')] = p.predicted_winner
+          else w[p.match_id] = p.predicted_winner
         }
-        setKoPicks(ko)
-        setThirdPicks(third)
+        setQualifiers(q)
+        setWinners(w)
         setLoading(false)
       })
   }, [])
 
   const groupsComplete = GROUP_CODES.every(g => (groupRankings[g]?.length ?? 0) >= 4)
-  const koComplete =
-    MATCH_IDS.every(id => !!koPicks[id]) &&
-    THIRD_PLACE_SLOT_MATCH_IDS.every(id => !!thirdPicks[id])
+  const koComplete = KNOCKOUT_MATCHES.every(m => !!picks[m.id]?.winner)
+    && KNOCKOUT_MATCHES
+      .filter(m => m.round === 'R32' && m.slotB.startsWith('Best 3rd'))
+      .every(m => !!picks[m.id]?.teamB)
+
+  const handlePick = useCallback((matchId: string, field: 'teamB' | 'winner', teamCode: string) => {
+    if (field === 'teamB') setQualifiers(prev => ({ ...prev, [matchId]: teamCode }))
+    else setWinners(prev => ({ ...prev, [matchId]: teamCode }))
+  }, [])
 
   const saveDraft = useCallback(async () => {
     setSaving(true)
@@ -92,8 +74,8 @@ export default function BracketPage() {
       order.map((team_code, i) => ({ group_code, team_code, predicted_pos: i + 1 }))
     )
     const knockoutPredictions = [
-      ...Object.entries(koPicks).map(([match_id, predicted_winner]) => ({ match_id, predicted_winner })),
-      ...Object.entries(thirdPicks).map(([match_id, predicted_winner]) => ({ match_id: `${match_id}:3rd`, predicted_winner })),
+      ...Object.entries(winners).map(([match_id, predicted_winner]) => ({ match_id, predicted_winner })),
+      ...Object.entries(qualifiers).map(([match_id, predicted_winner]) => ({ match_id: match_id + ':qualifier', predicted_winner })),
     ]
     const res = await fetch('/api/brackets', {
       method: 'PUT',
@@ -103,8 +85,7 @@ export default function BracketPage() {
     setSaveMsg(res.ok ? 'Saved ✓' : 'Save failed')
     setSaving(false)
     setTimeout(() => setSaveMsg(''), 3000)
-  }, [groupRankings, koPicks, thirdPicks])
-
+  }, [groupRankings, winners, qualifiers])
 
   if (loading) {
     return (
@@ -158,16 +139,8 @@ export default function BracketPage() {
         {tab === 'knockouts' && (
           <KnockoutBracket
             groupRankings={groupRankings}
-            picks={koPicks}
-            onPick={(matchId, teamCode) => setKoPicks(prev => ({ ...prev, [matchId]: teamCode }))}
-            thirdPicks={thirdPicks}
-            onThirdPick={(matchId, teamCode) => {
-              if (!teamCode) {
-                setThirdPicks(prev => { const n = { ...prev }; delete n[matchId]; return n })
-              } else {
-                setThirdPicks(prev => ({ ...prev, [matchId]: teamCode }))
-              }
-            }}
+            picks={picks}
+            onPick={handlePick}
             disabled={isDisabled}
             showValidation={showValidation}
           />

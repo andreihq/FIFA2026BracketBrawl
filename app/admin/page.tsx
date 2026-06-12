@@ -1,7 +1,7 @@
 'use client'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { GROUP_CODES, GROUPS } from '@/data/groups'
-import { KNOCKOUT_MATCHES } from '@/data/bracket'
+import { buildPicks } from '@/data/bracket'
 import { GroupStageEditor } from '@/components/GroupStageEditor'
 import { KnockoutBracket } from '@/components/KnockoutBracket'
 
@@ -11,11 +11,16 @@ export default function AdminPage() {
   const [authError, setAuthError] = useState('')
   const [activeSection, setActiveSection] = useState<'groups' | 'knockout' | 'settings'>('groups')
   const [groupRankings, setGroupRankings] = useState<Record<string, string[]>>({})
-  const [koPicks, setKoPicks] = useState<Record<string, string>>({})
-  const [thirdPicks, setThirdPicks] = useState<Record<string, string>>({})
+  const [qualifiers, setQualifiers] = useState<Record<string, string>>({})
+  const [winners, setWinners] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
   const [deadlineInput, setDeadlineInput] = useState('')
+
+  const picks = useMemo(
+    () => buildPicks(groupRankings, qualifiers, winners),
+    [groupRankings, qualifiers, winners]
+  )
 
   async function checkPassword(e: React.FormEvent) {
     e.preventDefault()
@@ -38,17 +43,14 @@ export default function AdminPage() {
     }
     setGroupRankings(rankings)
 
-    const ko: Record<string, string> = {}
-    const third: Record<string, string> = {}
+    const q: Record<string, string> = {}
+    const w: Record<string, string> = {}
     for (const r of (results as any[]).filter((r: any) => r.result_type === 'knockout')) {
-      if (r.ref_id.endsWith(':3rd')) {
-        third[r.ref_id.slice(0, -4)] = r.team_code
-      } else {
-        ko[r.ref_id] = r.team_code
-      }
+      if (r.ref_id.endsWith(':qualifier')) q[r.ref_id.replace(':qualifier', '')] = r.team_code
+      else w[r.ref_id] = r.team_code
     }
-    setKoPicks(ko)
-    setThirdPicks(third)
+    setQualifiers(q)
+    setWinners(w)
     setAuthed(true)
   }
 
@@ -69,23 +71,19 @@ export default function AdminPage() {
 
   async function saveKnockout() {
     setSaving(true); setMsg('')
-    const posts = [
-      ...Object.entries(koPicks).map(([ref_id, team_code]) =>
+    const entries = [
+      ...Object.entries(winners).map(([ref_id, team_code]) => ({ ref_id, team_code })),
+      ...Object.entries(qualifiers).map(([ref_id, team_code]) => ({ ref_id: ref_id + ':qualifier', team_code })),
+    ]
+    await Promise.all(
+      entries.map(({ ref_id, team_code }) =>
         fetch('/api/admin/results', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
           body: JSON.stringify({ result_type: 'knockout', ref_id, entries: [{ team_code }] }),
         })
-      ),
-      ...Object.entries(thirdPicks).map(([matchId, team_code]) =>
-        fetch('/api/admin/results', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
-          body: JSON.stringify({ result_type: 'knockout', ref_id: `${matchId}:3rd`, entries: [{ team_code }] }),
-        })
-      ),
-    ]
-    await Promise.all(posts)
+      )
+    )
     setMsg('Knockout results saved ✓')
     setSaving(false)
   }
@@ -175,15 +173,10 @@ export default function AdminPage() {
         <>
           <KnockoutBracket
             groupRankings={groupRankings}
-            picks={koPicks}
-            onPick={(matchId, teamCode) => setKoPicks(prev => ({ ...prev, [matchId]: teamCode }))}
-            thirdPicks={thirdPicks}
-            onThirdPick={(matchId, teamCode) => {
-              if (!teamCode) {
-                setThirdPicks(prev => { const n = { ...prev }; delete n[matchId]; return n })
-              } else {
-                setThirdPicks(prev => ({ ...prev, [matchId]: teamCode }))
-              }
+            picks={picks}
+            onPick={(matchId, field, teamCode) => {
+              if (field === 'teamB') setQualifiers(prev => ({ ...prev, [matchId]: teamCode }))
+              else setWinners(prev => ({ ...prev, [matchId]: teamCode }))
             }}
           />
           <div className="flex items-center justify-end gap-3 mt-6 pt-5 border-t border-pitch-700">

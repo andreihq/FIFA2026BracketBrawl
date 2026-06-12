@@ -7,10 +7,16 @@ export interface KnockoutMatch {
   feedsSlot?: 'A' | 'B'
 }
 
+export interface MatchPick {
+  teamA: string | null
+  teamB: string | null
+  winner: string | null
+}
+
 // Slot label conventions:
 //   "Group X Winner"      — 1st place in group X
 //   "Group X Runner-up"   — 2nd place in group X
-//   "Best 3rd XXXXX"      — best 3rd-place team from one of groups XXXXX (user picks)
+//   "Best 3rd XXXXX"      — best 3rd-place wildcard from one of groups XXXXX (user picks)
 //   "Winner MXX"          — winner of match MXX
 //   "Loser MXX"           — loser of match MXX (used for 3rd-place match)
 
@@ -60,12 +66,12 @@ export const KNOCKOUT_MATCHES: KnockoutMatch[] = [
 
 export const MATCH_IDS = KNOCKOUT_MATCHES.map(m => m.id)
 
-export function resolveTeam(
+// Resolves a deterministic slot label to a team code using already-built upstream picks.
+// Does not handle "Best 3rd" — that is handled separately in buildPicks.
+function resolveSlot(
   slotLabel: string,
-  matchId: string,
   groupRankings: Record<string, string[]>,
-  picks: Record<string, string>,
-  thirdPicks: Record<string, string>,
+  built: Record<string, MatchPick>,
 ): string | null {
   const winnerOf = slotLabel.match(/^Group ([A-L]) Winner$/)
   if (winnerOf) return groupRankings[winnerOf[1]]?.[0] ?? null
@@ -73,26 +79,54 @@ export function resolveTeam(
   const runnerOf = slotLabel.match(/^Group ([A-L]) Runner-up$/)
   if (runnerOf) return groupRankings[runnerOf[1]]?.[1] ?? null
 
-  if (slotLabel.startsWith('Best 3rd')) return thirdPicks[matchId] ?? null
-
   const prevWinner = slotLabel.match(/^Winner (M\d+)$/)
-  if (prevWinner) return picks[prevWinner[1]] ?? null
+  if (prevWinner) return built[prevWinner[1]]?.winner ?? null
 
   const prevLoser = slotLabel.match(/^Loser (M\d+)$/)
   if (prevLoser) {
-    const prev = KNOCKOUT_MATCHES.find(m => m.id === prevLoser[1])
-    if (!prev) return null
-    const w = picks[prev.id]
-    if (!w) return null
-    const a = resolveTeam(prev.slotA, prev.id, groupRankings, picks, thirdPicks)
-    const b = resolveTeam(prev.slotB, prev.id, groupRankings, picks, thirdPicks)
-    return a === w ? b : a
+    const prev = built[prevLoser[1]]
+    if (!prev?.winner) return null
+    return prev.winner === prev.teamA ? prev.teamB : prev.teamA
   }
 
   return null
 }
 
-// Matches where slotB is a "Best 3rd" wildcard — user must pick the team via dropdown
-export const THIRD_PLACE_SLOT_MATCH_IDS = KNOCKOUT_MATCHES
-  .filter(m => m.slotB.startsWith('Best 3rd'))
-  .map(m => m.id)
+// Builds the full bracket state from user inputs.
+// qualifiers: matchId → Best 3rd qualifier team chosen by user
+// winners: matchId → winner chosen by user
+// teamA is always auto-populated; teamB is auto-populated except for Best 3rd slots.
+// Winners that no longer match either resolved team are set to null automatically.
+export function buildPicks(
+  groupRankings: Record<string, string[]>,
+  qualifiers: Record<string, string>,
+  winners: Record<string, string>,
+  { skipQualifierValidation = false } = {},
+): Record<string, MatchPick> {
+  const result: Record<string, MatchPick> = {}
+
+  for (const match of KNOCKOUT_MATCHES) {
+    const teamA = resolveSlot(match.slotA, groupRankings, result)
+
+    let teamB: string | null
+    if (match.slotB.startsWith('Best 3rd')) {
+      const q = qualifiers[match.id] ?? null
+      if (skipQualifierValidation) {
+        teamB = q
+      } else {
+        const groups = match.slotB.replace('Best 3rd ', '').split('')
+        const eligible = groups.map(g => groupRankings[g]?.[2]).filter((c): c is string => !!c)
+        teamB = (q && eligible.includes(q)) ? q : null
+      }
+    } else {
+      teamB = resolveSlot(match.slotB, groupRankings, result)
+    }
+
+    const w = winners[match.id] ?? null
+    const winner = (w && (w === teamA || w === teamB)) ? w : null
+
+    result[match.id] = { teamA, teamB, winner }
+  }
+
+  return result
+}

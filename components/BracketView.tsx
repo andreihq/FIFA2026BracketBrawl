@@ -3,6 +3,7 @@ import { GroupStageEditor } from './GroupStageEditor'
 import { KnockoutBracket } from './KnockoutBracket'
 import type { GroupPrediction, KnockoutPrediction, ActualResult } from '@/types'
 import { GROUP_CODES } from '@/data/groups'
+import { buildPicks } from '@/data/bracket'
 
 interface Props {
   groupPredictions: GroupPrediction[]
@@ -20,20 +21,22 @@ export function BracketView({ groupPredictions, knockoutPredictions, actualResul
       .map(p => p.team_code)
   }
 
-  const picks: Record<string, string> = {}
-  const thirdPicks: Record<string, string> = {}
+  const qualifiers: Record<string, string> = {}
+  const winners: Record<string, string> = {}
   for (const p of knockoutPredictions) {
-    if (p.match_id.endsWith(':3rd')) {
-      thirdPicks[p.match_id.slice(0, -4)] = p.predicted_winner
-    } else {
-      picks[p.match_id] = p.predicted_winner
-    }
+    if (p.match_id.endsWith(':qualifier')) qualifiers[p.match_id.replace(':qualifier', '')] = p.predicted_winner
+    else winners[p.match_id] = p.predicted_winner
   }
+  const picks = buildPicks(groupRankings, qualifiers, winners)
 
-  // correctPositions[groupCode] = Set of 0-based indices where prediction matches result
+  // correctPositions[groupCode] = set of 0-based indices where prediction matches actual result
   const correctPositions: Record<string, Set<number>> = {}
+  const actualGroupRankings: Record<string, string[]> = {}
   for (const r of actualResults) {
     if (r.result_type === 'group' && r.position !== null) {
+      if (!actualGroupRankings[r.ref_id]) actualGroupRankings[r.ref_id] = []
+      actualGroupRankings[r.ref_id][r.position - 1] = r.team_code
+
       const order = groupRankings[r.ref_id] ?? []
       const predictedIdx = order.indexOf(r.team_code)
       if (predictedIdx !== -1 && predictedIdx === r.position - 1) {
@@ -43,11 +46,15 @@ export function BracketView({ groupPredictions, knockoutPredictions, actualResul
     }
   }
 
-  // correctPicks[matchId] = actual winning team code (includes :3rd keys)
-  const correctPicks: Record<string, string> = {}
+  const actualQualifiers: Record<string, string> = {}
+  const actualWinners: Record<string, string> = {}
   for (const r of actualResults) {
-    if (r.result_type === 'knockout') correctPicks[r.ref_id] = r.team_code
+    if (r.result_type === 'knockout') {
+      if (r.ref_id.endsWith(':qualifier')) actualQualifiers[r.ref_id.replace(':qualifier', '')] = r.team_code
+      else actualWinners[r.ref_id] = r.team_code
+    }
   }
+  const correctPicks = buildPicks(actualGroupRankings, actualQualifiers, actualWinners, { skipQualifierValidation: true })
 
   if (tab === 'groups') {
     return (
@@ -71,8 +78,6 @@ export function BracketView({ groupPredictions, knockoutPredictions, actualResul
       groupRankings={groupRankings}
       picks={picks}
       onPick={() => {}}
-      thirdPicks={thirdPicks}
-      onThirdPick={() => {}}
       disabled
       correctPicks={correctPicks}
     />
