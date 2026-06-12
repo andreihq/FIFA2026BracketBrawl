@@ -57,7 +57,7 @@ export default async function DashboardPage() {
 
   const isPastDeadline = new Date() > new Date(deadline)
   const bracketCreated = !!bracket
-  const isLocked = isPastDeadline || !!bracket?.locked || !!bracket?.submitted_at
+  const isLocked = isPastDeadline || !!bracket?.locked
 
   const bracketState = !bracketCreated ? 'empty' : isLocked ? 'locked' : 'active'
   const bracketStyles = {
