@@ -17,12 +17,17 @@ export default function RegisterPage() {
   useEffect(() => {
     if (username.length < 2) { setAvailability('idle'); return }
     setAvailability('checking')
+    const controller = new AbortController()
     const timer = setTimeout(async () => {
-      const res = await fetch(`/api/players/check?username=${encodeURIComponent(username)}`)
-      const data = await res.json()
-      setAvailability(data.available ? 'available' : 'taken')
+      try {
+        const res = await fetch(`/api/players/check?username=${encodeURIComponent(username)}`, { signal: controller.signal })
+        const data = await res.json()
+        setAvailability(data.available ? 'available' : 'taken')
+      } catch (e) {
+        if (e instanceof Error && e.name !== 'AbortError') setAvailability('idle')
+      }
     }, 400)
-    return () => clearTimeout(timer)
+    return () => { clearTimeout(timer); controller.abort() }
   }, [username])
 
   async function handleSubmit(e: React.FormEvent) {
