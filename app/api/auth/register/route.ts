@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   const { username, password } = await req.json()
 
   const clean = username?.trim().toLowerCase()
-  if (!clean || clean.length < 2 || clean.length > 20 || !/^[a-z0-9_]+$/.test(clean)) {
+  if (!clean || clean.length < 2 || clean.length > 20 || !/^[a-z0-9_-]+$/.test(clean)) {
     return NextResponse.json({ error: 'Invalid username' }, { status: 400 })
   }
   if (typeof password !== 'string' || password.length < 4) {

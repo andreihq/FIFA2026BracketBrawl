@@ -1,7 +1,8 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { randomUsernamePlaceholder } from '@/lib/username-suggestions'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -11,6 +12,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [availability, setAvailability] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle')
+  const usernamePlaceholder = useMemo(() => randomUsernamePlaceholder(), [])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -78,8 +80,8 @@ export default function RegisterPage() {
               <input
                 className="field"
                 value={username}
-                onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                placeholder="your_username"
+                onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
+                placeholder={usernamePlaceholder}
                 maxLength={20}
                 required
               />
