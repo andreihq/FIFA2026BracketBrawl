@@ -31,7 +31,7 @@ function TeamRow({ teamCode, label }: { teamCode: string | null; label: string }
     <div className="flex items-center gap-2 rounded-lg bg-pitch-800 border border-pitch-600 px-2.5 py-1.5 text-xs text-[#EBF0FF]">
       {team
         ? <><span className="flex-shrink-0">{team.flag}</span><span className="truncate font-medium">{team.name}</span></>
-        : <span className="text-pitch-400 truncate italic">{label}</span>}
+        : <span className="text-pitch-300 truncate italic">{label}</span>}
     </div>
   )
 }
@@ -66,7 +66,7 @@ function SlotDropdown({ slotLabel, matchId, groupRankings, picks, thirdPicks, on
       <div className="flex items-center gap-2 rounded-lg bg-pitch-800 border border-pitch-600 px-2.5 py-1.5 text-xs text-[#EBF0FF]">
         {team
           ? <><span>{team.flag}</span><span className="truncate font-medium">{team.name}</span></>
-          : <span className="text-pitch-400 italic truncate">{slotLabel}</span>}
+          : <span className="text-pitch-300 italic truncate">{slotLabel}</span>}
       </div>
     )
   }
@@ -82,8 +82,8 @@ function SlotDropdown({ slotLabel, matchId, groupRankings, picks, thirdPicks, on
           ? 'bg-pitch-800 border-pitch-500 text-[#EBF0FF]'
           : isError
             ? 'bg-red-950/30 border-red-700 text-pitch-400'
-            : 'bg-pitch-900 border-pitch-600 text-pitch-400'
-      } hover:border-pitch-400 disabled:opacity-40 disabled:cursor-not-allowed`}
+            : 'bg-pitch-700 border-pitch-500 text-pitch-200'
+      } hover:border-pitch-400 disabled:opacity-60 disabled:cursor-not-allowed`}
     >
       <option value="" disabled hidden>Pick winner…</option>
       <option value={teamA ?? ''}>{teamLabel(teamA, '')}</option>
@@ -126,7 +126,7 @@ function ThirdPlaceTeamPicker({ matchId, slotLabel, groupRankings, thirdPicks, o
           ? 'bg-pitch-800 border-pitch-500 text-[#EBF0FF]'
           : isError
             ? 'bg-red-950/30 border-red-700 text-pitch-400'
-            : 'bg-pitch-900 border-pitch-600 text-pitch-400'
+            : 'bg-pitch-700 border-pitch-500 text-pitch-200'
       } hover:border-pitch-400`}
     >
       <option value="" disabled hidden>Best 3rd {groups.join('/')}…</option>
@@ -242,8 +242,8 @@ function ChampionsPodium({ groupRankings, picks, thirdPicks, onPick, disabled, s
                 ? 'bg-gold/10 border-gold/40 text-gold'
                 : showValidation && !champion
                   ? 'bg-red-950/30 border-red-700 text-pitch-400'
-                  : 'bg-pitch-900 border-pitch-600 text-pitch-400'
-            } hover:border-gold/30 disabled:opacity-40 disabled:cursor-not-allowed`}
+                  : 'bg-pitch-700 border-pitch-500 text-pitch-200'
+            } hover:border-gold/30 disabled:opacity-60 disabled:cursor-not-allowed`}
           >
             <option value="" disabled hidden>Pick Champion…</option>
             <option value={finalistA ?? ''}>{teamLabel(finalistA, '')}</option>
@@ -271,8 +271,8 @@ function ChampionsPodium({ groupRankings, picks, thirdPicks, onPick, disabled, s
                 ? 'bg-[#3d2810]/40 border-[#C4834A]/40 text-[#C4834A] font-medium'
                 : showValidation && !thirdPlace
                   ? 'bg-red-950/30 border-red-700 text-pitch-400'
-                  : 'bg-pitch-900 border-pitch-600 text-pitch-400'
-            } hover:border-[#C4834A]/30 disabled:opacity-40 disabled:cursor-not-allowed`}
+                  : 'bg-pitch-700 border-pitch-500 text-pitch-200'
+            } hover:border-[#C4834A]/30 disabled:opacity-60 disabled:cursor-not-allowed`}
           >
             <option value="" disabled hidden>Pick 3rd Place…</option>
             <option value={loserA ?? ''}>{teamLabel(loserA, '')}</option>
