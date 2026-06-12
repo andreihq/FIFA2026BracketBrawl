@@ -201,25 +201,18 @@ export default function BracketPage() {
             disabled={saving}
             className="btn-ghost px-5 py-2.5 text-xs uppercase tracking-wider"
           >
-            {saving ? 'Saving…' : 'Save Draft'}
+            {saving ? 'Saving…' : 'Save Bracket'}
           </button>
-          {!submitted && (
-            <button
-              onClick={handleSubmit}
-              className="btn-gold px-5 py-2.5 text-xs uppercase tracking-widest"
-            >
-              Submit Bracket
-            </button>
-          )}
+          <button
+            onClick={handleSubmit}
+            className="btn-gold px-5 py-2.5 text-xs uppercase tracking-widest"
+          >
+            Submit Bracket
+          </button>
         </div>
       )}
 
-      {submitted && (
-        <p className="mt-8 text-center text-sm font-medium text-[#34D399]">
-          Your bracket has been submitted ✓
-        </p>
-      )}
-      {isDisabled && !submitted && (
+      {isDisabled && (
         <p className="mt-8 text-center text-sm font-medium text-gold">
           Prediction deadline has passed
         </p>
