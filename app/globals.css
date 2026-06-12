@@ -23,10 +23,9 @@ body {
   color: var(--text);
   background-color: var(--bg);
   font-family: var(--font-outfit, 'Outfit'), ui-sans-serif, system-ui, sans-serif;
-  background-image:
-    linear-gradient(rgba(245, 166, 35, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(245, 166, 35, 0.025) 1px, transparent 1px);
-  background-size: 64px 64px;
+  background-image: url('/bg.png');
+  background-repeat: repeat;
+  background-size: 1000px 1000px;
 }
 
 /* ── Animations ── */

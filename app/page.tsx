@@ -19,8 +19,8 @@ export default async function LandingPage() {
       <div className="relative z-10 flex flex-col items-center text-center max-w-md">
 
         {/* Logo badge */}
-        <div className="anim-fade-up mb-8 flex h-16 w-16 items-center justify-center rounded-full bg-gold glow-gold-sm">
-          <span className="font-display text-2xl text-pitch-950 leading-none">26</span>
+        <div className="anim-fade-up mb-8">
+          <img src="/ball.png" alt="FIFA World Cup 2026 ball" className="w-20 h-20 object-contain" />
         </div>
 
         {/* Hero heading */}
