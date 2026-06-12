@@ -4,6 +4,7 @@ import { createServerClient } from '@/lib/supabase'
 import { computeScore } from '@/lib/scoring'
 import Link from 'next/link'
 import { CreateJoinRoom } from './CreateJoinRoom'
+import { DeadlineCountdown } from './DeadlineCountdown'
 
 const DEADLINE = new Date('2026-06-15T04:59:00Z')
 
@@ -66,74 +67,63 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen p-5 max-w-xl mx-auto">
 
-      {/* Page header */}
-      <div className="anim-fade-up flex items-center justify-between mb-8 pt-2">
-        <div>
-          <p className="section-label mb-1">Dashboard</p>
-          <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">
-            {session.username}
-          </h1>
-        </div>
-        <form action="/api/auth/logout" method="POST">
-          <button className="btn-ghost text-xs px-3 py-2">
-            Log out
-          </button>
-        </form>
+      {/* Greeting */}
+      <div className="anim-fade-up pt-2 mb-8">
+        <p className="section-label mb-1">Dashboard</p>
+        <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">
+          {session.username}
+        </h1>
       </div>
 
-      {/* Bracket status card */}
-      <div className={`anim-fade-up anim-delay-1 card p-5 mb-5 ${
-        submitted
-          ? 'border-[#34D399]/25 bg-[#34D399]/5'
-          : 'border-gold/20 bg-gold/5'
-      }`}>
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <p className="section-label mb-1">My Bracket</p>
-            <p className="text-sm text-[#EBF0FF] font-medium">
+      {/* My Bracket */}
+      <div className="anim-fade-up anim-delay-1 mb-5">
+        <p className="section-label mb-3">My Bracket</p>
+        <div className={`card p-5 ${
+          submitted
+            ? 'border-[#34D399]/25 bg-[#34D399]/5'
+            : 'border-gold/20 bg-gold/5'
+        }`}>
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm font-medium text-[#EBF0FF]">
               {submitted ? 'Bracket locked in' : 'Complete your bracket'}
             </p>
-          </div>
-          {submitted ? (
-            <span className="rounded-lg bg-[#34D399]/15 border border-[#34D399]/25 px-2.5 py-1 text-xs font-semibold text-[#34D399]">
-              Submitted ✓
-            </span>
-          ) : (
-            <span className="rounded-lg bg-gold/10 border border-gold/20 px-2.5 py-1 text-xs font-semibold text-gold">
-              Pending
-            </span>
-          )}
-        </div>
-
-        <div className="flex gap-4 mb-4">
-          {[
-            { label: 'Group Stage', done: groupComplete },
-            { label: 'Knockouts', done: koComplete },
-          ].map(({ label, done }) => (
-            <div key={label} className="flex items-center gap-2">
-              <div className={`h-2 w-2 rounded-full ${done ? 'bg-[#34D399]' : 'bg-pitch-500'}`} />
-              <span className={`text-xs font-medium ${done ? 'text-[#34D399]' : 'text-pitch-300'}`}>
-                {label}
+            {submitted ? (
+              <span className="rounded-lg bg-[#34D399]/15 border border-[#34D399]/25 px-2.5 py-1 text-xs font-semibold text-[#34D399]">
+                Submitted ✓
               </span>
-            </div>
-          ))}
+            ) : (
+              <span className="rounded-lg bg-gold/10 border border-gold/20 px-2.5 py-1 text-xs font-semibold text-gold">
+                Pending
+              </span>
+            )}
+          </div>
+
+          <div className="flex gap-4 mb-4">
+            {[
+              { label: 'Group Stage', done: groupComplete },
+              { label: 'Knockouts',   done: koComplete },
+            ].map(({ label, done }) => (
+              <div key={label} className="flex items-center gap-2">
+                <div className={`h-2 w-2 rounded-full ${done ? 'bg-[#34D399]' : 'bg-pitch-500'}`} />
+                <span className={`text-xs font-medium ${done ? 'text-[#34D399]' : 'text-pitch-300'}`}>
+                  {label}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {!isPastDeadline && !submitted && <DeadlineCountdown />}
+
+          <Link
+            href="/bracket"
+            className="btn-ghost w-full justify-center text-xs uppercase tracking-wider py-2.5"
+          >
+            {isPastDeadline || submitted ? 'View Bracket' : 'Edit Bracket'}
+          </Link>
         </div>
-
-        {!isPastDeadline && !submitted && (
-          <p className="mb-4 text-xs text-pitch-300">
-            Deadline: <span className="font-medium text-[#EBF0FF]">14 Jun 2026 · 23:59</span>
-          </p>
-        )}
-
-        <Link
-          href="/bracket"
-          className="btn-ghost w-full justify-center text-xs uppercase tracking-wider py-2.5"
-        >
-          {isPastDeadline || submitted ? 'View Bracket' : 'Edit Bracket'}
-        </Link>
       </div>
 
-      {/* Rooms */}
+      {/* My Rooms */}
       <div className="anim-fade-up anim-delay-2 mb-5">
         <p className="section-label mb-3">My Rooms</p>
         <div className="flex flex-col gap-2">

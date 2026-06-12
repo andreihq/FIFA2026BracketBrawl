@@ -7,9 +7,11 @@ const NAV = [
   { label: 'My Bracket', href: '/bracket' },
 ]
 
+const HIDE_ON = ['/', '/login', '/register']
+
 export function Header() {
   const pathname = usePathname()
-  if (pathname === '/') return null
+  if (HIDE_ON.includes(pathname)) return null
 
   return (
     <header className="sticky top-0 z-50 border-b border-pitch-600 bg-pitch-950/90 backdrop-blur-md px-5 py-3">
@@ -24,20 +26,28 @@ export function Header() {
           </div>
         </Link>
 
-        <nav className="flex items-center gap-1">
-          {NAV.map(({ label, href }) => {
-            const active = pathname === href || pathname.startsWith(href + '/')
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={`tab-btn ${active ? 'tab-active' : 'tab-inactive'}`}
-              >
-                {label}
-              </Link>
-            )
-          })}
-        </nav>
+        <div className="flex items-center gap-2">
+          <nav className="flex items-center gap-1">
+            {NAV.map(({ label, href }) => {
+              const active = pathname === href || pathname.startsWith(href + '/')
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`tab-btn ${active ? 'tab-active' : 'tab-inactive'}`}
+                >
+                  {label}
+                </Link>
+              )
+            })}
+          </nav>
+          <div className="w-px h-4 bg-pitch-600 mx-1" />
+          <form action="/api/auth/logout" method="POST">
+            <button className="tab-btn tab-inactive text-xs px-3 py-1.5">
+              Log out
+            </button>
+          </form>
+        </div>
       </div>
     </header>
   )

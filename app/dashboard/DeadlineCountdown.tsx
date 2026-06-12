@@ -1,0 +1,53 @@
+'use client'
+import { useState, useEffect } from 'react'
+
+const DEADLINE = new Date('2026-06-15T04:59:00Z')
+
+export function DeadlineCountdown() {
+  const [now, setNow] = useState<number | null>(null)
+
+  useEffect(() => {
+    setNow(Date.now())
+    const id = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  if (now === null) return null
+
+  const ms = DEADLINE.getTime() - now
+  if (ms <= 0) return null
+
+  const totalSecs = Math.floor(ms / 1000)
+  const days  = Math.floor(totalSecs / 86400)
+  const hours = Math.floor((totalSecs % 86400) / 3600)
+  const mins  = Math.floor((totalSecs % 3600) / 60)
+  const secs  = totalSecs % 60
+
+  const pad = (n: number) => String(n).padStart(2, '0')
+
+  const label = days > 0
+    ? `${days}d ${pad(hours)}h ${pad(mins)}m ${pad(secs)}s`
+    : `${pad(hours)}:${pad(mins)}:${pad(secs)}`
+
+  const chipClass = days === 0
+    ? 'text-[#F87171] bg-red-950/30 border-red-700/40'
+    : days < 3
+      ? 'text-gold bg-gold/8 border-gold/25'
+      : 'text-pitch-200 bg-pitch-800 border-pitch-600'
+
+  const dotClass = days === 0
+    ? 'bg-[#F87171] animate-pulse'
+    : days < 3
+      ? 'bg-gold'
+      : 'bg-pitch-400'
+
+  return (
+    <div className="flex items-center gap-2 mb-4">
+      <div className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${dotClass}`} />
+      <span className="text-xs text-pitch-400">Closes in</span>
+      <span className={`font-mono text-xs font-semibold rounded-lg border px-2.5 py-1 tabular-nums ${chipClass}`}>
+        {label}
+      </span>
+    </div>
+  )
+}
