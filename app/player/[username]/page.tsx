@@ -31,35 +31,47 @@ export default async function PlayerPage({ params, searchParams }: {
   const tab = (searchParams.tab === 'knockouts' ? 'knockouts' : 'groups') as 'groups' | 'knockouts'
 
   return (
-    <div className="min-h-screen p-6 max-w-6xl mx-auto">
-      <div className="flex items-center gap-3 mb-4">
-        <Link href={backHref} className="text-slate-500 hover:text-slate-300 text-sm">← Back</Link>
+    <div className="min-h-screen p-5 max-w-6xl mx-auto">
+
+      <div className="anim-fade-up pt-2 mb-7">
+        <Link href={backHref} className="inline-flex items-center gap-1 text-xs text-pitch-300 hover:text-[#EBF0FF] transition-colors mb-4 uppercase tracking-wider">
+          ← Back
+        </Link>
+        <p className="section-label mb-1">Player Bracket</p>
+        <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">
+          {player.username}
+        </h1>
+        {!bracket?.submitted_at && (
+          <p className="mt-2 text-sm font-medium text-gold">
+            This player hasn&apos;t submitted their bracket yet.
+          </p>
+        )}
       </div>
-      <h1 className="text-2xl font-bold mb-1">{player.username}&apos;s bracket</h1>
-      {!bracket?.submitted_at && (
-        <p className="text-yellow-400 text-sm mb-4">This player hasn&apos;t submitted their bracket yet.</p>
-      )}
+
       {bracket && (
         <div>
-          <div className="flex gap-1 mb-6">
+          <div className="anim-fade-up anim-delay-1 flex gap-1.5 mb-6">
             <a
               href={`/player/${params.username}?tab=groups${searchParams.from ? `&from=${searchParams.from}` : ''}`}
-              className={`px-4 py-2 rounded text-sm font-medium ${tab === 'groups' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
+              className={`tab-btn ${tab === 'groups' ? 'tab-active' : 'tab-inactive'}`}
             >
               Group Stage
             </a>
             <a
               href={`/player/${params.username}?tab=knockouts${searchParams.from ? `&from=${searchParams.from}` : ''}`}
-              className={`px-4 py-2 rounded text-sm font-medium ${tab === 'knockouts' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
+              className={`tab-btn ${tab === 'knockouts' ? 'tab-active' : 'tab-inactive'}`}
             >
               Knockouts
             </a>
           </div>
-          <BracketView
-            groupPredictions={groupPredictions ?? []}
-            knockoutPredictions={knockoutPredictions ?? []}
-            tab={tab}
-          />
+
+          <div className="anim-fade-up anim-delay-2">
+            <BracketView
+              groupPredictions={groupPredictions ?? []}
+              knockoutPredictions={knockoutPredictions ?? []}
+              tab={tab}
+            />
+          </div>
         </div>
       )}
     </div>

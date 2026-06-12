@@ -10,41 +10,63 @@ interface Props {
   currentUsername: string
 }
 
-const MEDALS = ['🥇', '🥈', '🥉']
+const MEDAL_COLORS = [
+  'text-gold bg-gold/10 border border-gold/20',
+  'text-[#A0AEC0] bg-[#A0AEC0]/10 border border-[#A0AEC0]/20',
+  'text-[#C4834A] bg-[#C4834A]/10 border border-[#C4834A]/20',
+]
 
 export function Leaderboard({ rows, currentUsername }: Props) {
   return (
-    <table className="w-full text-sm border-collapse">
-      <thead>
-        <tr className="text-slate-500 border-b border-slate-800 text-xs uppercase">
-          <th className="text-left py-2 px-3 font-medium w-8">#</th>
-          <th className="text-left py-2 px-3 font-medium">Player</th>
-          <th className="text-right py-2 px-3 font-medium" title="Group Stage points">GS</th>
-          <th className="text-right py-2 px-3 font-medium" title="Knockout points">KO</th>
-          <th className="text-right py-2 px-3 font-medium">Total</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((row, i) => (
-          <tr
-            key={row.username}
-            className={`border-b border-slate-800/50 ${row.username === currentUsername ? 'bg-blue-950/30' : ''}`}
-          >
-            <td className="py-2.5 px-3 text-slate-400">{MEDALS[i] ?? i + 1}</td>
-            <td className="py-2.5 px-3">
-              <a href={`/player/${row.username}`} className="text-blue-400 hover:underline">
-                {row.username}
-              </a>
-              {row.username === currentUsername && (
-                <span className="ml-2 text-xs bg-slate-700 text-slate-400 px-1.5 py-0.5 rounded">you</span>
-              )}
-            </td>
-            <td className="py-2.5 px-3 text-right text-slate-300">{row.groupPoints}</td>
-            <td className="py-2.5 px-3 text-right text-slate-300">{row.knockoutPoints}</td>
-            <td className="py-2.5 px-3 text-right font-semibold text-slate-100">{row.total}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div className="card overflow-hidden">
+      <div className="grid grid-cols-[2rem_1fr_3rem_3rem_3.5rem] text-[10px] uppercase tracking-widest text-pitch-400 border-b border-pitch-600 px-4 py-2.5">
+        <div>#</div>
+        <div>Player</div>
+        <div className="text-right" title="Group Stage points">GS</div>
+        <div className="text-right" title="Knockout points">KO</div>
+        <div className="text-right">Total</div>
+      </div>
+      <div>
+        {rows.map((row, i) => {
+          const isMe = row.username === currentUsername
+          return (
+            <div
+              key={row.username}
+              className={`grid grid-cols-[2rem_1fr_3rem_3rem_3.5rem] items-center px-4 py-3.5 border-b border-pitch-800/60 last:border-0 transition-colors
+                ${isMe ? 'bg-blue-950/25' : 'hover:bg-pitch-900/50'}
+              `}
+            >
+              <div>
+                {i < 3 ? (
+                  <span className={`inline-flex h-6 w-6 items-center justify-center rounded-md text-[10px] font-bold ${MEDAL_COLORS[i]}`}>
+                    {i + 1}
+                  </span>
+                ) : (
+                  <span className="text-xs text-pitch-400 font-mono">{i + 1}</span>
+                )}
+              </div>
+              <div className="flex items-center gap-2 min-w-0">
+                <a
+                  href={`/player/${row.username}`}
+                  className="text-sm font-medium text-[#EBF0FF] hover:text-gold transition-colors truncate"
+                >
+                  {row.username}
+                </a>
+                {isMe && (
+                  <span className="flex-shrink-0 rounded-md bg-pitch-700 px-1.5 py-0.5 text-[10px] font-medium text-pitch-300">
+                    you
+                  </span>
+                )}
+              </div>
+              <div className="text-right text-xs text-pitch-200 font-mono">{row.groupPoints}</div>
+              <div className="text-right text-xs text-pitch-200 font-mono">{row.knockoutPoints}</div>
+              <div className={`text-right text-sm font-bold font-mono ${isMe ? 'text-[#60A5FA]' : 'text-[#EBF0FF]'}`}>
+                {row.total}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
   )
 }

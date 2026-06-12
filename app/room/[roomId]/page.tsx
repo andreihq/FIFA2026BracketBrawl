@@ -40,13 +40,28 @@ export default async function RoomPage({ params }: { params: { roomId: string } 
   leaderboard.sort((a, b) => b.total - a.total)
 
   return (
-    <div className="min-h-screen p-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-1">{room.name}</h1>
-      <p className="text-slate-500 text-sm mb-6">
-        Code: <span className="font-mono text-yellow-400">{room.id}</span>
-        {' · '}{leaderboard.length} player{leaderboard.length !== 1 ? 's' : ''}
-      </p>
-      <Leaderboard rows={leaderboard} currentUsername={session.username} />
+    <div className="min-h-screen p-5 max-w-2xl mx-auto">
+
+      <div className="anim-fade-up pt-2 mb-7">
+        <p className="section-label mb-1">Room</p>
+        <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none mb-3">
+          {room.name}
+        </h1>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 rounded-lg bg-pitch-800 border border-pitch-600 px-3 py-1.5">
+            <span className="text-pitch-400 text-xs">Code</span>
+            <span className="font-mono text-gold text-sm font-semibold tracking-wider">{room.id}</span>
+          </div>
+          <span className="text-xs text-pitch-300">
+            {leaderboard.length} player{leaderboard.length !== 1 ? 's' : ''}
+          </span>
+        </div>
+      </div>
+
+      <div className="anim-fade-up anim-delay-1">
+        <p className="section-label mb-3">Leaderboard</p>
+        <Leaderboard rows={leaderboard} currentUsername={session.username} />
+      </div>
     </div>
   )
 }

@@ -64,65 +64,119 @@ export default async function DashboardPage() {
   const submitted = !!bracket?.submitted_at
 
   return (
-    <div className="min-h-screen p-6 max-w-xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold">Hey, {session.username} 👋</h1>
+    <div className="min-h-screen p-5 max-w-xl mx-auto">
+
+      {/* Page header */}
+      <div className="anim-fade-up flex items-center justify-between mb-8 pt-2">
+        <div>
+          <p className="section-label mb-1">Dashboard</p>
+          <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">
+            {session.username}
+          </h1>
+        </div>
         <form action="/api/auth/logout" method="POST">
-          <button className="text-sm text-slate-500 hover:text-slate-300 bg-slate-800 px-3 py-1.5 rounded">
+          <button className="btn-ghost text-xs px-3 py-2">
             Log out
           </button>
         </form>
       </div>
 
-      <div className={`rounded-xl border p-4 mb-6 ${submitted ? 'border-green-700 bg-green-950/20' : 'border-yellow-700 bg-yellow-950/20'}`}>
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-semibold text-slate-300">My Bracket</span>
-          {submitted
-            ? <span className="text-xs bg-green-900 text-green-300 px-2 py-0.5 rounded">Submitted ✓</span>
-            : <span className="text-xs bg-yellow-900 text-yellow-300 px-2 py-0.5 rounded">⚠ Not submitted</span>
-          }
+      {/* Bracket status card */}
+      <div className={`anim-fade-up anim-delay-1 card p-5 mb-5 ${
+        submitted
+          ? 'border-[#34D399]/25 bg-[#34D399]/5'
+          : 'border-gold/20 bg-gold/5'
+      }`}>
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <p className="section-label mb-1">My Bracket</p>
+            <p className="text-sm text-[#EBF0FF] font-medium">
+              {submitted ? 'Bracket locked in' : 'Complete your bracket'}
+            </p>
+          </div>
+          {submitted ? (
+            <span className="rounded-lg bg-[#34D399]/15 border border-[#34D399]/25 px-2.5 py-1 text-xs font-semibold text-[#34D399]">
+              Submitted ✓
+            </span>
+          ) : (
+            <span className="rounded-lg bg-gold/10 border border-gold/20 px-2.5 py-1 text-xs font-semibold text-gold">
+              Pending
+            </span>
+          )}
         </div>
-        {!isPastDeadline && (
-          <p className="text-xs text-slate-500 mb-3">Deadline: 14 Jun 2026 23:59</p>
+
+        <div className="flex gap-4 mb-4">
+          {[
+            { label: 'Group Stage', done: groupComplete },
+            { label: 'Knockouts', done: koComplete },
+          ].map(({ label, done }) => (
+            <div key={label} className="flex items-center gap-2">
+              <div className={`h-2 w-2 rounded-full ${done ? 'bg-[#34D399]' : 'bg-pitch-500'}`} />
+              <span className={`text-xs font-medium ${done ? 'text-[#34D399]' : 'text-pitch-300'}`}>
+                {label}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {!isPastDeadline && !submitted && (
+          <p className="mb-4 text-xs text-pitch-300">
+            Deadline: <span className="font-medium text-[#EBF0FF]">14 Jun 2026 · 23:59</span>
+          </p>
         )}
-        <div className="flex gap-2 text-xs text-slate-400 mb-4">
-          <span>{groupComplete ? '✅' : '⬜'} Group Stage</span>
-          <span>{koComplete ? '✅' : '⬜'} Knockouts</span>
-        </div>
-        <div className="flex gap-2">
-          <Link href="/bracket" className="flex-1 text-center rounded bg-slate-700 px-3 py-2 text-sm hover:bg-slate-600">
-            {isPastDeadline || submitted ? 'View bracket' : 'Edit bracket'}
-          </Link>
-        </div>
+
+        <Link
+          href="/bracket"
+          className="btn-ghost w-full justify-center text-xs uppercase tracking-wider py-2.5"
+        >
+          {isPastDeadline || submitted ? 'View Bracket' : 'Edit Bracket'}
+        </Link>
       </div>
 
-      <div className="mb-6">
-        <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wide mb-3">My Rooms</h2>
+      {/* Rooms */}
+      <div className="anim-fade-up anim-delay-2 mb-5">
+        <p className="section-label mb-3">My Rooms</p>
         <div className="flex flex-col gap-2">
-          {roomsWithRank.map(room => (
+          {roomsWithRank.map((room, i) => (
             <Link
               key={room.id}
               href={`/room/${room.id}`}
-              className="flex items-center gap-3 rounded-lg bg-slate-800 px-4 py-3 hover:bg-slate-700 transition-colors"
+              className="card card-lift flex items-center gap-4 px-4 py-3.5"
             >
-              <div className="flex-1">
-                <div className="font-medium text-slate-200">{room.name}</div>
-                <div className="text-xs text-slate-500 mt-0.5">
-                  Code: <span className="font-mono text-yellow-400">{room.id}</span>
-                  {' · '}{room.playerCount} players
-                  {room.rank > 0 && ` · You're #${room.rank}`}
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-pitch-800 border border-pitch-600">
+                <span className="font-display text-base text-pitch-300 leading-none">
+                  {i + 1}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-sm text-[#EBF0FF] truncate">{room.name}</div>
+                <div className="mt-0.5 flex items-center gap-2 text-xs text-pitch-300">
+                  <span className="font-mono text-gold text-[11px] tracking-wider">{room.id}</span>
+                  <span className="text-pitch-500">·</span>
+                  <span>{room.playerCount} players</span>
+                  {room.rank > 0 && (
+                    <>
+                      <span className="text-pitch-500">·</span>
+                      <span className="font-medium text-[#EBF0FF]">#{room.rank}</span>
+                    </>
+                  )}
                 </div>
               </div>
-              <span className="text-slate-500">›</span>
+              <span className="text-pitch-400 text-lg">›</span>
             </Link>
           ))}
           {roomsWithRank.length === 0 && (
-            <p className="text-sm text-slate-500">No rooms yet — create one or enter a code below.</p>
+            <div className="card px-4 py-6 text-center">
+              <p className="text-sm text-pitch-300">No rooms yet</p>
+              <p className="text-xs text-pitch-400 mt-1">Create one or enter a room code below</p>
+            </div>
           )}
         </div>
       </div>
 
-      <CreateJoinRoom />
+      <div className="anim-fade-up anim-delay-3">
+        <CreateJoinRoom />
+      </div>
     </div>
   )
 }

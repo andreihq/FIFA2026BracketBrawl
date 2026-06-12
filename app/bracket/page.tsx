@@ -21,8 +21,6 @@ export default function BracketPage() {
   const [saveMsg, setSaveMsg] = useState('')
   const [showValidation, setShowValidation] = useState(false)
 
-  // When group rankings change, clear any KO picks that are no longer valid.
-  // Process in bracket order so cascading clears (R32 → R16 → QF → SF → FINAL) work naturally.
   useEffect(() => {
     const ko = { ...koPicks }
     const third = { ...thirdPicks }
@@ -120,82 +118,112 @@ export default function BracketPage() {
     MATCH_IDS.every(id => !!koPicks[id]) &&
     THIRD_PLACE_SLOT_MATCH_IDS.every(id => !!thirdPicks[id])
 
-  if (loading) return <div className="p-8 text-slate-400">Loading…</div>
+  if (loading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="text-pitch-400 text-sm tracking-widest uppercase font-display animate-pulse">
+          Loading bracket…
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen p-4 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">My Bracket</h1>
+    <div className="min-h-screen p-5 max-w-6xl mx-auto">
+
+      {/* Page header */}
+      <div className="anim-fade-up flex items-center justify-between mb-6 pt-2">
+        <div>
+          <p className="section-label mb-1">Bracket</p>
+          <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">My Predictions</h1>
+        </div>
+        {submitted && (
+          <span className="rounded-xl bg-[#34D399]/10 border border-[#34D399]/25 px-3 py-1.5 text-xs font-semibold text-[#34D399]">
+            Submitted ✓
+          </span>
+        )}
       </div>
 
-      <div className="flex gap-1 mb-6">
+      {/* Tabs */}
+      <div className="anim-fade-up anim-delay-1 flex gap-1.5 mb-6">
         {(['groups', 'knockouts'] as Tab[]).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
-              tab === t ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-            }`}
+            className={`tab-btn ${tab === t ? 'tab-active' : 'tab-inactive'}`}
           >
             {t === 'groups' ? 'Group Stage' : 'Knockouts'}
           </button>
         ))}
       </div>
 
-      {tab === 'groups' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {GROUP_CODES.map(g => (
-            <GroupStageEditor
-              key={g}
-              groupCode={g}
-              order={groupRankings[g] ?? []}
-              onChange={(code, order) => setGroupRankings(prev => ({ ...prev, [code]: order }))}
-              disabled={isDisabled}
-            />
-          ))}
-        </div>
-      )}
+      <div className="anim-fade-up anim-delay-2">
+        {tab === 'groups' && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {GROUP_CODES.map(g => (
+              <GroupStageEditor
+                key={g}
+                groupCode={g}
+                order={groupRankings[g] ?? []}
+                onChange={(code, order) => setGroupRankings(prev => ({ ...prev, [code]: order }))}
+                disabled={isDisabled}
+              />
+            ))}
+          </div>
+        )}
 
-      {tab === 'knockouts' && (
-        <KnockoutBracket
-          groupRankings={groupRankings}
-          picks={koPicks}
-          onPick={(matchId, teamCode) => setKoPicks(prev => ({ ...prev, [matchId]: teamCode }))}
-          thirdPicks={thirdPicks}
-          onThirdPick={(matchId, teamCode) => {
-            if (!teamCode) {
-              setThirdPicks(prev => { const n = { ...prev }; delete n[matchId]; return n })
-            } else {
-              setThirdPicks(prev => ({ ...prev, [matchId]: teamCode }))
-            }
-          }}
-          disabled={isDisabled}
-          showValidation={showValidation}
-        />
-      )}
+        {tab === 'knockouts' && (
+          <KnockoutBracket
+            groupRankings={groupRankings}
+            picks={koPicks}
+            onPick={(matchId, teamCode) => setKoPicks(prev => ({ ...prev, [matchId]: teamCode }))}
+            thirdPicks={thirdPicks}
+            onThirdPick={(matchId, teamCode) => {
+              if (!teamCode) {
+                setThirdPicks(prev => { const n = { ...prev }; delete n[matchId]; return n })
+              } else {
+                setThirdPicks(prev => ({ ...prev, [matchId]: teamCode }))
+              }
+            }}
+            disabled={isDisabled}
+            showValidation={showValidation}
+          />
+        )}
+      </div>
 
       {!isDisabled && (
-        <div className="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-slate-800">
-          {saveMsg && <span className="text-sm text-green-400">{saveMsg}</span>}
+        <div className="flex items-center justify-end gap-3 mt-10 pt-5 border-t border-pitch-700">
+          {saveMsg && (
+            <span className="text-sm font-medium text-[#34D399]">{saveMsg}</span>
+          )}
           <button
             onClick={saveDraft}
             disabled={saving}
-            className="rounded bg-slate-700 px-4 py-2 text-sm hover:bg-slate-600 disabled:opacity-50"
+            className="btn-ghost px-5 py-2.5 text-xs uppercase tracking-wider"
           >
-            {saving ? 'Saving…' : 'Save draft'}
+            {saving ? 'Saving…' : 'Save Draft'}
           </button>
           {!submitted && (
             <button
               onClick={handleSubmit}
-              className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold hover:bg-blue-500"
+              className="btn-gold px-5 py-2.5 text-xs uppercase tracking-widest"
             >
-              Submit bracket
+              Submit Bracket
             </button>
           )}
         </div>
       )}
-      {submitted && <p className="mt-8 text-center text-sm text-green-400 font-medium">Submitted ✓</p>}
-      {isDisabled && !submitted && <p className="mt-8 text-center text-sm text-yellow-400">Deadline passed</p>}
+
+      {submitted && (
+        <p className="mt-8 text-center text-sm font-medium text-[#34D399]">
+          Your bracket has been submitted ✓
+        </p>
+      )}
+      {isDisabled && !submitted && (
+        <p className="mt-8 text-center text-sm font-medium text-gold">
+          Prediction deadline has passed
+        </p>
+      )}
     </div>
   )
 }

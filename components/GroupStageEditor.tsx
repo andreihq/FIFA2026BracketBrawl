@@ -20,16 +20,23 @@ import { GROUPS } from '@/data/groups'
 
 interface Props {
   groupCode: string
-  order: string[]          // team codes in current predicted order (index 0 = 1st)
+  order: string[]
   onChange: (groupCode: string, newOrder: string[]) => void
   disabled?: boolean
 }
 
-const POSITION_STYLES = [
-  'border-l-green-500 text-green-400',
-  'border-l-blue-500 text-blue-400',
-  'border-l-yellow-500 text-yellow-400',
-  'border-l-red-500 text-red-400',
+// Left-border accent colors per position
+const POSITION_BORDERS = [
+  'border-l-[#34D399]',  // 1st — green (advances)
+  'border-l-[#60A5FA]',  // 2nd — blue (advances)
+  'border-l-[#F5A623]',  // 3rd — gold (maybe)
+  'border-l-pitch-500',  // 4th — grey (out)
+]
+const POSITION_TEXT = [
+  'text-[#34D399]',
+  'text-[#60A5FA]',
+  'text-gold',
+  'text-pitch-400',
 ]
 
 function SortableTeam({ teamCode, position, disabled }: { teamCode: string; position: number; disabled: boolean }) {
@@ -45,12 +52,18 @@ function SortableTeam({ teamCode, position, disabled }: { teamCode: string; posi
       ref={setNodeRef}
       style={style}
       {...(!disabled ? { ...attributes, ...listeners } : {})}
-      className={`flex items-center gap-3 rounded bg-slate-800 px-3 py-2 border-l-4 ${POSITION_STYLES[position]} ${isDragging ? 'opacity-50' : ''} ${!disabled ? 'cursor-grab active:cursor-grabbing select-none' : ''}`}
+      className={`flex items-center gap-3 rounded-xl border-l-[3px] bg-pitch-800 px-3 py-2.5
+        ${POSITION_BORDERS[position]}
+        ${isDragging ? 'opacity-40 scale-[0.98]' : ''}
+        ${!disabled ? 'cursor-grab active:cursor-grabbing select-none hover:bg-pitch-700 transition-colors' : ''}
+      `}
     >
-      <span className="w-5 font-bold text-sm">{position + 1}</span>
-      <span className="text-lg">{team?.flag ?? '🏳️'}</span>
-      <span className="flex-1 text-sm font-medium text-slate-200">{team?.name ?? teamCode}</span>
-      {!disabled && <span className="text-slate-500 select-none">⠿</span>}
+      <span className={`w-4 text-xs font-bold font-display leading-none ${POSITION_TEXT[position]}`}>
+        {position + 1}
+      </span>
+      <span className="text-base leading-none">{team?.flag ?? '🏳️'}</span>
+      <span className="flex-1 text-xs font-medium text-[#EBF0FF] truncate">{team?.name ?? teamCode}</span>
+      {!disabled && <span className="text-pitch-500 text-xs select-none">⠿</span>}
     </div>
   )
 }
@@ -74,13 +87,14 @@ export function GroupStageEditor({ groupCode, order, onChange, disabled = false 
   }
 
   return (
-    <div className="rounded-lg bg-slate-900 p-3">
-      <div className="text-xs font-semibold text-yellow-400 mb-2 uppercase tracking-wide">
-        Group {groupCode}
+    <div className="card p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <span className="font-display text-lg tracking-wider text-[#EBF0FF] leading-none">Group</span>
+        <span className="font-display text-lg tracking-wider text-gold leading-none">{groupCode}</span>
       </div>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={teams} strategy={verticalListSortingStrategy}>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1.5">
             {teams.map((code, i) => (
               <SortableTeam key={code} teamCode={code} position={i} disabled={disabled} />
             ))}

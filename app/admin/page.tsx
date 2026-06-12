@@ -58,21 +58,26 @@ export default function AdminPage() {
   if (!authed) {
     return (
       <main className="flex min-h-screen items-center justify-center p-8">
-        <form onSubmit={checkPassword} className="flex flex-col gap-4 w-full max-w-xs">
-          <h1 className="text-xl font-bold">Admin</h1>
-          <input
-            type="password"
-            className="rounded bg-slate-800 border border-slate-600 px-3 py-2 focus:outline-none focus:border-blue-500"
-            placeholder="Admin password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-          />
-          {authError && <p className="text-sm text-red-400">{authError}</p>}
-          <button type="submit" className="rounded bg-blue-600 px-4 py-2 font-semibold hover:bg-blue-500">
-            Enter
-          </button>
-        </form>
+        <div className="w-full max-w-xs anim-fade-up">
+          <div className="mb-6 text-center">
+            <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF]">Admin</h1>
+            <p className="text-sm text-pitch-300 mt-1">Enter results</p>
+          </div>
+          <form onSubmit={checkPassword} className="card p-6 flex flex-col gap-4">
+            <input
+              type="password"
+              className="field"
+              placeholder="Admin password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+            />
+            {authError && <p className="text-sm text-[#F87171]">{authError}</p>}
+            <button type="submit" className="btn-gold w-full uppercase tracking-widest text-xs">
+              Enter
+            </button>
+          </form>
+        </div>
       </main>
     )
   }
@@ -80,35 +85,43 @@ export default function AdminPage() {
   const roundMatches = KNOCKOUT_MATCHES.filter(m => m.round === selectedRound)
 
   return (
-    <div className="min-h-screen p-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Admin — Enter Results</h1>
-      {msg && <p className="mb-4 text-sm text-green-400">{msg}</p>}
+    <div className="min-h-screen p-5 max-w-2xl mx-auto">
+      <div className="anim-fade-up pt-2 mb-7">
+        <p className="section-label mb-1">Admin Panel</p>
+        <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">Enter Results</h1>
+      </div>
 
-      <div className="flex gap-2 mb-6">
+      {msg && (
+        <div className="mb-5 rounded-xl bg-[#34D399]/10 border border-[#34D399]/25 px-4 py-2.5 text-sm font-medium text-[#34D399]">
+          {msg}
+        </div>
+      )}
+
+      <div className="flex gap-1.5 mb-6">
         {(['groups', 'knockout'] as const).map(s => (
           <button key={s} onClick={() => setActiveSection(s)}
-            className={`px-4 py-2 rounded text-sm font-medium ${activeSection === s ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>
+            className={`tab-btn ${activeSection === s ? 'tab-active' : 'tab-inactive'}`}>
             {s === 'groups' ? 'Group Stage' : 'Knockout'}
           </button>
         ))}
       </div>
 
       {activeSection === 'groups' && (
-        <div>
-          <div className="flex gap-2 flex-wrap mb-4">
+        <div className="card p-5">
+          <div className="flex gap-1.5 flex-wrap mb-5">
             {GROUP_CODES.map(g => (
               <button key={g} onClick={() => setSelectedGroup(g)}
-                className={`px-3 py-1 rounded text-sm ${selectedGroup === g ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>
+                className={`tab-btn py-1.5 px-3 text-xs ${selectedGroup === g ? 'tab-active' : 'tab-inactive'}`}>
                 {g}
               </button>
             ))}
           </div>
-          <div className="flex flex-col gap-2 mb-4">
+          <div className="flex flex-col gap-3 mb-5">
             {[1, 2, 3].map(pos => (
               <div key={pos} className="flex items-center gap-3">
-                <span className="w-6 text-sm font-bold text-slate-400">{pos}</span>
+                <span className="font-display text-base text-pitch-300 w-5 text-center leading-none">{pos}</span>
                 <select
-                  className="flex-1 rounded bg-slate-800 border border-slate-600 px-3 py-2 text-sm"
+                  className="field flex-1 py-2"
                   value={groupResults[selectedGroup]?.[pos] ?? ''}
                   onChange={e => setGroupResults(prev => ({
                     ...prev,
@@ -124,39 +137,39 @@ export default function AdminPage() {
             ))}
           </div>
           <button onClick={saveGroupResult} disabled={saving}
-            className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold hover:bg-blue-500 disabled:opacity-50">
+            className="btn-gold uppercase tracking-widest text-xs">
             {saving ? 'Saving…' : `Save Group ${selectedGroup}`}
           </button>
         </div>
       )}
 
       {activeSection === 'knockout' && (
-        <div>
-          <div className="flex gap-2 flex-wrap mb-4">
+        <div className="card p-5">
+          <div className="flex gap-1.5 flex-wrap mb-5">
             {KO_ROUNDS.map(r => (
               <button key={r} onClick={() => setSelectedRound(r)}
-                className={`px-3 py-1 rounded text-sm ${selectedRound === r ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>
+                className={`tab-btn py-1.5 px-3 text-xs font-mono ${selectedRound === r ? 'tab-active' : 'tab-inactive'}`}>
                 {r}
               </button>
             ))}
           </div>
           <div className="flex flex-col gap-3">
             {roundMatches.map(match => (
-              <div key={match.id} className="flex flex-col gap-1 bg-slate-800 rounded px-3 py-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-500 w-16">{match.id}</span>
-                  <span className="text-xs text-slate-400">{match.slotA} vs {match.slotB}</span>
+              <div key={match.id} className="rounded-xl bg-pitch-800 border border-pitch-600 px-3 py-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="font-mono text-[10px] text-pitch-400 bg-pitch-900 px-1.5 py-0.5 rounded">{match.id}</span>
+                  <span className="text-xs text-pitch-300 truncate">{match.slotA} vs {match.slotB}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <input
-                    className="flex-1 rounded bg-slate-700 border border-slate-600 px-2 py-1 text-sm font-mono uppercase"
-                    placeholder="Winner team code (e.g. BRA)"
+                    className="field flex-1 py-2 font-mono uppercase text-sm"
+                    placeholder="Team code (e.g. BRA)"
                     value={koResults[match.id] ?? ''}
                     onChange={e => setKoResults(prev => ({ ...prev, [match.id]: e.target.value.toUpperCase().slice(0, 4) }))}
                     maxLength={4}
                   />
                   <button onClick={() => saveKoResult(match.id)} disabled={saving || !koResults[match.id]}
-                    className="rounded bg-blue-600 px-3 py-1 text-xs hover:bg-blue-500 disabled:opacity-40">
+                    className="btn-gold px-3 py-2 text-xs">
                     Save
                   </button>
                 </div>

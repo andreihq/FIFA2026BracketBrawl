@@ -35,65 +35,61 @@ export function CreateJoinRoom() {
     router.push(`/room/${data.roomId}`)
   }
 
-  return (
-    <div className="flex flex-col gap-2">
-      {mode === 'none' && (
+  function reset() { setMode('none'); setValue(''); setError('') }
+
+  if (mode === 'none') {
+    return (
+      <div className="flex gap-2">
+        <button onClick={() => setMode('create')} className="btn-gold flex-1 py-2.5 text-xs uppercase tracking-widest">
+          + Create Room
+        </button>
+        <button onClick={() => setMode('join')} className="btn-ghost flex-1 py-2.5 text-xs">
+          Enter Code
+        </button>
+      </div>
+    )
+  }
+
+  if (mode === 'create') {
+    return (
+      <form onSubmit={handleCreate} className="flex flex-col gap-3">
+        <input
+          className="field"
+          placeholder="Room name"
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          autoFocus
+          required
+        />
+        {error && <p className="text-xs text-[#F87171]">{error}</p>}
         <div className="flex gap-2">
-          <button
-            onClick={() => setMode('create')}
-            className="flex-1 rounded bg-blue-600 px-4 py-2.5 text-sm font-semibold hover:bg-blue-500"
-          >
-            + Create room
+          <button type="submit" disabled={loading} className="btn-gold flex-1 py-2.5 text-xs uppercase tracking-widest">
+            {loading ? 'Creating…' : 'Create'}
           </button>
-          <button
-            onClick={() => setMode('join')}
-            className="flex-1 rounded bg-slate-700 px-4 py-2.5 text-sm hover:bg-slate-600"
-          >
-            Enter room code
-          </button>
+          <button type="button" onClick={reset} className="btn-ghost px-4 py-2.5 text-xs">Cancel</button>
         </div>
-      )}
+      </form>
+    )
+  }
 
-      {mode === 'create' && (
-        <form onSubmit={handleCreate} className="flex flex-col gap-2">
-          <input
-            className="w-full rounded bg-slate-800 border border-slate-600 px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-            placeholder="Room name"
-            value={value}
-            onChange={e => setValue(e.target.value)}
-            autoFocus
-            required
-          />
-          {error && <p className="text-xs text-red-400">{error}</p>}
-          <div className="flex gap-2">
-            <button type="submit" disabled={loading} className="flex-1 rounded bg-blue-600 px-4 py-2 text-sm font-semibold hover:bg-blue-500 disabled:opacity-50">
-              {loading ? 'Creating…' : 'Create'}
-            </button>
-            <button type="button" onClick={() => { setMode('none'); setValue(''); setError('') }} className="rounded bg-slate-700 px-4 py-2 text-sm hover:bg-slate-600">Cancel</button>
-          </div>
-        </form>
-      )}
-
-      {mode === 'join' && (
-        <form onSubmit={handleJoin} className="flex flex-col gap-2">
-          <input
-            className="w-full rounded bg-slate-800 border border-slate-600 px-3 py-2 text-sm font-mono focus:outline-none focus:border-blue-500 uppercase"
-            placeholder="FIFA-XXXX"
-            value={value}
-            onChange={e => setValue(e.target.value.toUpperCase())}
-            maxLength={9}
-            autoFocus
-            required
-          />
-          {error && <p className="text-xs text-red-400">{error}</p>}
-          <div className="flex gap-2">
-            <button type="submit" disabled={loading} className="flex-1 rounded bg-blue-600 px-4 py-2 text-sm font-semibold hover:bg-blue-500 disabled:opacity-50">
-              {loading ? 'Joining…' : 'Join'}
-            </button>
-            <button type="button" onClick={() => { setMode('none'); setValue(''); setError('') }} className="rounded bg-slate-700 px-4 py-2 text-sm hover:bg-slate-600">Cancel</button>
-          </div>
-        </form>
-      )}
-    </div>
+  return (
+    <form onSubmit={handleJoin} className="flex flex-col gap-3">
+      <input
+        className="field font-mono tracking-widest uppercase text-gold placeholder-pitch-400"
+        placeholder="FIFA-XXXX"
+        value={value}
+        onChange={e => setValue(e.target.value.toUpperCase())}
+        maxLength={9}
+        autoFocus
+        required
+      />
+      {error && <p className="text-xs text-[#F87171]">{error}</p>}
+      <div className="flex gap-2">
+        <button type="submit" disabled={loading} className="btn-gold flex-1 py-2.5 text-xs uppercase tracking-widest">
+          {loading ? 'Joining…' : 'Join Room'}
+        </button>
+        <button type="button" onClick={reset} className="btn-ghost px-4 py-2.5 text-xs">Cancel</button>
+      </div>
+    </form>
   )
 }

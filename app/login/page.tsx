@@ -25,43 +25,59 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8">
-      <div className="w-full max-w-sm">
-        <h1 className="text-2xl font-bold mb-6">Login</h1>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div>
-            <label className="block text-sm text-slate-400 mb-1">Username</label>
-            <input
-              className="w-full rounded-lg bg-slate-800 border border-slate-600 px-4 py-2 focus:outline-none focus:border-blue-500"
-              value={username}
-              onChange={e => setUsername(e.target.value.toLowerCase())}
-              placeholder="your_username"
-              required
-            />
+    <main className="flex min-h-screen flex-col items-center justify-center p-6">
+      <div className="w-full max-w-sm anim-fade-up">
+
+        <div className="mb-8 text-center">
+          <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-gold">
+            <span className="font-display text-xl text-pitch-950 leading-none">26</span>
           </div>
-          <div>
-            <label className="block text-sm text-slate-400 mb-1">PIN</label>
-            <input
-              className="w-full rounded-lg bg-slate-800 border border-slate-600 px-4 py-2 focus:outline-none focus:border-blue-500"
-              type="password"
-              inputMode="numeric"
-              value={pin}
-              onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-              placeholder="••••"
-              required
-            />
-          </div>
-          {error && <p className="text-sm text-red-400">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="rounded-lg bg-blue-600 px-6 py-3 font-semibold hover:bg-blue-500 disabled:opacity-50 transition-colors"
-          >
-            {loading ? 'Logging in…' : 'Login'}
-          </button>
-        </form>
-        <p className="mt-4 text-sm text-slate-400 text-center">
-          No account? <Link href="/register" className="text-blue-400 hover:underline">Register</Link>
+          <h1 className="font-display text-5xl tracking-wider text-[#EBF0FF] leading-none">Welcome back</h1>
+          <p className="mt-2 text-sm text-pitch-300">Sign in to your predictor account</p>
+        </div>
+
+        <div className="card p-7">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            <div>
+              <label className="section-label mb-2 block">Username</label>
+              <input
+                className="field"
+                value={username}
+                onChange={e => setUsername(e.target.value.toLowerCase())}
+                placeholder="your_username"
+                required
+              />
+            </div>
+            <div>
+              <label className="section-label mb-2 block">PIN</label>
+              <input
+                className="field font-mono tracking-[0.4em] text-center text-lg"
+                type="password"
+                inputMode="numeric"
+                value={pin}
+                onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                placeholder="· · · ·"
+                required
+              />
+            </div>
+
+            {error && (
+              <div className="rounded-xl border border-red-800/50 bg-red-950/40 px-4 py-2.5 text-sm text-[#F87171]">
+                {error}
+              </div>
+            )}
+
+            <button type="submit" disabled={loading} className="btn-gold w-full mt-1 uppercase tracking-widest">
+              {loading ? 'Signing in…' : 'Sign In'}
+            </button>
+          </form>
+        </div>
+
+        <p className="mt-5 text-center text-sm text-pitch-300">
+          No account?{' '}
+          <Link href="/register" className="text-gold hover:text-gold-hover transition-colors font-medium">
+            Create one
+          </Link>
         </p>
       </div>
     </main>
