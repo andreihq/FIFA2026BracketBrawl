@@ -23,7 +23,7 @@ export function BracketView({ groupPredictions, knockoutPredictions, tab }: Prop
 
   if (tab === 'groups') {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {GROUP_CODES.map(g => (
           <GroupStageEditor
             key={g}
@@ -37,11 +37,18 @@ export function BracketView({ groupPredictions, knockoutPredictions, tab }: Prop
     )
   }
 
+  const thirdPicks: Record<string, string> = {}
+  for (const p of knockoutPredictions) {
+    if (p.match_id.endsWith(':3rd')) thirdPicks[p.match_id.slice(0, -4)] = p.predicted_winner
+  }
+
   return (
     <KnockoutBracket
       groupRankings={groupRankings}
       picks={picks}
       onPick={() => {}}
+      thirdPicks={thirdPicks}
+      onThirdPick={() => {}}
       disabled
     />
   )
