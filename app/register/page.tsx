@@ -1,10 +1,12 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
 export default function RegisterPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const join = searchParams.get('join')
   const [username, setUsername] = useState('')
   const [pin, setPin] = useState('')
   const [confirmPin, setConfirmPin] = useState('')
@@ -37,7 +39,16 @@ export default function RegisterPage() {
     })
     const data = await res.json()
     if (!res.ok) { setError(data.error); setLoading(false); return }
-    router.push('/dashboard')
+    if (join) {
+      await fetch('/api/leagues/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leagueId: join }),
+      })
+      window.location.href = `/league/${join}`
+    } else {
+      window.location.href = '/dashboard'
+    }
   }
 
   return (
@@ -119,7 +130,7 @@ export default function RegisterPage() {
 
         <p className="mt-5 text-center text-sm text-pitch-300">
           Already have an account?{' '}
-          <Link href="/login" className="text-gold hover:text-gold-hover transition-colors font-medium">
+          <Link href={`/login${join ? `?join=${join}` : ''}`} className="text-gold hover:text-gold-hover transition-colors font-medium">
             Sign in
           </Link>
         </p>

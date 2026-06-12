@@ -1,10 +1,12 @@
 'use client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const join = searchParams.get('join')
   const [username, setUsername] = useState('')
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
@@ -21,7 +23,16 @@ export default function LoginPage() {
     })
     const data = await res.json()
     if (!res.ok) { setError(data.error); setLoading(false); return }
-    router.push('/dashboard')
+    if (join) {
+      await fetch('/api/leagues/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leagueId: join }),
+      })
+      window.location.href = `/league/${join}`
+    } else {
+      window.location.href = '/dashboard'
+    }
   }
 
   return (
@@ -75,7 +86,7 @@ export default function LoginPage() {
 
         <p className="mt-5 text-center text-sm text-pitch-300">
           No account?{' '}
-          <Link href="/register" className="text-gold hover:text-gold-hover transition-colors font-medium">
+          <Link href={`/register${join ? `?join=${join}` : ''}`} className="text-gold hover:text-gold-hover transition-colors font-medium">
             Create one
           </Link>
         </p>

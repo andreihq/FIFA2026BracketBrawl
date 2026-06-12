@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/session'
 import { createServerClient } from '@/lib/supabase'
-
 import { computeScore } from '@/lib/scoring'
 import { Leaderboard } from '@/components/Leaderboard'
+import { JoinLeagueButton } from '@/components/JoinLeagueButton'
 
 export default async function LeaguePage({ params }: { params: { leagueId: string } }) {
   const session = await getSession()
@@ -39,6 +39,8 @@ export default async function LeaguePage({ params }: { params: { leagueId: strin
   )
   leaderboard.sort((a, b) => b.total - a.total)
 
+  const isMember = !!session.playerId && (members ?? []).some((m: any) => m.player_id === session.playerId)
+
   return (
     <div className="min-h-screen p-5 max-w-2xl mx-auto">
 
@@ -55,6 +57,11 @@ export default async function LeaguePage({ params }: { params: { leagueId: strin
           <span className="text-xs text-pitch-300">
             {leaderboard.length} player{leaderboard.length !== 1 ? 's' : ''}
           </span>
+          {!isMember && (
+            <div className="ml-auto">
+              <JoinLeagueButton leagueId={params.leagueId} isLoggedIn={!!session.playerId} />
+            </div>
+          )}
         </div>
       </div>
 
