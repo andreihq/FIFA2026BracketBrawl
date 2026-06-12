@@ -1,5 +1,5 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { randomUsernamePlaceholder } from '@/lib/username-suggestions'
@@ -12,7 +12,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const usernamePlaceholder = useMemo(() => randomUsernamePlaceholder(), [])
+  const [usernamePlaceholder, setUsernamePlaceholder] = useState('')
+  useEffect(() => { setUsernamePlaceholder(randomUsernamePlaceholder()) }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

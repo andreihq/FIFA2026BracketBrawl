@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { randomUsernamePlaceholder } from '@/lib/username-suggestions'
@@ -12,7 +12,8 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [availability, setAvailability] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle')
-  const usernamePlaceholder = useMemo(() => randomUsernamePlaceholder(), [])
+  const [usernamePlaceholder, setUsernamePlaceholder] = useState('')
+  useEffect(() => { setUsernamePlaceholder(randomUsernamePlaceholder()) }, [])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 

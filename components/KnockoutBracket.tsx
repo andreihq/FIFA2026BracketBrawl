@@ -2,6 +2,7 @@
 import { useRef, useEffect } from 'react'
 import { KNOCKOUT_MATCHES, KnockoutMatch, MatchPick } from '@/data/bracket'
 import { TEAMS } from '@/data/teams'
+import { MatchDropdown, DropdownOption } from './MatchDropdown'
 
 interface Props {
   groupRankings: Record<string, string[]>
@@ -18,10 +19,10 @@ const COLUMN_LABELS: Record<string, string> = {
   SF: 'Semifinals', FINAL: 'Finals', CHAMPIONS: 'Champions',
 }
 
-function teamLabel(code: string | null, fallback: string): string {
-  if (!code) return fallback
+function teamOpt(code: string | null): DropdownOption | null {
+  if (!code) return null
   const t = TEAMS[code]
-  return t ? `${t.flag} ${t.name}` : code
+  return { value: code, flag: t?.flag, teamName: t?.name ?? code }
 }
 
 function TeamRow({ teamCode, label, correct }: { teamCode: string | null; label: string; correct?: boolean }) {
@@ -39,9 +40,6 @@ function TeamRow({ teamCode, label, correct }: { teamCode: string | null; label:
   )
 }
 
-const selectBase = `w-full text-xs rounded-lg px-2.5 py-1.5 border cursor-pointer transition-all outline-none appearance-none`
-
-// Dropdown to pick the winner of a source match. Shown in the next stage's match card.
 function WinnerDropdown({ srcMatchId, picks, onPick, showValidation }: {
   srcMatchId: string
   picks: Record<string, MatchPick>
@@ -53,27 +51,21 @@ function WinnerDropdown({ srcMatchId, picks, onPick, showValidation }: {
   const teamB = src?.teamB ?? null
   const picked = src?.winner ?? null
   const isError = showValidation && !picked && !!teamA && !!teamB
+
+  const options = [teamOpt(teamA), teamOpt(teamB)].filter((o): o is DropdownOption => !!o)
+
   return (
-    <select
+    <MatchDropdown
       value={picked ?? ''}
-      onChange={e => e.target.value && onPick(srcMatchId, 'winner', e.target.value)}
+      options={options}
+      placeholder={`Pick winner…`}
+      onChange={code => onPick(srcMatchId, 'winner', code)}
       disabled={!teamA || !teamB}
-      className={`${selectBase} ${
-        picked
-          ? 'bg-pitch-800 border-pitch-500 text-[#EBF0FF]'
-          : isError
-            ? 'bg-red-950/30 border-red-700 text-pitch-400'
-            : 'bg-pitch-700 border-pitch-500 text-pitch-200'
-      } hover:border-pitch-400 disabled:opacity-60 disabled:cursor-not-allowed`}
-    >
-      <option value="" disabled hidden>Pick {srcMatchId} winner…</option>
-      <option value={teamA ?? ''}>{teamLabel(teamA, '')}</option>
-      <option value={teamB ?? ''}>{teamLabel(teamB, '')}</option>
-    </select>
+      isError={isError}
+    />
   )
 }
 
-// Dropdown to pick the Best 3rd qualifier. Shown directly in the R32 match card.
 function QualifierDropdown({ match, groupRankings, picks, onPick, showValidation }: {
   match: KnockoutMatch
   groupRankings: Record<string, string[]>
@@ -94,24 +86,17 @@ function QualifierDropdown({ match, groupRankings, picks, onPick, showValidation
 
   const picked = picks[match.id]?.teamB ?? ''
   const isError = showValidation && !picked
+  const options = eligible.map(code => teamOpt(code)).filter((o): o is DropdownOption => !!o)
+
   return (
-    <select
+    <MatchDropdown
       value={picked}
-      onChange={e => e.target.value && onPick(match.id, 'teamB', e.target.value)}
+      options={options}
+      placeholder={`3rd: ${groups.join('/')}…`}
+      onChange={code => onPick(match.id, 'teamB', code)}
       disabled={eligible.length === 0}
-      className={`${selectBase} ${
-        picked
-          ? 'bg-pitch-800 border-pitch-500 text-[#EBF0FF]'
-          : isError
-            ? 'bg-red-950/30 border-red-700 text-pitch-400'
-            : 'bg-pitch-700 border-pitch-500 text-pitch-200'
-      } hover:border-pitch-400 disabled:opacity-60 disabled:cursor-not-allowed`}
-    >
-      <option value="" disabled hidden>Pick 3rd {groups.join('/')}…</option>
-      {eligible.map(code => (
-        <option key={code} value={code}>{teamLabel(code, '')}</option>
-      ))}
-    </select>
+      isError={isError}
+    />
   )
 }
 
@@ -189,6 +174,9 @@ function ChampionsPodium({ picks, onPick, disabled, showValidation, correctPicks
   const loserB = picks['M103']?.teamB ?? null
   const thirdPlace = picks['M103']?.winner ?? null
 
+  const championOptions = [teamOpt(finalistA), teamOpt(finalistB)].filter((o): o is DropdownOption => !!o)
+  const thirdOptions = [teamOpt(loserA), teamOpt(loserB)].filter((o): o is DropdownOption => !!o)
+
   return (
     <div className="flex flex-col flex-1 justify-center gap-5 px-3 pb-4">
       <div className="flex flex-col gap-1.5">
@@ -196,22 +184,15 @@ function ChampionsPodium({ picks, onPick, disabled, showValidation, correctPicks
         {disabled ? (
           <TeamRow teamCode={champion} label="TBD" correct={!!(champion && correctPicks?.['M104']?.winner === champion)} />
         ) : (
-          <select
+          <MatchDropdown
             value={champion ?? ''}
-            onChange={e => e.target.value && onPick('M104', 'winner', e.target.value)}
+            options={championOptions}
+            placeholder="Pick Champion…"
+            onChange={code => onPick('M104', 'winner', code)}
             disabled={!finalistA || !finalistB}
-            className={`${selectBase} font-semibold ${
-              champion
-                ? 'bg-gold/10 border-gold/40 text-gold'
-                : showValidation && !champion && finalistA && finalistB
-                  ? 'bg-red-950/30 border-red-700 text-pitch-400'
-                  : 'bg-pitch-700 border-pitch-500 text-pitch-200'
-            } hover:border-gold/30 disabled:opacity-60 disabled:cursor-not-allowed`}
-          >
-            <option value="" disabled hidden>Pick Champion…</option>
-            <option value={finalistA ?? ''}>{teamLabel(finalistA, '')}</option>
-            <option value={finalistB ?? ''}>{teamLabel(finalistB, '')}</option>
-          </select>
+            isError={showValidation && !champion && !!finalistA && !!finalistB}
+            variant="gold"
+          />
         )}
       </div>
 
@@ -233,22 +214,15 @@ function ChampionsPodium({ picks, onPick, disabled, showValidation, correctPicks
         {disabled ? (
           <TeamRow teamCode={thirdPlace} label="TBD" correct={!!(thirdPlace && correctPicks?.['M103']?.winner === thirdPlace)} />
         ) : (
-          <select
+          <MatchDropdown
             value={thirdPlace ?? ''}
-            onChange={e => e.target.value && onPick('M103', 'winner', e.target.value)}
+            options={thirdOptions}
+            placeholder="Pick 3rd Place…"
+            onChange={code => onPick('M103', 'winner', code)}
             disabled={!loserA || !loserB}
-            className={`${selectBase} ${
-              thirdPlace
-                ? 'bg-[#3d2810]/40 border-[#C4834A]/40 text-[#C4834A] font-medium'
-                : showValidation && !thirdPlace && loserA && loserB
-                  ? 'bg-red-950/30 border-red-700 text-pitch-400'
-                  : 'bg-pitch-700 border-pitch-500 text-pitch-200'
-            } hover:border-[#C4834A]/30 disabled:opacity-60 disabled:cursor-not-allowed`}
-          >
-            <option value="" disabled hidden>Pick 3rd Place…</option>
-            <option value={loserA ?? ''}>{teamLabel(loserA, '')}</option>
-            <option value={loserB ?? ''}>{teamLabel(loserB, '')}</option>
-          </select>
+            isError={showValidation && !thirdPlace && !!loserA && !!loserB}
+            variant="bronze"
+          />
         )}
       </div>
     </div>
