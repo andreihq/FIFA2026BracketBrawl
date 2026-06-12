@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { GROUP_CODES, GROUPS } from '@/data/groups'
-import { KNOCKOUT_MATCHES, resolveTeam } from '@/data/bracket'
+import { MATCH_IDS, THIRD_PLACE_SLOT_MATCH_IDS, KNOCKOUT_MATCHES, resolveTeam } from '@/data/bracket'
 import { GroupStageEditor } from '@/components/GroupStageEditor'
 import { KnockoutBracket } from '@/components/KnockoutBracket'
 
@@ -16,6 +16,7 @@ export default function BracketPage() {
   const [saving, setSaving] = useState(false)
   const [locked, setLocked] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
+  const [showValidation, setShowValidation] = useState(false)
   const [deadline, setDeadline] = useState<string | null>(null)
 
   useEffect(() => {
@@ -79,6 +80,11 @@ export default function BracketPage() {
         setLoading(false)
       })
   }, [])
+
+  const groupsComplete = GROUP_CODES.every(g => (groupRankings[g]?.length ?? 0) >= 4)
+  const koComplete =
+    MATCH_IDS.every(id => !!koPicks[id]) &&
+    THIRD_PLACE_SLOT_MATCH_IDS.every(id => !!thirdPicks[id])
 
   const saveDraft = useCallback(async () => {
     setSaving(true)
@@ -163,6 +169,7 @@ export default function BracketPage() {
               }
             }}
             disabled={isDisabled}
+            showValidation={showValidation}
           />
         )}
       </div>
@@ -170,7 +177,19 @@ export default function BracketPage() {
       {!isDisabled && (
         <div className="flex items-center justify-end gap-3 mt-10 pt-5 border-t border-pitch-700">
           {saveMsg && <span className="text-sm font-medium text-[#34D399]">{saveMsg}</span>}
-          <button onClick={saveDraft} disabled={saving} className="btn-gold px-5 py-2.5 text-xs uppercase tracking-widest">
+          <button
+            onClick={async () => {
+              if (!groupsComplete || !koComplete) {
+                setShowValidation(true)
+                if (tab !== 'knockouts') setTab('knockouts')
+                return
+              }
+              setShowValidation(false)
+              await saveDraft()
+            }}
+            disabled={saving}
+            className="btn-gold px-5 py-2.5 text-xs uppercase tracking-widest"
+          >
             {saving ? 'Saving…' : 'Save Bracket'}
           </button>
         </div>
