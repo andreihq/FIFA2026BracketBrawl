@@ -23,6 +23,7 @@ interface Props {
   order: string[]
   onChange: (groupCode: string, newOrder: string[]) => void
   disabled?: boolean
+  correctPositions?: Set<number>
 }
 
 // Left-border accent colors per position
@@ -39,7 +40,7 @@ const POSITION_TEXT = [
   'text-[#EF4444]',
 ]
 
-function SortableTeam({ teamCode, position, disabled }: { teamCode: string; position: number; disabled: boolean }) {
+function SortableTeam({ teamCode, position, disabled, correct }: { teamCode: string; position: number; disabled: boolean; correct?: boolean }) {
   const team = TEAMS[teamCode]
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: teamCode,
@@ -52,8 +53,8 @@ function SortableTeam({ teamCode, position, disabled }: { teamCode: string; posi
       ref={setNodeRef}
       style={style}
       {...(!disabled ? { ...attributes, ...listeners } : {})}
-      className={`flex items-center gap-3 rounded-xl border-l-[3px] bg-pitch-800 px-3 py-2.5
-        ${POSITION_BORDERS[position]}
+      className={`flex items-center gap-3 rounded-xl border-l-[3px] px-3 py-2.5
+        ${correct ? 'border-l-[#34D399] bg-[#34D399]/10' : `bg-pitch-800 ${POSITION_BORDERS[position]}`}
         ${isDragging ? 'opacity-40 scale-[0.98]' : ''}
         ${!disabled ? 'cursor-grab active:cursor-grabbing select-none hover:bg-pitch-700 transition-colors' : ''}
       `}
@@ -68,7 +69,7 @@ function SortableTeam({ teamCode, position, disabled }: { teamCode: string; posi
   )
 }
 
-export function GroupStageEditor({ groupCode, order, onChange, disabled = false }: Props) {
+export function GroupStageEditor({ groupCode, order, onChange, disabled = false, correctPositions }: Props) {
   const sensors = useSensors(
     useSensor(MouseSensor),
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
@@ -96,7 +97,7 @@ export function GroupStageEditor({ groupCode, order, onChange, disabled = false 
         <SortableContext items={teams} strategy={verticalListSortingStrategy}>
           <div className="flex flex-col gap-1.5">
             {teams.map((code, i) => (
-              <SortableTeam key={code} teamCode={code} position={i} disabled={disabled} />
+              <SortableTeam key={code} teamCode={code} position={i} disabled={disabled} correct={correctPositions?.has(i)} />
             ))}
           </div>
         </SortableContext>

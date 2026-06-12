@@ -20,12 +20,13 @@ export default async function PlayerPage({ params, searchParams }: {
   const { data: bracket } = await supabase
     .from('brackets').select('id, submitted_at').eq('player_id', player.id).single()
 
-  const [{ data: groupPredictions }, { data: knockoutPredictions }] = bracket
+  const [{ data: groupPredictions }, { data: knockoutPredictions }, { data: actualResults }] = bracket
     ? await Promise.all([
         supabase.from('group_predictions').select('*').eq('bracket_id', bracket.id),
         supabase.from('knockout_predictions').select('*').eq('bracket_id', bracket.id),
+        supabase.from('actual_results').select('*'),
       ])
-    : [{ data: [] }, { data: [] }]
+    : [{ data: [] }, { data: [] }, { data: [] }]
 
   const backHref = searchParams.from ? `/league/${searchParams.from}` : '/dashboard'
   const tab = (searchParams.tab === 'knockouts' ? 'knockouts' : 'groups') as 'groups' | 'knockouts'
@@ -69,6 +70,7 @@ export default async function PlayerPage({ params, searchParams }: {
             <BracketView
               groupPredictions={groupPredictions ?? []}
               knockoutPredictions={knockoutPredictions ?? []}
+              actualResults={actualResults ?? []}
               tab={tab}
             />
           </div>

@@ -1,20 +1,18 @@
 'use client'
 import { useState } from 'react'
-import { GROUPS, GROUP_CODES } from '@/data/groups'
+import { GROUP_CODES, GROUPS } from '@/data/groups'
 import { KNOCKOUT_MATCHES } from '@/data/bracket'
-import { TEAMS } from '@/data/teams'
-
-const KO_ROUNDS = ['R32', 'R16', 'QF', 'SF', '3RD', 'FINAL'] as const
+import { GroupStageEditor } from '@/components/GroupStageEditor'
+import { KnockoutBracket } from '@/components/KnockoutBracket'
 
 export default function AdminPage() {
   const [password, setPassword] = useState('')
   const [authed, setAuthed] = useState(false)
   const [authError, setAuthError] = useState('')
   const [activeSection, setActiveSection] = useState<'groups' | 'knockout' | 'settings'>('groups')
-  const [selectedGroup, setSelectedGroup] = useState('A')
-  const [selectedRound, setSelectedRound] = useState('R32')
-  const [groupResults, setGroupResults] = useState<Record<string, Record<number, string>>>({})
-  const [koResults, setKoResults] = useState<Record<string, string>>({})
+  const [groupRankings, setGroupRankings] = useState<Record<string, string[]>>({})
+  const [koPicks, setKoPicks] = useState<Record<string, string>>({})
+  const [thirdPicks, setThirdPicks] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
   const [deadlineInput, setDeadlineInput] = useState('')
@@ -22,24 +20,73 @@ export default function AdminPage() {
   async function checkPassword(e: React.FormEvent) {
     e.preventDefault()
     const res = await fetch('/api/admin/results', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
-      body: JSON.stringify({ result_type: 'group', ref_id: '__ping__', entries: [] }),
+      headers: { 'x-admin-password': password },
     })
     if (res.status === 401) { setAuthError('Wrong password'); return }
+
+    const { results } = await res.json()
+    const rankings: Record<string, string[]> = {}
+    for (const group of GROUP_CODES) {
+      const rows = (results as any[]).filter(r => r.result_type === 'group' && r.ref_id === group)
+      if (rows.length > 0) {
+        const arr: string[] = []
+        for (const r of rows) arr[r.position - 1] = r.team_code
+        rankings[group] = arr.filter(Boolean)
+      } else {
+        rankings[group] = GROUPS[group] ?? []
+      }
+    }
+    setGroupRankings(rankings)
+
+    const ko: Record<string, string> = {}
+    const third: Record<string, string> = {}
+    for (const r of (results as any[]).filter((r: any) => r.result_type === 'knockout')) {
+      if (r.ref_id.endsWith(':3rd')) {
+        third[r.ref_id.slice(0, -4)] = r.team_code
+      } else {
+        ko[r.ref_id] = r.team_code
+      }
+    }
+    setKoPicks(ko)
+    setThirdPicks(third)
     setAuthed(true)
   }
 
-  async function saveGroupResult() {
+  async function saveGroups() {
     setSaving(true); setMsg('')
-    const pos = groupResults[selectedGroup] ?? {}
-    const entries = Object.entries(pos).map(([p, tc]) => ({ team_code: tc, position: Number(p) }))
-    const res = await fetch('/api/admin/results', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
-      body: JSON.stringify({ result_type: 'group', ref_id: selectedGroup, entries }),
-    })
-    setMsg(res.ok ? `Group ${selectedGroup} saved ✓` : 'Error saving')
+    await Promise.all(GROUP_CODES.map(group => {
+      const order = groupRankings[group] ?? []
+      const entries = order.map((team_code, i) => ({ team_code, position: i + 1 }))
+      return fetch('/api/admin/results', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+        body: JSON.stringify({ result_type: 'group', ref_id: group, entries }),
+      })
+    }))
+    setMsg('Group results saved ✓')
+    setSaving(false)
+  }
+
+  async function saveKnockout() {
+    setSaving(true); setMsg('')
+    const posts = [
+      ...Object.entries(koPicks).map(([ref_id, team_code]) =>
+        fetch('/api/admin/results', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+          body: JSON.stringify({ result_type: 'knockout', ref_id, entries: [{ team_code }] }),
+        })
+      ),
+      ...Object.entries(thirdPicks).map(([matchId, team_code]) =>
+        fetch('/api/admin/results', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+          body: JSON.stringify({ result_type: 'knockout', ref_id: `${matchId}:3rd`, entries: [{ team_code }] }),
+        })
+      ),
+    ]
+    await Promise.all(posts)
+    setMsg('Knockout results saved ✓')
     setSaving(false)
   }
 
@@ -52,19 +99,6 @@ export default function AdminPage() {
       body: JSON.stringify({ deadline: deadlineInput }),
     })
     setMsg(res.ok ? 'Deadline saved ✓' : 'Error saving deadline')
-    setSaving(false)
-  }
-
-  async function saveKoResult(matchId: string) {
-    const winner = koResults[matchId]
-    if (!winner) return
-    setSaving(true); setMsg('')
-    const res = await fetch('/api/admin/results', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
-      body: JSON.stringify({ result_type: 'knockout', ref_id: matchId, entries: [{ team_code: winner }] }),
-    })
-    setMsg(res.ok ? `${matchId} saved ✓` : 'Error saving')
     setSaving(false)
   }
 
@@ -95,10 +129,8 @@ export default function AdminPage() {
     )
   }
 
-  const roundMatches = KNOCKOUT_MATCHES.filter(m => m.round === selectedRound)
-
   return (
-    <div className="min-h-screen p-5 max-w-2xl mx-auto">
+    <div className="min-h-screen p-5 max-w-6xl mx-auto">
       <div className="anim-fade-up pt-2 mb-7">
         <p className="section-label mb-1">Admin Panel</p>
         <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">Enter Results</h1>
@@ -112,7 +144,7 @@ export default function AdminPage() {
 
       <div className="flex gap-1.5 mb-6">
         {(['groups', 'knockout', 'settings'] as const).map(s => (
-          <button key={s} onClick={() => setActiveSection(s)}
+          <button key={s} onClick={() => { setMsg(''); setActiveSection(s) }}
             className={`tab-btn ${activeSection === s ? 'tab-active' : 'tab-inactive'}`}>
             {s === 'groups' ? 'Group Stage' : s === 'knockout' ? 'Knockout' : 'Settings'}
           </button>
@@ -120,80 +152,50 @@ export default function AdminPage() {
       </div>
 
       {activeSection === 'groups' && (
-        <div className="card p-5">
-          <div className="flex gap-1.5 flex-wrap mb-5">
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
             {GROUP_CODES.map(g => (
-              <button key={g} onClick={() => setSelectedGroup(g)}
-                className={`tab-btn py-1.5 px-3 text-xs ${selectedGroup === g ? 'tab-active' : 'tab-inactive'}`}>
-                {g}
-              </button>
+              <GroupStageEditor
+                key={g}
+                groupCode={g}
+                order={groupRankings[g] ?? []}
+                onChange={(code, order) => setGroupRankings(prev => ({ ...prev, [code]: order }))}
+              />
             ))}
           </div>
-          <div className="flex flex-col gap-3 mb-5">
-            {[1, 2, 3].map(pos => (
-              <div key={pos} className="flex items-center gap-3">
-                <span className="font-display text-base text-pitch-300 w-5 text-center leading-none">{pos}</span>
-                <select
-                  className="field flex-1 py-2"
-                  value={groupResults[selectedGroup]?.[pos] ?? ''}
-                  onChange={e => setGroupResults(prev => ({
-                    ...prev,
-                    [selectedGroup]: { ...(prev[selectedGroup] ?? {}), [pos]: e.target.value }
-                  }))}
-                >
-                  <option value="">— select team —</option>
-                  {GROUPS[selectedGroup]?.map(tc => (
-                    <option key={tc} value={tc}>{TEAMS[tc]?.flag} {TEAMS[tc]?.name ?? tc}</option>
-                  ))}
-                </select>
-              </div>
-            ))}
+          <div className="flex items-center justify-end gap-3 pt-5 border-t border-pitch-700">
+            <button onClick={saveGroups} disabled={saving} className="btn-gold px-5 py-2.5 text-xs uppercase tracking-widest">
+              {saving ? 'Saving…' : 'Save Group Results'}
+            </button>
           </div>
-          <button onClick={saveGroupResult} disabled={saving}
-            className="btn-gold uppercase tracking-widest text-xs">
-            {saving ? 'Saving…' : `Save Group ${selectedGroup}`}
-          </button>
-        </div>
+        </>
       )}
 
       {activeSection === 'knockout' && (
-        <div className="card p-5">
-          <div className="flex gap-1.5 flex-wrap mb-5">
-            {KO_ROUNDS.map(r => (
-              <button key={r} onClick={() => setSelectedRound(r)}
-                className={`tab-btn py-1.5 px-3 text-xs font-mono ${selectedRound === r ? 'tab-active' : 'tab-inactive'}`}>
-                {r}
-              </button>
-            ))}
+        <>
+          <KnockoutBracket
+            groupRankings={groupRankings}
+            picks={koPicks}
+            onPick={(matchId, teamCode) => setKoPicks(prev => ({ ...prev, [matchId]: teamCode }))}
+            thirdPicks={thirdPicks}
+            onThirdPick={(matchId, teamCode) => {
+              if (!teamCode) {
+                setThirdPicks(prev => { const n = { ...prev }; delete n[matchId]; return n })
+              } else {
+                setThirdPicks(prev => ({ ...prev, [matchId]: teamCode }))
+              }
+            }}
+          />
+          <div className="flex items-center justify-end gap-3 mt-6 pt-5 border-t border-pitch-700">
+            <button onClick={saveKnockout} disabled={saving} className="btn-gold px-5 py-2.5 text-xs uppercase tracking-widest">
+              {saving ? 'Saving…' : 'Save Knockout Results'}
+            </button>
           </div>
-          <div className="flex flex-col gap-3">
-            {roundMatches.map(match => (
-              <div key={match.id} className="rounded-xl bg-pitch-800 border border-pitch-600 px-3 py-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="font-mono text-[10px] text-pitch-400 bg-pitch-900 px-1.5 py-0.5 rounded">{match.id}</span>
-                  <span className="text-xs text-pitch-300 truncate">{match.slotA} vs {match.slotB}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    className="field flex-1 py-2 font-mono uppercase text-sm"
-                    placeholder="Team code (e.g. BRA)"
-                    value={koResults[match.id] ?? ''}
-                    onChange={e => setKoResults(prev => ({ ...prev, [match.id]: e.target.value.toUpperCase().slice(0, 4) }))}
-                    maxLength={4}
-                  />
-                  <button onClick={() => saveKoResult(match.id)} disabled={saving || !koResults[match.id]}
-                    className="btn-gold px-3 py-2 text-xs">
-                    Save
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        </>
       )}
 
       {activeSection === 'settings' && (
-        <div className="card p-5">
+        <div className="card p-5 max-w-sm">
           <p className="text-sm font-medium text-[#EBF0FF] mb-4">Submission Deadline</p>
           <form onSubmit={saveDeadline} className="flex flex-col gap-3">
             <input

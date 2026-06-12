@@ -11,6 +11,7 @@ interface Props {
   onThirdPick: (matchId: string, teamCode: string | null) => void
   disabled?: boolean
   showValidation?: boolean
+  correctPicks?: Record<string, string>
 }
 
 const COLUMNS = ['R32', 'R16', 'QF', 'SF', 'FINAL', 'CHAMPIONS'] as const
@@ -25,10 +26,14 @@ function teamLabel(code: string | null, fallback: string): string {
   return t ? `${t.flag} ${t.name}` : code
 }
 
-function TeamRow({ teamCode, label }: { teamCode: string | null; label: string }) {
+function TeamRow({ teamCode, label, correct }: { teamCode: string | null; label: string; correct?: boolean }) {
   const team = teamCode ? TEAMS[teamCode] : null
   return (
-    <div className="flex items-center gap-2 rounded-lg bg-pitch-800 border border-pitch-600 px-2.5 py-1.5 text-xs text-[#EBF0FF]">
+    <div className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs ${
+      correct && team
+        ? 'bg-[#34D399]/10 border border-[#34D399]/40 text-[#34D399]'
+        : 'bg-pitch-800 border border-pitch-600 text-[#EBF0FF]'
+    }`}>
       {team
         ? <><span className="flex-shrink-0">{team.flag}</span><span className="truncate font-medium">{team.name}</span></>
         : <span className="text-pitch-300 truncate italic">{label}</span>}
@@ -38,7 +43,7 @@ function TeamRow({ teamCode, label }: { teamCode: string | null; label: string }
 
 const selectBase = `w-full text-xs rounded-lg px-2.5 py-1.5 border cursor-pointer transition-all outline-none appearance-none`
 
-function SlotDropdown({ slotLabel, matchId, groupRankings, picks, thirdPicks, onPick, disabled, showValidation }: {
+function SlotDropdown({ slotLabel, matchId, groupRankings, picks, thirdPicks, onPick, disabled, showValidation, correctPicks }: {
   slotLabel: string
   matchId: string
   groupRankings: Record<string, string[]>
@@ -47,6 +52,7 @@ function SlotDropdown({ slotLabel, matchId, groupRankings, picks, thirdPicks, on
   onPick: (matchId: string, code: string) => void
   disabled: boolean
   showValidation: boolean
+  correctPicks?: Record<string, string>
 }) {
   const sourceMatch = slotLabel.match(/^Winner (M\d+)$/)
   if (!sourceMatch) {
@@ -61,14 +67,8 @@ function SlotDropdown({ slotLabel, matchId, groupRankings, picks, thirdPicks, on
   const picked = picks[srcId]
 
   if (disabled) {
-    const team = picked ? TEAMS[picked] : null
-    return (
-      <div className="flex items-center gap-2 rounded-lg bg-pitch-800 border border-pitch-600 px-2.5 py-1.5 text-xs text-[#EBF0FF]">
-        {team
-          ? <><span>{team.flag}</span><span className="truncate font-medium">{team.name}</span></>
-          : <span className="text-pitch-300 italic truncate">{slotLabel}</span>}
-      </div>
-    )
+    const isCorrect = !!(picked && correctPicks?.[srcId] === picked)
+    return <TeamRow teamCode={picked ?? null} label={slotLabel} correct={isCorrect} />
   }
 
   const isError = showValidation && !picked
@@ -92,7 +92,7 @@ function SlotDropdown({ slotLabel, matchId, groupRankings, picks, thirdPicks, on
   )
 }
 
-function ThirdPlaceTeamPicker({ matchId, slotLabel, groupRankings, thirdPicks, onThirdPick, disabled, showValidation }: {
+function ThirdPlaceTeamPicker({ matchId, slotLabel, groupRankings, thirdPicks, onThirdPick, disabled, showValidation, correctPicks }: {
   matchId: string
   slotLabel: string
   groupRankings: Record<string, string[]>
@@ -100,6 +100,7 @@ function ThirdPlaceTeamPicker({ matchId, slotLabel, groupRankings, thirdPicks, o
   onThirdPick: (matchId: string, teamCode: string | null) => void
   disabled: boolean
   showValidation: boolean
+  correctPicks?: Record<string, string>
 }) {
   const groups = slotLabel.replace('Best 3rd ', '').split('')
   const pickedElsewhere = new Set(
@@ -107,16 +108,10 @@ function ThirdPlaceTeamPicker({ matchId, slotLabel, groupRankings, thirdPicks, o
   )
   const eligible = groups.map(g => groupRankings[g]?.[2]).filter(Boolean).filter(code => !pickedElsewhere.has(code)) as string[]
   const selected = thirdPicks[matchId] ?? null
-  const team = selected ? TEAMS[selected] : null
 
   if (disabled) {
-    return (
-      <div className="flex items-center gap-2 rounded-lg bg-pitch-800 border border-pitch-600 px-2.5 py-1.5 text-xs text-pitch-300">
-        {team
-          ? <><span>{team.flag}</span><span className="truncate font-medium">{team.name}</span></>
-          : <span className="italic">3rd: {groups.join('/')}</span>}
-      </div>
-    )
+    const isCorrect = !!(selected && correctPicks?.[`${matchId}:3rd`] === selected)
+    return <TeamRow teamCode={selected} label={`3rd: ${groups.join('/')}`} correct={isCorrect} />
   }
 
   const isError = showValidation && !selected
@@ -140,7 +135,7 @@ function ThirdPlaceTeamPicker({ matchId, slotLabel, groupRankings, thirdPicks, o
   )
 }
 
-function MatchCard({ match, groupRankings, picks, thirdPicks, onPick, onThirdPick, disabled, label, showValidation }: {
+function MatchCard({ match, groupRankings, picks, thirdPicks, onPick, onThirdPick, disabled, label, showValidation, correctPicks }: {
   match: KnockoutMatch
   groupRankings: Record<string, string[]>
   picks: Record<string, string>
@@ -150,6 +145,7 @@ function MatchCard({ match, groupRankings, picks, thirdPicks, onPick, onThirdPic
   disabled: boolean
   label?: string
   showValidation: boolean
+  correctPicks?: Record<string, string>
 }) {
   const isR32 = match.round === 'R32'
   const isBest3rdB = match.slotB.startsWith('Best 3rd')
@@ -176,6 +172,7 @@ function MatchCard({ match, groupRankings, picks, thirdPicks, onPick, onThirdPic
           onPick={onPick}
           disabled={disabled}
           showValidation={showValidation}
+          correctPicks={correctPicks}
         />
       )}
 
@@ -190,6 +187,7 @@ function MatchCard({ match, groupRankings, picks, thirdPicks, onPick, onThirdPic
           onThirdPick={onThirdPick}
           disabled={disabled}
           showValidation={showValidation}
+          correctPicks={correctPicks}
         />
       ) : isR32 ? (
         <TeamRow
@@ -206,19 +204,21 @@ function MatchCard({ match, groupRankings, picks, thirdPicks, onPick, onThirdPic
           onPick={onPick}
           disabled={disabled}
           showValidation={showValidation}
+          correctPicks={correctPicks}
         />
       )}
     </div>
   )
 }
 
-function ChampionsPodium({ groupRankings, picks, thirdPicks, onPick, disabled, showValidation }: {
+function ChampionsPodium({ groupRankings, picks, thirdPicks, onPick, disabled, showValidation, correctPicks }: {
   groupRankings: Record<string, string[]>
   picks: Record<string, string>
   thirdPicks: Record<string, string>
   onPick: (matchId: string, code: string) => void
   disabled: boolean
   showValidation: boolean
+  correctPicks?: Record<string, string>
 }) {
   const finalistA = resolveTeam('Winner M101', 'M104', groupRankings, picks, thirdPicks)
   const finalistB = resolveTeam('Winner M102', 'M104', groupRankings, picks, thirdPicks)
@@ -234,7 +234,7 @@ function ChampionsPodium({ groupRankings, picks, thirdPicks, onPick, disabled, s
       <div className="flex flex-col gap-1.5">
         <div className="text-[10px] font-bold text-gold uppercase tracking-widest">🥇 Champion</div>
         {disabled ? (
-          <TeamRow teamCode={champion} label="TBD" />
+          <TeamRow teamCode={champion} label="TBD" correct={!!(champion && correctPicks?.['M104'] === champion)} />
         ) : (
           <select
             value={champion ?? ''}
@@ -263,7 +263,7 @@ function ChampionsPodium({ groupRankings, picks, thirdPicks, onPick, disabled, s
       <div className="flex flex-col gap-1.5">
         <div className="text-[10px] font-bold text-[#C4834A] uppercase tracking-widest">🥉 3rd Place</div>
         {disabled ? (
-          <TeamRow teamCode={thirdPlace} label="TBD" />
+          <TeamRow teamCode={thirdPlace} label="TBD" correct={!!(thirdPlace && correctPicks?.['M103'] === thirdPlace)} />
         ) : (
           <select
             value={thirdPlace ?? ''}
@@ -287,7 +287,7 @@ function ChampionsPodium({ groupRankings, picks, thirdPicks, onPick, disabled, s
   )
 }
 
-export function KnockoutBracket({ groupRankings, picks, onPick, thirdPicks, onThirdPick, disabled = false, showValidation = false }: Props) {
+export function KnockoutBracket({ groupRankings, picks, onPick, thirdPicks, onThirdPick, disabled = false, showValidation = false, correctPicks }: Props) {
   const finalMatches = KNOCKOUT_MATCHES.filter(m => m.round === 'FINAL' || m.round === '3RD')
 
   const allPicksMade =
@@ -323,6 +323,7 @@ export function KnockoutBracket({ groupRankings, picks, onPick, thirdPicks, onTh
                 onPick={onPick}
                 disabled={disabled}
                 showValidation={showValidation}
+                correctPicks={correctPicks}
               />
             ) : col === 'FINAL' ? (
               <div className="flex flex-col flex-1 justify-center gap-6 px-2 pb-4">
@@ -338,6 +339,7 @@ export function KnockoutBracket({ groupRankings, picks, onPick, thirdPicks, onTh
                     onThirdPick={onThirdPick}
                     disabled={disabled}
                     showValidation={showValidation}
+                    correctPicks={correctPicks}
                   />
                 ))}
               </div>
@@ -354,6 +356,7 @@ export function KnockoutBracket({ groupRankings, picks, onPick, thirdPicks, onTh
                     onThirdPick={onThirdPick}
                     disabled={disabled}
                     showValidation={showValidation}
+                    correctPicks={correctPicks}
                   />
                 ))}
               </div>
