@@ -27,16 +27,16 @@ interface Props {
 
 // Left-border accent colors per position
 const POSITION_BORDERS = [
-  'border-l-[#34D399]',  // 1st — green (advances)
-  'border-l-[#60A5FA]',  // 2nd — blue (advances)
-  'border-l-[#F5A623]',  // 3rd — gold (maybe)
-  'border-l-pitch-500',  // 4th — grey (out)
+  'border-l-[#FFD700]',  // 1st — gold
+  'border-l-[#C0C0C0]',  // 2nd — silver
+  'border-l-[#CD7F32]',  // 3rd — bronze
+  'border-l-[#EF4444]',  // 4th — red (out)
 ]
 const POSITION_TEXT = [
-  'text-[#34D399]',
-  'text-[#60A5FA]',
-  'text-gold',
-  'text-pitch-400',
+  'text-[#FFD700]',
+  'text-[#C0C0C0]',
+  'text-[#CD7F32]',
+  'text-[#EF4444]',
 ]
 
 function SortableTeam({ teamCode, position, disabled }: { teamCode: string; position: number; disabled: boolean }) {
