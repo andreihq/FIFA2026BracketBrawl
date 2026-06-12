@@ -59,6 +59,18 @@ export default async function DashboardPage() {
   const bracketCreated = !!bracket
   const isLocked = isPastDeadline || !!bracket?.locked || !!bracket?.submitted_at
 
+  const bracketState = !bracketCreated ? 'empty' : isLocked ? 'locked' : 'active'
+  const bracketStyles = {
+    empty:  { card: 'border-pitch-500/40 bg-pitch-900/60', badge: 'bg-pitch-700 border-pitch-500 text-pitch-300' },
+    active: { card: 'border-gold/20 bg-gold/5',            badge: 'bg-gold/10 border-gold/20 text-gold' },
+    locked: { card: 'border-[#34D399]/25 bg-[#34D399]/5', badge: 'bg-[#34D399]/15 border-[#34D399]/25 text-[#34D399]' },
+  }[bracketState]
+  const bracketCopy = {
+    empty:  { heading: 'Your bracket awaits',  body: 'Rank all 12 groups and pick knockout winners all the way to the champion. Submit before the deadline to compete.', badge: 'Not started', btn: 'Create My Bracket' },
+    active: { heading: 'Bracket in progress',  body: 'Keep picking and submit before the deadline to lock in your predictions.',                                          badge: 'In Progress',  btn: 'Edit My Bracket' },
+    locked: { heading: 'Bracket locked in',    body: 'Your predictions are set. Check back as results come in to see how you rank.',                                      badge: 'Locked ✓',    btn: 'View My Bracket' },
+  }[bracketState]
+
   return (
     <div className="min-h-screen p-5 max-w-xl mx-auto">
 
@@ -74,67 +86,24 @@ export default async function DashboardPage() {
       <div className="anim-fade-up anim-delay-1 mb-5">
         <p className="section-label mb-3">My Bracket</p>
 
-        {/* State 1 — Not created */}
-        {!bracketCreated && (
-          <div className="card p-5 border-pitch-500/40 bg-pitch-900/60">
-            <div className="flex items-start justify-between gap-3 mb-4">
-              <div>
-                <p className="text-sm font-semibold text-[#EBF0FF] mb-1">Your bracket awaits</p>
-                <p className="text-xs text-pitch-300 leading-relaxed">
-                  Rank all 12 groups and pick knockout winners all the way to the champion. Submit before the deadline to compete.
-                </p>
-              </div>
-              <span className="shrink-0 rounded-lg bg-pitch-700 border border-pitch-500 px-2.5 py-1 text-xs font-semibold text-pitch-300">
-                Not started
-              </span>
+        <div className={`card p-5 ${bracketStyles.card}`}>
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div>
+              <p className="text-sm font-semibold text-[#EBF0FF] mb-1">{bracketCopy.heading}</p>
+              <p className="text-xs text-pitch-300 leading-relaxed">{bracketCopy.body}</p>
             </div>
-            {!isPastDeadline && <DeadlineCountdown deadline={deadline} />}
-            <Link href="/bracket" className="btn-gold w-full justify-center text-xs uppercase tracking-widest py-2.5">
-              Create My Bracket
-            </Link>
+            <span className={`shrink-0 rounded-lg border px-2.5 py-1 text-xs font-semibold ${bracketStyles.badge}`}>
+              {bracketCopy.badge}
+            </span>
           </div>
-        )}
-
-        {/* State 2 — Created, before deadline */}
-        {bracketCreated && !isLocked && (
-          <div className="card p-5 border-gold/20 bg-gold/5">
-            <div className="flex items-start justify-between gap-3 mb-4">
-              <div>
-                <p className="text-sm font-semibold text-[#EBF0FF] mb-1">Bracket in progress</p>
-                <p className="text-xs text-pitch-300 leading-relaxed">
-                  Keep picking and submit before the deadline to lock in your predictions.
-                </p>
-              </div>
-              <span className="shrink-0 rounded-lg bg-gold/10 border border-gold/20 px-2.5 py-1 text-xs font-semibold text-gold">
-                In Progress
-              </span>
-            </div>
-            <DeadlineCountdown deadline={deadline} />
-            <Link href="/bracket" className="btn-ghost w-full justify-center text-xs uppercase tracking-wider py-2.5">
-              Edit My Bracket
-            </Link>
-          </div>
-        )}
-
-        {/* State 3 — Locked */}
-        {bracketCreated && isLocked && (
-          <div className="card p-5 border-[#34D399]/25 bg-[#34D399]/5">
-            <div className="flex items-start justify-between gap-3 mb-4">
-              <div>
-                <p className="text-sm font-semibold text-[#EBF0FF] mb-1">Bracket locked in</p>
-                <p className="text-xs text-pitch-300 leading-relaxed">
-                  Your predictions are set. Check back as results come in to see how you rank.
-                </p>
-              </div>
-              <span className="shrink-0 rounded-lg bg-[#34D399]/15 border border-[#34D399]/25 px-2.5 py-1 text-xs font-semibold text-[#34D399]">
-                Locked ✓
-              </span>
-            </div>
-            <Link href="/bracket" className="btn-ghost w-full justify-center text-xs uppercase tracking-wider py-2.5">
-              View My Bracket
-            </Link>
-          </div>
-        )}
+          {bracketState !== 'locked' && !isPastDeadline && <DeadlineCountdown deadline={deadline} />}
+          <Link
+            href="/bracket"
+            className={`w-full justify-center text-xs uppercase tracking-widest py-2.5 ${bracketState === 'empty' ? 'btn-gold' : 'btn-ghost'}`}
+          >
+            {bracketCopy.btn}
+          </Link>
+        </div>
       </div>
 
       {/* My Leagues */}
