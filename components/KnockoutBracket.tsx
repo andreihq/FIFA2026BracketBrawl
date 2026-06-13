@@ -1,8 +1,27 @@
 'use client'
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { KNOCKOUT_MATCHES, KnockoutMatch, MatchPick } from '@/data/bracket'
 import { TEAMS } from '@/data/teams'
 import { MatchDropdown, DropdownOption } from './MatchDropdown'
+
+// Precompute bracket connector pairs: [topSrcId, botSrcId, destId]
+const CONNECTOR_PAIRS: [string, string, string][] = (() => {
+  const groups: Record<string, { id: string; feedsSlot: 'A' | 'B' }[]> = {}
+  for (const m of KNOCKOUT_MATCHES) {
+    if (m.feedsInto && m.feedsSlot) {
+      if (!groups[m.feedsInto]) groups[m.feedsInto] = []
+      groups[m.feedsInto].push({ id: m.id, feedsSlot: m.feedsSlot })
+    }
+  }
+  return Object.entries(groups)
+    .filter(([, srcs]) => srcs.length === 2)
+    .map(([dest, srcs]) => {
+      const [a, b] = srcs[0].feedsSlot === 'A' ? [srcs[0], srcs[1]] : [srcs[1], srcs[0]]
+      return [a.id, b.id, dest] as [string, string, string]
+    })
+})()
+
+interface Seg { x1: number; y1: number; x2: number; y2: number }
 
 interface Props {
   groupRankings: Record<string, string[]>
@@ -237,11 +256,51 @@ export function KnockoutBracket({ groupRankings, picks, onPick, disabled = false
       .every(m => !!picks[m.id]?.teamB)
 
   const errorRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const [segs, setSegs] = useState<Seg[]>([])
+
   useEffect(() => {
     if (showValidation && !allPicksMade) {
       errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }, [showValidation]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const measure = () => {
+      const container = containerRef.current
+      if (!container) return
+      const base = container.getBoundingClientRect()
+      const next: Seg[] = []
+      for (const [topId, botId, destId] of CONNECTOR_PAIRS) {
+        const topEl = cardRefs.current[topId]
+        const botEl = cardRefs.current[botId]
+        const destEl = cardRefs.current[destId]
+        if (!topEl || !botEl || !destEl) continue
+        const tr = topEl.getBoundingClientRect()
+        const br = botEl.getBoundingClientRect()
+        const dr = destEl.getBoundingClientRect()
+        const y1 = tr.top + tr.height / 2 - base.top
+        const y2 = br.top + br.height / 2 - base.top
+        const yd = (y1 + y2) / 2
+        const xSrc = tr.right - base.left
+        const xDest = dr.left - base.left
+        const xMid = (xSrc + xDest) / 2
+        next.push(
+          { x1: xSrc, y1, x2: xMid, y2: y1 },
+          { x1: xMid, y1, x2: xMid, y2: y2 },
+          { x1: xSrc, y1: y2, x2: xMid, y2: y2 },
+          { x1: xMid, y1: yd, x2: xDest, y2: yd },
+        )
+      }
+      setSegs(next)
+    }
+
+    measure()
+    const ro = new ResizeObserver(measure)
+    if (containerRef.current) ro.observe(containerRef.current)
+    return () => ro.disconnect()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="overflow-x-auto pb-2">
@@ -250,7 +309,14 @@ export function KnockoutBracket({ groupRankings, picks, onPick, disabled = false
           Complete all picks before submitting — missing selections are highlighted.
         </div>
       )}
-      <div className="flex min-w-max items-stretch">
+      <div ref={containerRef} className="relative flex min-w-max items-stretch gap-4">
+        <svg className="absolute inset-0 w-full h-full pointer-events-none" overflow="visible">
+          {segs.map((s, i) => (
+            <line key={i} x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2}
+              stroke="rgba(255,255,255,0.18)" strokeWidth={1.5} />
+          ))}
+        </svg>
+
         {COLUMNS.map(col => (
           <div key={col} className="flex flex-col" style={{ minWidth: 180 }}>
             <div className="section-label text-center py-3 font-display text-[11px] tracking-widest">
@@ -268,32 +334,34 @@ export function KnockoutBracket({ groupRankings, picks, onPick, disabled = false
             ) : col === 'FINAL' ? (
               <div className="flex flex-col flex-1 justify-center gap-6 px-2 pb-4">
                 {finalMatches.map(match => (
-                  <MatchCard
-                    key={match.id}
-                    match={match}
-                    label={match.round === 'FINAL' ? `Finals · ${match.id}` : `3rd Place · ${match.id}`}
-                    groupRankings={groupRankings}
-                    picks={picks}
-                    onPick={onPick}
-                    disabled={disabled}
-                    showValidation={showValidation}
-                    correctPicks={correctPicks}
-                  />
+                  <div key={match.id} ref={el => { cardRefs.current[match.id] = el }}>
+                    <MatchCard
+                      match={match}
+                      label={match.round === 'FINAL' ? `Finals · ${match.id}` : `3rd Place · ${match.id}`}
+                      groupRankings={groupRankings}
+                      picks={picks}
+                      onPick={onPick}
+                      disabled={disabled}
+                      showValidation={showValidation}
+                      correctPicks={correctPicks}
+                    />
+                  </div>
                 ))}
               </div>
             ) : (
               <div className="flex flex-col flex-1 justify-around gap-3 px-2 pb-4">
                 {KNOCKOUT_MATCHES.filter(m => m.round === col).map(match => (
-                  <MatchCard
-                    key={match.id}
-                    match={match}
-                    groupRankings={groupRankings}
-                    picks={picks}
-                    onPick={onPick}
-                    disabled={disabled}
-                    showValidation={showValidation}
-                    correctPicks={correctPicks}
-                  />
+                  <div key={match.id} ref={el => { cardRefs.current[match.id] = el }}>
+                    <MatchCard
+                      match={match}
+                      groupRankings={groupRankings}
+                      picks={picks}
+                      onPick={onPick}
+                      disabled={disabled}
+                      showValidation={showValidation}
+                      correctPicks={correctPicks}
+                    />
+                  </div>
                 ))}
               </div>
             )}
