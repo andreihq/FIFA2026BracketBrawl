@@ -147,7 +147,7 @@ export default function BracketPage() {
         <div className="mt-4">
           <button
             onClick={() => setShowInstructions(s => !s)}
-            className="inline-flex items-center gap-1.5 text-[11px] text-pitch-400 hover:text-pitch-300 transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-[#EBF0FF] hover:text-white transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <circle cx="8" cy="8" r="6.5"/>
