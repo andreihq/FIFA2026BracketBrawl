@@ -27,7 +27,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="en" className={`${bebas.variable} ${outfit.variable}`}>
-      <body className="min-h-screen bg-pitch-950 text-pitch-200 antialiased">
+      <body className="min-h-screen bg-pitch-950 text-pitch-200 antialiased overflow-x-hidden">
         <Header isLoggedIn={isLoggedIn} />
         {children}
       </body>

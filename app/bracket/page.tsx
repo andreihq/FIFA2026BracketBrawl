@@ -161,14 +161,14 @@ export default function BracketPage() {
       )}
 
       {/* Page header */}
-      <div className="anim-fade-up mb-12 pt-2 px-5">
+      <div className="anim-fade-up mb-6 pt-2 px-5">
         <p className="section-label mb-1">Bracket</p>
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">My Predictions</h1>
+        <div className="flex items-center justify-between mb-2 gap-3">
+          <h1 className="font-display text-3xl sm:text-4xl tracking-wider text-[#EBF0FF] leading-none">My Predictions</h1>
           {submitted && (
             <button
               onClick={() => setShowShare(true)}
-              className="btn-ghost gap-2 py-2 text-xs uppercase tracking-widest"
+              className="btn-ghost flex-shrink-0 gap-2 py-2 text-xs uppercase tracking-widest"
             >
               <svg width="14" height="15" viewBox="0 0 16 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
                 <circle cx="2.5" cy="9" r="2"/>
@@ -177,7 +177,7 @@ export default function BracketPage() {
                 <line x1="4.3" y1="8.2" x2="11.7" y2="3.8"/>
                 <line x1="4.3" y1="9.8" x2="11.7" y2="14.2"/>
               </svg>
-              Share
+              <span className="hidden min-[351px]:inline">Share</span>
             </button>
           )}
         </div>
@@ -187,7 +187,7 @@ export default function BracketPage() {
         {deadline && !isDisabled && <div><DeadlineCountdown deadline={deadline} /></div>}
 
         {/* How to play */}
-        <div className="mt-4">
+        <div className="mt-6">
           <button
             onClick={() => setShowInstructions(s => !s)}
             className="inline-flex items-center gap-1.5 text-sm text-[#EBF0FF] hover:text-white transition-colors"
@@ -321,7 +321,7 @@ export default function BracketPage() {
           <button
             onClick={() => setShowReset(true)}
             disabled={saving}
-            className="btn-ghost px-5 py-2.5 text-xs uppercase tracking-widest text-red-400 hover:text-red-300 border-red-500/30 hover:border-red-400/50"
+            className="btn-ghost px-5 py-2.5 text-xs uppercase tracking-widest"
           >
             Reset Bracket
           </button>

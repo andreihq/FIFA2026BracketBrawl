@@ -326,7 +326,7 @@ export function KnockoutBracket({ groupRankings, picks, onPick, disabled = false
 
         {COLUMNS.map(col => (
           <div key={col} className="flex flex-col" style={{ minWidth: 180 }}>
-            <div className="section-label text-center py-3 font-display text-[11px] tracking-widest">
+            <div className="section-label text-center py-3 font-display text-[14px] tracking-widest">
               {COLUMN_LABELS[col]}
             </div>
 

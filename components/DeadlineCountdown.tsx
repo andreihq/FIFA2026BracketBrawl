@@ -52,8 +52,8 @@ export function DeadlineCountdown({ deadline }: { deadline: string }) {
       : 'text-pitch-400'
 
   return (
-    <div className="flex items-center gap-2 mb-4 flex-wrap">
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className={`flex-shrink-0 ${iconClass}`} aria-hidden="true">
+    <div className="flex items-center gap-1.5 mb-4 min-w-0 overflow-hidden">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className={`flex-shrink-0 ${iconClass}`} aria-hidden="true">
         {/* crown/button at top */}
         <path d="M6 1h4" />
         {/* stem */}
@@ -63,12 +63,12 @@ export function DeadlineCountdown({ deadline }: { deadline: string }) {
         {/* hands */}
         <path d="M8 6.5v3l2 1.5" />
       </svg>
-      <span className="text-xs text-[#EBF0FF]">Closes in</span>
-      <span className={`font-mono text-xs font-semibold rounded-lg border px-2.5 py-1 tabular-nums ${chipClass}`}>
+      <span className="text-[11px] sm:text-xs text-[#EBF0FF] flex-shrink-0">Closes in</span>
+      <span className={`font-mono text-[11px] sm:text-xs font-semibold rounded border px-1.5 py-0.5 tabular-nums flex-shrink-0 ${chipClass}`}>
         {label}
       </span>
-      <span className="text-xs text-[#EBF0FF]">{deadlineLabel}</span>
-      <span className="text-xs text-pitch-400">{tzLabel}</span>
+      <span className="text-[11px] sm:text-xs text-[#EBF0FF] truncate">{deadlineLabel}</span>
+      <span className="text-[11px] sm:text-xs text-pitch-400 flex-shrink-0">{tzLabel}</span>
     </div>
   )
 }
