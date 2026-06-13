@@ -191,9 +191,9 @@ export default function BracketPage() {
                     <div key={id} className="rounded-lg bg-pitch-800 border border-pitch-600 px-3 py-2.5">
                       <div className="flex items-center gap-2 mb-1.5">
                         <span className="font-mono text-[11px] font-bold text-[#EBF0FF] bg-pitch-600 rounded px-1.5 py-0.5">{id}</span>
-                        <span className="text-[#EBF0FF] font-medium text-xs">{opp}</span>
-                        <span className="text-pitch-400 text-xs">vs</span>
-                        <span className="text-pitch-300 text-xs">Best 3rd of</span>
+                        <span className="text-pitch-400 text-xs">{opp}</span>
+                        <span className="text-pitch-500 text-xs">vs</span>
+                        <span className="text-[#EBF0FF] font-semibold text-xs">Best 3rd Place of</span>
                       </div>
                       <div className="flex gap-1.5 flex-wrap">
                         {groups.split(' ').map(g => (
