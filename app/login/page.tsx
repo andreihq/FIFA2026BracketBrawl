@@ -50,7 +50,7 @@ export default function LoginPage() {
         <div className="mb-8 text-center">
           <img src="/trophy.png" alt="FIFA World Cup trophy" className="mb-4 w-[80px] h-[80px] sm:w-[110px] sm:h-[110px] md:w-[140px] md:h-[140px] object-contain mx-auto" />
           <h1 className="font-display text-5xl tracking-wider text-[#EBF0FF] leading-none">Welcome back</h1>
-          <p className="mt-2 text-sm text-pitch-300">Sign in to your predictor account</p>
+          <p className="mt-2 text-sm text-pitch-300">Sign in to your Bracket Brawl account</p>
         </div>
 
         <div className="card p-7">
