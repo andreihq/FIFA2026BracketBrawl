@@ -3,7 +3,6 @@ interface LeaderboardRow {
   groupPoints: number
   knockoutPoints: number
   total: number
-  submitted: boolean
 }
 
 interface Props {
@@ -59,15 +58,12 @@ export function Leaderboard({ rows, currentUsername, leagueId }: Props) {
                     you
                   </span>
                 )}
-                {!row.submitted && (
-                  <span className="flex-shrink-0 rounded-md bg-red-500/10 border border-red-500/30 px-1.5 py-0.5 text-[10px] font-medium text-red-400">
-                    Bracket not Submitted
-                  </span>
-                )}
               </div>
               <div className="text-right text-xs text-pitch-200 font-mono">{row.groupPoints}</div>
               <div className="text-right text-xs text-pitch-200 font-mono">{row.knockoutPoints}</div>
-              <div className={`text-right text-sm font-bold font-mono ${isMe ? 'text-[#60A5FA]' : 'text-[#EBF0FF]'}`}>
+              <div className={`text-right text-sm font-bold font-mono ${
+                i === 0 ? 'text-gold' : i === 1 ? 'text-[#A0AEC0]' : i === 2 ? 'text-[#C4834A]' : 'text-[#EBF0FF]'
+              }`}>
                 {row.total}
               </div>
             </div>

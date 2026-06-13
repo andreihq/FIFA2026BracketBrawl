@@ -305,7 +305,7 @@ export default function BracketPage() {
       </div>
 
       {!isDisabled && (
-        <div className="flex items-center justify-between mt-10 pt-5 border-t border-pitch-700 px-5">
+        <div className="flex items-start sm:items-center justify-between mt-1 pt-5 border-t border-pitch-700 px-5">
           <div className="flex items-center gap-3">
             <button
               onClick={submitBracket}
@@ -321,13 +321,13 @@ export default function BracketPage() {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
             <button
               onClick={saveDraft}
               disabled={savingAction !== null}
               className="btn-ghost px-5 py-2.5 text-xs uppercase tracking-widest"
             >
-              {savingAction === 'save' ? 'Saving…' : 'Save'}
+              {savingAction === 'save' ? 'Saving…' : 'Save Draft'}
             </button>
             <button
               onClick={() => setShowReset(true)}

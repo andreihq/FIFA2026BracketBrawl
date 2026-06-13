@@ -56,19 +56,19 @@ export default async function DashboardPage() {
   )
 
   const isPastDeadline = new Date() > new Date(deadline)
-  const bracketCreated = !!bracket
-  const isLocked = isPastDeadline || !!bracket?.locked
+  const isSubmitted = !!bracket?.submitted_at
+  const isLocked = isSubmitted && (isPastDeadline || !!bracket?.locked)
 
-  const bracketState = !bracketCreated ? 'empty' : isLocked ? 'locked' : 'active'
+  const bracketState = !isSubmitted ? 'empty' : isLocked ? 'locked' : 'active'
   const bracketStyles = {
     empty:  { card: 'border-gold/20 bg-gold/5',            badge: 'bg-gold/10 border-gold/20 text-gold' },
     active: { card: 'border-[#34D399]/25 bg-[#34D399]/5', badge: 'bg-[#34D399]/15 border-[#34D399]/25 text-[#34D399]' },
     locked: { card: 'border-[#34D399]/25 bg-[#34D399]/5', badge: 'bg-[#34D399]/15 border-[#34D399]/25 text-[#34D399]' },
   }[bracketState]
   const bracketCopy = {
-    empty:  { heading: 'Your bracket awaits',  body: 'Rank all 12 groups and pick knockout winners all the way to the champion. Submit before the deadline to compete.', badge: 'Not started', btn: 'Create My Bracket' },
-    active: { heading: 'Bracket in progress',  body: 'Keep picking and submit before the deadline to lock in your predictions.',                                          badge: 'Submitted',    btn: 'Edit My Bracket' },
-    locked: { heading: 'Bracket locked in',    body: 'Your predictions are set. Check back as results come in to see how you rank.',                                      badge: 'Locked ✓',    btn: 'View My Bracket' },
+    empty:  { heading: 'Your bracket awaits',   body: 'Rank all 12 groups and pick knockout winners all the way to the champion. Submit before the deadline to compete.', badge: 'Not Submitted', btn: 'Fill My Bracket' },
+    active: { heading: 'Bracket submitted',      body: 'Your predictions are in. You can still update and re-submit before the deadline.',                                 badge: 'Submitted',     btn: 'Edit My Bracket' },
+    locked: { heading: 'Bracket locked in',      body: 'Your predictions are set. Check back as results come in to see how you rank.',                                    badge: 'Locked ✓',      btn: 'View My Bracket' },
   }[bracketState]
 
   return (
