@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import type { GroupPrediction, KnockoutPrediction } from '@/types'
 import { GROUP_CODES, GROUPS } from '@/data/groups'
 import { KNOCKOUT_MATCHES, buildPicks } from '@/data/bracket'
 import { BracketEditor } from '@/components/BracketEditor'
@@ -45,18 +46,18 @@ export default function BracketPage() {
 
         const rankings: Record<string, string[]> = {}
         for (const group of GROUP_CODES) {
-          const preds = (data.groupPredictions as any[])
-            .filter((p: any) => p.group_code === group)
-            .sort((a: any, b: any) => a.predicted_pos - b.predicted_pos)
+          const preds = (data.groupPredictions as GroupPrediction[])
+            .filter((p: GroupPrediction) => p.group_code === group)
+            .sort((a: GroupPrediction, b: GroupPrediction) => a.predicted_pos - b.predicted_pos)
           rankings[group] = preds.length > 0
-            ? preds.map((p: any) => p.team_code)
+            ? preds.map((p) => p.team_code)
             : GROUPS[group] ?? []
         }
         setGroupRankings(rankings)
 
         const q: Record<string, string> = {}
         const w: Record<string, string> = {}
-        for (const p of data.knockoutPredictions as any[]) {
+        for (const p of data.knockoutPredictions as KnockoutPrediction[]) {
           if (p.match_id.endsWith(':qualifier')) q[p.match_id.replace(':qualifier', '')] = p.predicted_winner
           else w[p.match_id] = p.predicted_winner
         }
@@ -209,7 +210,7 @@ export default function BracketPage() {
               <div>
                 <p className="section-label mb-2">① Group Stage</p>
                 <p className="leading-relaxed">
-                  Drag and drop the teams within each group to rank them <span className="text-[#EBF0FF] font-medium">1st through 4th</span> in the order you predict they'll finish. The <span className="text-[#EBF0FF] font-medium">top 2</span> from each group advance to the Round of 32 automatically.
+                  Drag and drop the teams within each group to rank them <span className="text-[#EBF0FF] font-medium">1st through 4th</span> in the order you predict they&apos;ll finish. The <span className="text-[#EBF0FF] font-medium">top 2</span> from each group advance to the Round of 32 automatically.
                 </p>
               </div>
 
@@ -251,7 +252,7 @@ export default function BracketPage() {
               <div>
                 <p className="section-label mb-2">③ Knockout Rounds</p>
                 <p className="leading-relaxed">
-                  Switch to the <span className="text-[#EBF0FF] font-medium">Knockouts tab</span> and pick the winner of every match — Round of 32, Quarterfinals, Semifinals, and the Final. Don't forget to pick the <span className="text-[#EBF0FF] font-medium">3rd Place</span> match too.
+                  Switch to the <span className="text-[#EBF0FF] font-medium">Knockouts tab</span> and pick the winner of every match — Round of 32, Quarterfinals, Semifinals, and the Final. Don&apos;t forget to pick the <span className="text-[#EBF0FF] font-medium">3rd Place</span> match too.
                 </p>
               </div>
 

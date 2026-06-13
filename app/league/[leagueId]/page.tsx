@@ -26,7 +26,7 @@ export default async function LeaguePage({ params }: { params: { leagueId: strin
 
   const leaderboard = await Promise.all(
     (members ?? []).map(async member => {
-      const player = member.players as any
+      const player = member.players as unknown as { id: string; username: string }
       const { data: bracket } = await supabase
         .from('brackets').select('id').eq('player_id', player.id).single()
       if (!bracket) return { username: player.username, groupPoints: 0, knockoutPoints: 0, total: 0, submitted: false }
@@ -39,7 +39,7 @@ export default async function LeaguePage({ params }: { params: { leagueId: strin
   )
   leaderboard.sort((a, b) => b.total - a.total)
 
-  const isMember = !!session.playerId && (members ?? []).some((m: any) => m.player_id === session.playerId)
+  const isMember = !!session.playerId && (members ?? []).some((m) => m.player_id === session.playerId)
 
   return (
     <div className="min-h-screen p-5 max-w-2xl mx-auto">

@@ -31,7 +31,7 @@ export default async function DashboardPage() {
 
   const leaguesWithRank = await Promise.all(
     (memberships ?? []).map(async m => {
-      const league = m.leagues as any
+      const league = m.leagues as unknown as { id: string; name: string }
       const { data: members } = await supabase
         .from('league_members')
         .select('player_id, players(id, username)')
@@ -39,7 +39,7 @@ export default async function DashboardPage() {
 
       const scores = await Promise.all(
         (members ?? []).map(async member => {
-          const p = member.players as any
+          const p = member.players as unknown as { id: string; username: string }
           const { data: b } = await supabase.from('brackets').select('id').eq('player_id', p.id).single()
           if (!b) return { username: p.username, total: 0 }
           const [{ data: gp }, { data: kp }] = await Promise.all([

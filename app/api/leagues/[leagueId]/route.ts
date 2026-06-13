@@ -24,7 +24,7 @@ export async function GET(req: NextRequest, { params }: { params: { leagueId: st
 
   const leaderboard = await Promise.all(
     members.map(async member => {
-      const player = (member.players as any)
+      const player = member.players as unknown as { id: string; username: string }
       const { data: bracket } = await supabase
         .from('brackets')
         .select('id')

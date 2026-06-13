@@ -2,12 +2,13 @@
 import { useState } from 'react'
 import { GROUP_CODES, GROUPS } from '@/data/groups'
 import { BracketEditor } from '@/components/BracketEditor'
+import type { ActualResult } from '@/types'
 
 // ── Login gate ────────────────────────────────────────────────────────────────
 // Kept as a separate component so it fully unmounts (and its password input
 // disappears from the DOM) the moment the user authenticates.
 
-function AdminLogin({ onSuccess }: { onSuccess: (password: string, initialData: any) => void }) {
+function AdminLogin({ onSuccess }: { onSuccess: (password: string, initialData: { results: ActualResult[] }) => void }) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 
@@ -51,7 +52,7 @@ function AdminLogin({ onSuccess }: { onSuccess: (password: string, initialData: 
 
 // ── Admin panel ───────────────────────────────────────────────────────────────
 
-function AdminPanel({ password, initialResults }: { password: string; initialResults: any[] }) {
+function AdminPanel({ password, initialResults }: { password: string; initialResults: ActualResult[] }) {
   const [activeSection, setActiveSection] = useState<'bracket' | 'settings'>('bracket')
   const [bracketTab, setBracketTab] = useState<'groups' | 'knockouts'>('groups')
   const [groupRankings, setGroupRankings] = useState<Record<string, string[]>>(() => {
@@ -60,7 +61,7 @@ function AdminPanel({ password, initialResults }: { password: string; initialRes
       const rows = initialResults.filter(r => r.result_type === 'group' && r.ref_id === group)
       if (rows.length > 0) {
         const arr: string[] = []
-        for (const r of rows) arr[r.position - 1] = r.team_code
+        for (const r of rows) if (r.position != null) arr[r.position - 1] = r.team_code
         rankings[group] = arr.filter(Boolean)
       } else {
         rankings[group] = GROUPS[group] ?? []
@@ -204,7 +205,7 @@ function AdminPanel({ password, initialResults }: { password: string; initialRes
 // ── Page shell ────────────────────────────────────────────────────────────────
 
 export default function AdminPage() {
-  const [session, setSession] = useState<{ password: string; results: any[] } | null>(null)
+  const [session, setSession] = useState<{ password: string; results: ActualResult[] } | null>(null)
 
   if (!session) {
     return (

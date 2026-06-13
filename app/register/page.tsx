@@ -1,11 +1,10 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { randomUsernamePlaceholder } from '@/lib/username-suggestions'
 
 export default function RegisterPage() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const join = searchParams.get('join')
   const [username, setUsername] = useState('')
