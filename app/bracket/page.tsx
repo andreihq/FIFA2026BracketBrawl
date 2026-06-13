@@ -119,13 +119,8 @@ export default function BracketPage() {
       {/* Page header */}
       <div className="anim-fade-up mb-12 pt-2 px-5">
         <p className="section-label mb-1">Bracket</p>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">My Predictions</h1>
-            <span className={`rounded-lg border px-2.5 py-1 text-xs font-semibold ${badgeStyles}`}>
-              {badgeLabel}
-            </span>
-          </div>
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">My Predictions</h1>
           {submitted && (
             <button
               onClick={() => setShowShare(true)}
@@ -135,7 +130,10 @@ export default function BracketPage() {
             </button>
           )}
         </div>
-        {deadline && !isDisabled && <div className="mt-4"><DeadlineCountdown deadline={deadline} /></div>}
+        <span className={`inline-block rounded-lg border px-2.5 py-1 text-xs font-semibold mb-3 ${badgeStyles}`}>
+          {badgeLabel}
+        </span>
+        {deadline && !isDisabled && <div><DeadlineCountdown deadline={deadline} /></div>}
       </div>
 
       {/* Tabs */}
@@ -178,7 +176,7 @@ export default function BracketPage() {
       </div>
 
       {!isDisabled && (
-        <div className="flex items-center justify-end gap-3 mt-10 pt-5 border-t border-pitch-700 px-5">
+        <div className="flex items-center gap-3 mt-10 pt-5 border-t border-pitch-700 px-5">
           {saveMsg && <span className="text-sm font-medium text-[#34D399]">{saveMsg}</span>}
           <button
             onClick={async () => {
