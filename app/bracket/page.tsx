@@ -113,11 +113,11 @@ export default function BracketPage() {
   }
 
   return (
-    <div className="min-h-screen px-0 py-5 sm:px-5 max-w-6xl mx-auto">
+    <div className="min-h-screen px-0 py-5 max-w-[1202px] mx-auto">
       {showShare && username && <ShareBracketModal username={username} onClose={() => setShowShare(false)} />}
 
       {/* Page header */}
-      <div className="anim-fade-up mb-12 pt-2 px-5 sm:px-0">
+      <div className="anim-fade-up mb-12 pt-2 px-5">
         <p className="section-label mb-1">Bracket</p>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
@@ -139,7 +139,7 @@ export default function BracketPage() {
       </div>
 
       {/* Tabs */}
-      <div className="anim-fade-up anim-delay-1 flex gap-1.5 mb-6 px-5 sm:px-0">
+      <div className="anim-fade-up anim-delay-1 flex gap-1.5 mb-6 px-5">
         {(['groups', 'knockouts'] as Tab[]).map(t => (
           <button
             key={t}
@@ -153,7 +153,7 @@ export default function BracketPage() {
 
       <div className="anim-fade-up anim-delay-2">
         {tab === 'groups' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-5 sm:px-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-5">
             {GROUP_CODES.map(g => (
               <GroupStageEditor
                 key={g}
@@ -178,7 +178,7 @@ export default function BracketPage() {
       </div>
 
       {!isDisabled && (
-        <div className="flex items-center justify-end gap-3 mt-10 pt-5 border-t border-pitch-700 px-5 sm:px-0">
+        <div className="flex items-center justify-end gap-3 mt-10 pt-5 border-t border-pitch-700 px-5">
           {saveMsg && <span className="text-sm font-medium text-[#34D399]">{saveMsg}</span>}
           <button
             onClick={async () => {
