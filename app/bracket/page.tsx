@@ -26,6 +26,7 @@ export default function BracketPage() {
   const [showInstructions, setShowInstructions] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
   const [showValidation, setShowValidation] = useState(false)
+  const [bracketTab, setBracketTab] = useState<'groups' | 'knockouts'>('groups')
   const [deadline, setDeadline] = useState<string | null>(null)
 
   const picks = useMemo(
@@ -116,6 +117,7 @@ export default function BracketPage() {
   const submitBracket = useCallback(async () => {
     if (!groupsComplete || !koComplete) {
       setShowValidation(true)
+      if (!koComplete) setBracketTab('knockouts')
       return
     }
     setShowValidation(false)
@@ -297,6 +299,8 @@ export default function BracketPage() {
           onPick={handlePick}
           disabled={isDisabled}
           showValidation={showValidation}
+          tab={bracketTab}
+          onTabChange={setBracketTab}
         />
       </div>
 

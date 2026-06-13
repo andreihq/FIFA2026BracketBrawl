@@ -15,6 +15,7 @@ interface Props {
   onPick: (matchId: string, field: 'teamB' | 'winner', teamCode: string) => void
   disabled?: boolean
   showValidation?: boolean
+  tab?: Tab
   onTabChange?: (tab: Tab) => void
 }
 
@@ -26,12 +27,14 @@ export function BracketEditor({
   onPick,
   disabled = false,
   showValidation = false,
+  tab: controlledTab,
   onTabChange,
 }: Props) {
-  const [tab, setTab] = useState<Tab>('groups')
+  const [internalTab, setInternalTab] = useState<Tab>('groups')
+  const tab = controlledTab ?? internalTab
 
   function switchTab(t: Tab) {
-    setTab(t)
+    setInternalTab(t)
     onTabChange?.(t)
   }
 
