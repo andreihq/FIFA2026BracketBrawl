@@ -102,13 +102,15 @@ export default function AdminPage() {
             <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF]">Admin</h1>
             <p className="text-sm text-pitch-300 mt-1">Enter results</p>
           </div>
-          <form onSubmit={checkPassword} className="card p-6 flex flex-col gap-4">
+          <form onSubmit={checkPassword} className="card p-6 flex flex-col gap-4" autoComplete="off">
             <input
               type="password"
               className="field"
               placeholder="Admin password"
               value={password}
               onChange={e => setPassword(e.target.value)}
+              autoComplete="off"
+              data-1p-ignore
               required
             />
             {authError && <p className="text-sm text-[#F87171]">{authError}</p>}
