@@ -161,7 +161,7 @@ export default function BracketPage() {
           </button>
 
           {showInstructions && (
-            <div className="mt-3 rounded-xl border border-pitch-700 bg-pitch-900/60 p-5 space-y-6 text-sm text-pitch-200 max-w-2xl">
+            <div className="mt-3 rounded-xl border border-pitch-700 bg-pitch-900/60 p-5 space-y-6 text-sm text-pitch-200">
 
               {/* Step 1 */}
               <div>
