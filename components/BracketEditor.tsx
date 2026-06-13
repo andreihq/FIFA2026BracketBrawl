@@ -66,13 +66,15 @@ export function BracketEditor({
       )}
 
       {tab === 'knockouts' && (
-        <KnockoutBracket
-          groupRankings={groupRankings}
-          picks={picks}
-          onPick={onPick}
-          disabled={disabled}
-          showValidation={showValidation}
-        />
+        <div className="-mx-5">
+          <KnockoutBracket
+            groupRankings={groupRankings}
+            picks={picks}
+            onPick={onPick}
+            disabled={disabled}
+            showValidation={showValidation}
+          />
+        </div>
       )}
     </>
   )
