@@ -124,8 +124,11 @@ export default function BracketPage() {
           {submitted && (
             <button
               onClick={() => setShowShare(true)}
-              className="text-xs uppercase tracking-widest px-4 py-1.5 rounded-lg border border-[#34D399]/30 bg-[#34D399]/10 text-[#34D399] hover:bg-[#34D399]/20 transition-colors"
+              className="btn-ghost gap-2 py-2 text-xs uppercase tracking-widest"
             >
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M8 1.5v8M5 4.5l3-3 3 3M3 9.5v4h10v-4" />
+              </svg>
               Share
             </button>
           )}
