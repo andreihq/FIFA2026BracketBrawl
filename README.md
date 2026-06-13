@@ -24,8 +24,8 @@ A web app for predicting the FIFA 2026 World Cup bracket. Users register, fill i
 **1. Clone and install**
 
 ```bash
-git clone <repo-url>
-cd fifa2026bracketpreditor
+git clone https://github.com/andreihq/FIFA2026BracketBrawl.git
+cd FIFA2026BracketBrawl
 npm install
 ```
 
