@@ -40,9 +40,10 @@ export async function PUT(req: NextRequest) {
   if (deadlineSetting && new Date() > new Date(deadlineSetting.value)) {
     return NextResponse.json({ error: 'Submission deadline has passed' }, { status: 403 })
   }
-  const { groupPredictions, knockoutPredictions } = await req.json() as {
+  const { groupPredictions, knockoutPredictions, submit } = await req.json() as {
     groupPredictions: Omit<GroupPrediction, 'id' | 'bracket_id'>[],
     knockoutPredictions: Omit<KnockoutPrediction, 'id' | 'bracket_id'>[],
+    submit?: boolean,
   }
 
   // Get or create bracket
@@ -76,6 +77,13 @@ export async function PUT(req: NextRequest) {
   if (knockoutPredictions.length > 0) {
     const rows = knockoutPredictions.map(p => ({ ...p, bracket_id: bracket!.id }))
     await supabase.from('knockout_predictions').insert(rows)
+  }
+
+  if (submit) {
+    await supabase
+      .from('brackets')
+      .update({ submitted_at: new Date().toISOString() })
+      .eq('id', bracket.id)
   }
 
   return NextResponse.json({ ok: true })

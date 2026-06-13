@@ -15,9 +15,10 @@ export default function BracketPage() {
   const [qualifiers, setQualifiers] = useState<Record<string, string>>({})
   const [winners, setWinners] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
+  const [savingAction, setSavingAction] = useState<'save' | 'submit' | null>(null)
   const [resetting, setResetting] = useState(false)
   const [showReset, setShowReset] = useState(false)
+  const [hasBracket, setHasBracket] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [locked, setLocked] = useState(false)
   const [username, setUsername] = useState('')
@@ -40,7 +41,8 @@ export default function BracketPage() {
     fetch('/api/brackets')
       .then(r => r.json())
       .then(data => {
-        setSubmitted(!!data.bracket)
+        setHasBracket(!!data.bracket)
+        setSubmitted(!!data.bracket?.submitted_at)
         setLocked(!!data.bracket?.locked)
         setUsername(data.username ?? '')
 
@@ -67,13 +69,14 @@ export default function BracketPage() {
       })
   }, [])
 
-  const bracketState = !submitted ? 'empty' : isDisabled ? 'locked' : 'active'
+  const bracketState = !hasBracket ? 'empty' : !submitted ? 'draft' : isDisabled ? 'locked' : 'active'
   const badgeStyles = {
     empty:  'bg-gold/10 border-gold/20 text-gold',
+    draft:  'bg-pitch-700/50 border-pitch-600/60 text-pitch-300',
     active: 'bg-[#34D399]/15 border-[#34D399]/25 text-[#34D399]',
     locked: 'bg-[#34D399]/15 border-[#34D399]/25 text-[#34D399]',
   }[bracketState]
-  const badgeLabel = { empty: 'Not Submitted', active: 'Submitted', locked: 'Locked ✓' }[bracketState]
+  const badgeLabel = { empty: 'Not Submitted', draft: 'Draft', active: 'Submitted', locked: 'Locked ✓' }[bracketState]
 
   const groupsComplete = GROUP_CODES.every(g => (groupRankings[g]?.length ?? 0) >= 4)
   const koComplete = KNOCKOUT_MATCHES.every(m => !!picks[m.id]?.winner)
@@ -86,8 +89,7 @@ export default function BracketPage() {
     else setWinners(prev => ({ ...prev, [matchId]: teamCode }))
   }, [])
 
-  const saveDraft = useCallback(async () => {
-    setSaving(true)
+  const buildPayload = useCallback((doSubmit: boolean) => {
     const groupPredictions = Object.entries(groupRankings).flatMap(([group_code, order]) =>
       order.map((team_code, i) => ({ group_code, team_code, predicted_pos: i + 1 }))
     )
@@ -95,15 +97,39 @@ export default function BracketPage() {
       ...Object.entries(winners).map(([match_id, predicted_winner]) => ({ match_id, predicted_winner })),
       ...Object.entries(qualifiers).map(([match_id, predicted_winner]) => ({ match_id: match_id + ':qualifier', predicted_winner })),
     ]
+    return { groupPredictions, knockoutPredictions, submit: doSubmit }
+  }, [groupRankings, winners, qualifiers])
+
+  const saveDraft = useCallback(async () => {
+    setSavingAction('save')
     const res = await fetch('/api/brackets', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ groupPredictions, knockoutPredictions }),
+      body: JSON.stringify(buildPayload(false)),
     })
+    if (res.ok) setHasBracket(true)
     setSaveMsg(res.ok ? 'Saved ✓' : 'Save failed')
-    setSaving(false)
+    setSavingAction(null)
     setTimeout(() => setSaveMsg(''), 3000)
-  }, [groupRankings, winners, qualifiers])
+  }, [buildPayload])
+
+  const submitBracket = useCallback(async () => {
+    if (!groupsComplete || !koComplete) {
+      setShowValidation(true)
+      return
+    }
+    setShowValidation(false)
+    setSavingAction('submit')
+    const res = await fetch('/api/brackets', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(buildPayload(true)),
+    })
+    if (res.ok) { setHasBracket(true); setSubmitted(true) }
+    setSaveMsg(res.ok ? 'Submitted ✓' : 'Submit failed')
+    setSavingAction(null)
+    setTimeout(() => setSaveMsg(''), 3000)
+  }, [buildPayload, groupsComplete, koComplete])
 
   const resetBracket = useCallback(async () => {
     setResetting(true)
@@ -116,6 +142,7 @@ export default function BracketPage() {
       setGroupRankings(defaultRankings)
       setQualifiers({})
       setWinners({})
+      setHasBracket(false)
       setSubmitted(false)
       router.refresh()
     }
@@ -274,29 +301,38 @@ export default function BracketPage() {
       </div>
 
       {!isDisabled && (
-        <div className="flex items-center gap-3 mt-10 pt-5 border-t border-pitch-700 px-5">
-          {saveMsg && <span className="text-sm font-medium text-[#34D399]">{saveMsg}</span>}
-          <button
-            onClick={async () => {
-              if (!groupsComplete || !koComplete) {
-                setShowValidation(true)
-                return
-              }
-              setShowValidation(false)
-              await saveDraft()
-            }}
-            disabled={saving}
-            className="btn-gold px-5 py-2.5 text-xs uppercase tracking-widest"
-          >
-            {saving ? 'Saving…' : 'Save Bracket'}
-          </button>
-          <button
-            onClick={() => setShowReset(true)}
-            disabled={saving}
-            className="btn-ghost px-5 py-2.5 text-xs uppercase tracking-widest"
-          >
-            Reset Bracket
-          </button>
+        <div className="flex items-center justify-between mt-10 pt-5 border-t border-pitch-700 px-5">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={submitBracket}
+              disabled={savingAction !== null}
+              className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-widest transition-all duration-200 disabled:opacity-50"
+              style={{ background: '#34D399', color: '#07090F' }}
+            >
+              {savingAction === 'submit' ? 'Submitting…' : 'Submit Bracket'}
+            </button>
+            {saveMsg && (
+              <span className={`text-sm font-medium ${saveMsg.includes('✓') ? 'text-[#34D399]' : 'text-[#F87171]'}`}>
+                {saveMsg}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={saveDraft}
+              disabled={savingAction !== null}
+              className="btn-ghost px-5 py-2.5 text-xs uppercase tracking-widest"
+            >
+              {savingAction === 'save' ? 'Saving…' : 'Save'}
+            </button>
+            <button
+              onClick={() => setShowReset(true)}
+              disabled={savingAction !== null}
+              className="btn-ghost px-5 py-2.5 text-xs uppercase tracking-widest"
+            >
+              Reset
+            </button>
+          </div>
         </div>
       )}
     </div>
