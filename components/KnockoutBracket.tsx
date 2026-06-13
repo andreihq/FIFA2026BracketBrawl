@@ -77,7 +77,7 @@ function WinnerDropdown({ srcMatchId, picks, onPick, showValidation }: {
     <MatchDropdown
       value={picked ?? ''}
       options={options}
-      placeholder={`Pick winner…`}
+      placeholder={`Pick ${srcMatchId} Winner`}
       onChange={code => onPick(srcMatchId, 'winner', code)}
       disabled={!teamA || !teamB}
       isError={isError}
