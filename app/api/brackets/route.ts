@@ -105,10 +105,7 @@ export async function DELETE() {
     supabase.from('knockout_predictions').delete().eq('bracket_id', bracket.id),
   ])
 
-  await supabase
-    .from('brackets')
-    .update({ submitted_at: null })
-    .eq('id', bracket.id)
+  await supabase.from('brackets').delete().eq('id', bracket.id)
 
   return NextResponse.json({ ok: true })
 }

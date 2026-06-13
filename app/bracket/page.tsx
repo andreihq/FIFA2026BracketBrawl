@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { GROUP_CODES, GROUPS } from '@/data/groups'
 import { KNOCKOUT_MATCHES, buildPicks } from '@/data/bracket'
 import { BracketEditor } from '@/components/BracketEditor'
@@ -8,6 +9,7 @@ import { ShareBracketModal } from '@/components/ShareBracketModal'
 import { Modal } from '@/components/Modal'
 
 export default function BracketPage() {
+  const router = useRouter()
   const [groupRankings, setGroupRankings] = useState<Record<string, string[]>>({})
   const [qualifiers, setQualifiers] = useState<Record<string, string>>({})
   const [winners, setWinners] = useState<Record<string, string>>({})
@@ -114,10 +116,11 @@ export default function BracketPage() {
       setQualifiers({})
       setWinners({})
       setSubmitted(false)
+      router.refresh()
     }
     setResetting(false)
     setShowReset(false)
-  }, [])
+  }, [router])
 
   if (loading) {
     return (

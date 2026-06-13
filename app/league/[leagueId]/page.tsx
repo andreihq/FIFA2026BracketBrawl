@@ -29,12 +29,12 @@ export default async function LeaguePage({ params }: { params: { leagueId: strin
       const player = member.players as any
       const { data: bracket } = await supabase
         .from('brackets').select('id').eq('player_id', player.id).single()
-      if (!bracket) return { username: player.username, groupPoints: 0, knockoutPoints: 0, total: 0 }
+      if (!bracket) return { username: player.username, groupPoints: 0, knockoutPoints: 0, total: 0, submitted: false }
       const [{ data: gp }, { data: kp }] = await Promise.all([
         supabase.from('group_predictions').select('*').eq('bracket_id', bracket.id),
         supabase.from('knockout_predictions').select('*').eq('bracket_id', bracket.id),
       ])
-      return { username: player.username, ...computeScore(gp ?? [], kp ?? [], actualResults ?? []) }
+      return { username: player.username, ...computeScore(gp ?? [], kp ?? [], actualResults ?? []), submitted: true }
     })
   )
   leaderboard.sort((a, b) => b.total - a.total)
