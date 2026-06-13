@@ -72,7 +72,7 @@ function SortableTeam({ teamCode, position, disabled, correct }: { teamCode: str
 export function GroupStageEditor({ groupCode, order, onChange, disabled = false, correctPositions }: Props) {
   const sensors = useSensors(
     useSensor(MouseSensor),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
+    useSensor(TouchSensor, { activationConstraint: { delay: 100, tolerance: 5 } })
   )
   const allTeams = GROUPS[groupCode] ?? []
   const teams = order.length > 0
