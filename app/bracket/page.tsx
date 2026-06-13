@@ -6,6 +6,7 @@ import { GroupStageEditor } from '@/components/GroupStageEditor'
 import { KnockoutBracket } from '@/components/KnockoutBracket'
 import { DeadlineCountdown } from '@/components/DeadlineCountdown'
 import { ShareBracketModal } from '@/components/ShareBracketModal'
+import { Modal } from '@/components/Modal'
 
 type Tab = 'groups' | 'knockouts'
 
@@ -16,6 +17,8 @@ export default function BracketPage() {
   const [winners, setWinners] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [resetting, setResetting] = useState(false)
+  const [showReset, setShowReset] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [locked, setLocked] = useState(false)
   const [username, setUsername] = useState('')
@@ -103,6 +106,23 @@ export default function BracketPage() {
     setTimeout(() => setSaveMsg(''), 3000)
   }, [groupRankings, winners, qualifiers])
 
+  const resetBracket = useCallback(async () => {
+    setResetting(true)
+    const res = await fetch('/api/brackets', { method: 'DELETE' })
+    if (res.ok) {
+      const defaultRankings: Record<string, string[]> = {}
+      for (const group of GROUP_CODES) {
+        defaultRankings[group] = GROUPS[group] ?? []
+      }
+      setGroupRankings(defaultRankings)
+      setQualifiers({})
+      setWinners({})
+      setSubmitted(false)
+    }
+    setResetting(false)
+    setShowReset(false)
+  }, [])
+
   if (loading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -116,6 +136,29 @@ export default function BracketPage() {
   return (
     <div className="min-h-screen px-0 py-5 max-w-[1202px] mx-auto">
       {showShare && username && <ShareBracketModal username={username} onClose={() => setShowShare(false)} />}
+
+      {showReset && (
+        <Modal title="Reset Bracket?" onClose={() => setShowReset(false)}>
+          <p className="text-sm text-pitch-200 mb-6">
+            This will permanently clear all your picks and un-submit your bracket. You can fill it in again before the deadline.
+          </p>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setShowReset(false)}
+              className="btn-ghost px-4 py-2 text-xs uppercase tracking-widest"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={resetBracket}
+              disabled={resetting}
+              className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-red-400 transition-colors hover:bg-red-500/20 disabled:opacity-50"
+            >
+              {resetting ? 'Resetting…' : 'Reset Bracket'}
+            </button>
+          </div>
+        </Modal>
+      )}
 
       {/* Page header */}
       <div className="anim-fade-up mb-12 pt-2 px-5">
@@ -274,6 +317,13 @@ export default function BracketPage() {
             className="btn-gold px-5 py-2.5 text-xs uppercase tracking-widest"
           >
             {saving ? 'Saving…' : 'Save Bracket'}
+          </button>
+          <button
+            onClick={() => setShowReset(true)}
+            disabled={saving}
+            className="btn-ghost px-5 py-2.5 text-xs uppercase tracking-widest text-red-400 hover:text-red-300 border-red-500/30 hover:border-red-400/50"
+          >
+            Reset Bracket
           </button>
         </div>
       )}
