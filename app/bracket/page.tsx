@@ -126,8 +126,12 @@ export default function BracketPage() {
               onClick={() => setShowShare(true)}
               className="btn-ghost gap-2 py-2 text-xs uppercase tracking-widest"
             >
-              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M8 1.5v8M5 4.5l3-3 3 3M3 9.5v4h10v-4" />
+              <svg width="14" height="15" viewBox="0 0 16 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+                <circle cx="2.5" cy="9" r="2"/>
+                <circle cx="13.5" cy="2.5" r="2"/>
+                <circle cx="13.5" cy="15.5" r="2"/>
+                <line x1="4.3" y1="8.2" x2="11.7" y2="3.8"/>
+                <line x1="4.3" y1="9.8" x2="11.7" y2="14.2"/>
               </svg>
               Share
             </button>
