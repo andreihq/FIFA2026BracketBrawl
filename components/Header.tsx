@@ -18,7 +18,7 @@ export function Header({ isLoggedIn }: { isLoggedIn: boolean }) {
 
   return (
     <header className="sticky top-0 z-50 border-b border-pitch-600 bg-pitch-950/90 backdrop-blur-md">
-      <div className="max-w-6xl mx-auto w-full flex items-center justify-between px-5 py-3">
+      <div className="max-w-[1202px] mx-auto w-full flex items-center justify-between px-5 py-3">
         <Link href={isLoggedIn ? '/dashboard' : '/'} className="flex items-center gap-3 group" onClick={() => setOpen(false)}>
           <img src="/trophy.png" alt="FIFA World Cup trophy" className="w-9 h-9 object-contain flex-shrink-0" />
           <div>
