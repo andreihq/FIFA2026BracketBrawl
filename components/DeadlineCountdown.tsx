@@ -45,15 +45,24 @@ export function DeadlineCountdown({ deadline }: { deadline: string }) {
       ? 'text-gold bg-gold/8 border-gold/25'
       : 'text-pitch-200 bg-pitch-800 border-pitch-600'
 
-  const dotClass = days === 0
-    ? 'bg-[#F87171] animate-pulse'
+  const iconClass = days === 0
+    ? 'text-[#F87171]'
     : days < 3
-      ? 'bg-gold'
-      : 'bg-pitch-400'
+      ? 'text-gold'
+      : 'text-pitch-400'
 
   return (
     <div className="flex items-center gap-2 mb-4 flex-wrap">
-      <div className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${dotClass}`} />
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className={`flex-shrink-0 ${iconClass}`} aria-hidden="true">
+        {/* crown/button at top */}
+        <path d="M6 1h4" />
+        {/* stem */}
+        <line x1="8" y1="1" x2="8" y2="3" />
+        {/* case */}
+        <circle cx="8" cy="9" r="5.5" />
+        {/* hands */}
+        <path d="M8 6.5v3l2 1.5" />
+      </svg>
       <span className="text-xs text-[#EBF0FF]">Closes in</span>
       <span className={`font-mono text-xs font-semibold rounded-lg border px-2.5 py-1 tabular-nums ${chipClass}`}>
         {label}
