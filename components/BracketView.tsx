@@ -74,12 +74,14 @@ export function BracketView({ groupPredictions, knockoutPredictions, actualResul
   }
 
   return (
-    <KnockoutBracket
-      groupRankings={groupRankings}
-      picks={picks}
-      onPick={() => {}}
-      disabled
-      correctPicks={correctPicks}
-    />
+    <div className="-mx-5">
+      <KnockoutBracket
+        groupRankings={groupRankings}
+        picks={picks}
+        onPick={() => {}}
+        disabled
+        correctPicks={correctPicks}
+      />
+    </div>
   )
 }

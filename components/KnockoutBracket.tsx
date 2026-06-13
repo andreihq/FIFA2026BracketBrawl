@@ -154,7 +154,7 @@ function MatchCard({ match, groupRankings, picks, onPick, disabled, label, showV
         <TeamRow
           teamCode={mp.teamA}
           label={match.slotA}
-          correct={disabled && !!mp.teamA && mp.teamA === cp?.teamA}
+          correct={disabled && !isR32 && !!mp.teamA && mp.teamA === cp?.teamA}
         />
       ) : (
         <WinnerDropdown srcMatchId={srcA} picks={picks} onPick={onPick} showValidation={showValidation} />
@@ -166,7 +166,7 @@ function MatchCard({ match, groupRankings, picks, onPick, disabled, label, showV
         <TeamRow
           teamCode={mp.teamB}
           label={slotBLabel}
-          correct={!!mp.teamB && mp.teamB === cp?.teamB}
+          correct={(!isR32 || isBest3rdB) && !!mp.teamB && mp.teamB === cp?.teamB}
         />
       ) : isR32 && isBest3rdB ? (
         <QualifierDropdown match={match} groupRankings={groupRankings} picks={picks} onPick={onPick} showValidation={showValidation} />

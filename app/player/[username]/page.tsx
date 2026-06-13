@@ -33,9 +33,9 @@ export default async function PlayerPage({ params, searchParams }: {
   const tab = (searchParams.tab === 'knockouts' ? 'knockouts' : 'groups') as 'groups' | 'knockouts'
 
   return (
-    <div className="min-h-screen p-5 max-w-6xl mx-auto">
+    <div className="min-h-screen px-0 py-5 max-w-[1202px] mx-auto">
 
-      <div className="anim-fade-up pt-2 mb-7">
+      <div className="anim-fade-up pt-2 mb-7 px-5">
         {searchParams.from && (
           <Link href={backHref} className="inline-flex items-center gap-1 text-xs text-pitch-300 hover:text-[#EBF0FF] transition-colors mb-4 uppercase tracking-wider">
             ← Back
@@ -48,12 +48,12 @@ export default async function PlayerPage({ params, searchParams }: {
       </div>
 
       {!isSubmitted ? (
-        <div className="flex items-center justify-center py-24">
+        <div className="flex items-center justify-center py-24 px-5">
           <p className="text-sm text-pitch-300">This user hasn&apos;t submitted their bracket yet.</p>
         </div>
       ) : (
         <div>
-          <div className="anim-fade-up anim-delay-1 mb-6">
+          <div className="anim-fade-up anim-delay-1 mb-6 px-5">
             <p className="section-label mb-3">Points Scored</p>
             <div className="card grid grid-cols-3">
               <div className="flex flex-col items-center py-4 border-r border-pitch-600">
@@ -71,7 +71,7 @@ export default async function PlayerPage({ params, searchParams }: {
             </div>
           </div>
 
-          <div className="anim-fade-up anim-delay-2 flex gap-1.5 mb-6">
+          <div className="anim-fade-up anim-delay-2 flex gap-1.5 mb-6 px-5">
             <a
               href={`/player/${params.username}?tab=groups${searchParams.from ? `&from=${searchParams.from}` : ''}`}
               className={`tab-btn ${tab === 'groups' ? 'tab-active' : 'tab-inactive'}`}
@@ -86,7 +86,7 @@ export default async function PlayerPage({ params, searchParams }: {
             </a>
           </div>
 
-          <div className="anim-fade-up anim-delay-3">
+          <div className="anim-fade-up anim-delay-3 px-5">
             <BracketView
               groupPredictions={groupPredictions ?? []}
               knockoutPredictions={knockoutPredictions ?? []}

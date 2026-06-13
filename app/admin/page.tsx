@@ -161,19 +161,19 @@ function AdminPanel({ password, initialResults }: { password: string; initialRes
   }
 
   return (
-    <div className="min-h-screen p-5 max-w-6xl mx-auto">
-      <div className="anim-fade-up pt-2 mb-7">
+    <div className="min-h-screen px-0 py-5 max-w-[1202px] mx-auto">
+      <div className="anim-fade-up pt-2 mb-7 px-5">
         <p className="section-label mb-1">Admin Panel</p>
         <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">Enter Results</h1>
       </div>
 
       {msg && (
-        <div className="mb-5 rounded-xl bg-[#34D399]/10 border border-[#34D399]/25 px-4 py-2.5 text-sm font-medium text-[#34D399]">
+        <div className="mb-5 mx-5 rounded-xl bg-[#34D399]/10 border border-[#34D399]/25 px-4 py-2.5 text-sm font-medium text-[#34D399]">
           {msg}
         </div>
       )}
 
-      <div className="flex gap-1.5 mb-6">
+      <div className="flex gap-1.5 mb-6 px-5">
         {(['bracket', 'settings'] as const).map(s => (
           <button key={s} onClick={() => { setMsg(''); setActiveSection(s) }}
             className={`tab-btn ${activeSection === s ? 'tab-active' : 'tab-inactive'}`}>
@@ -183,7 +183,7 @@ function AdminPanel({ password, initialResults }: { password: string; initialRes
       </div>
 
       {activeSection === 'bracket' && (
-        <>
+        <div className="px-5">
           <BracketEditor
             groupRankings={groupRankings}
             qualifiers={qualifiers}
@@ -216,25 +216,27 @@ function AdminPanel({ password, initialResults }: { password: string; initialRes
               </>
             )}
           </div>
-        </>
+        </div>
       )}
 
       {activeSection === 'settings' && (
-        <div className="card p-5 max-w-sm">
-          <p className="text-sm font-medium text-[#EBF0FF] mb-4">Submission Deadline</p>
-          <form onSubmit={saveDeadline} className="flex flex-col gap-3">
-            <input
-              type="datetime-local"
-              className="field"
-              value={deadlineInput}
-              onChange={e => setDeadlineInput(e.target.value)}
-              required
-            />
-            <p className="text-xs text-pitch-400">Enter the deadline in your local time. It will be stored as UTC.</p>
-            <button type="submit" disabled={saving} className="btn-gold uppercase tracking-widest text-xs">
-              {saving ? 'Saving…' : 'Save Deadline'}
-            </button>
-          </form>
+        <div className="px-5">
+          <div className="card p-5 max-w-sm">
+            <p className="text-sm font-medium text-[#EBF0FF] mb-4">Submission Deadline</p>
+            <form onSubmit={saveDeadline} className="flex flex-col gap-3">
+              <input
+                type="datetime-local"
+                className="field"
+                value={deadlineInput}
+                onChange={e => setDeadlineInput(e.target.value)}
+                required
+              />
+              <p className="text-xs text-pitch-400">Enter the deadline in your local time. It will be stored as UTC.</p>
+              <button type="submit" disabled={saving} className="btn-gold uppercase tracking-widest text-xs">
+                {saving ? 'Saving…' : 'Save Deadline'}
+              </button>
+            </form>
+          </div>
         </div>
       )}
     </div>
