@@ -20,6 +20,7 @@ export default function BracketPage() {
   const [locked, setLocked] = useState(false)
   const [username, setUsername] = useState('')
   const [showShare, setShowShare] = useState(false)
+  const [showInstructions, setShowInstructions] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
   const [showValidation, setShowValidation] = useState(false)
   const [deadline, setDeadline] = useState<string | null>(null)
@@ -141,6 +142,76 @@ export default function BracketPage() {
           {badgeLabel}
         </span>
         {deadline && !isDisabled && <div><DeadlineCountdown deadline={deadline} /></div>}
+
+        {/* How to play */}
+        <div className="mt-4">
+          <button
+            onClick={() => setShowInstructions(s => !s)}
+            className="inline-flex items-center gap-1.5 text-[11px] text-pitch-400 hover:text-pitch-300 transition-colors"
+          >
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="8" cy="8" r="6.5"/>
+              <path d="M8 7.5v4M8 5.5h.01"/>
+            </svg>
+            How to fill your bracket
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
+              style={{ transform: showInstructions ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
+              <path d="M2 3.5l3 3 3-3"/>
+            </svg>
+          </button>
+
+          {showInstructions && (
+            <div className="mt-3 rounded-xl border border-pitch-700 bg-pitch-900/60 p-4 space-y-5 text-xs text-pitch-200 max-w-2xl">
+
+              {/* Step 1 */}
+              <div>
+                <p className="section-label mb-2">① Group Stage</p>
+                <p className="leading-relaxed">
+                  Drag and drop the teams within each group to rank them <span className="text-[#EBF0FF] font-medium">1st through 4th</span> in the order you predict they'll finish. The <span className="text-[#EBF0FF] font-medium">top 2</span> from each group advance to the Round of 32 automatically.
+                </p>
+              </div>
+
+              {/* Step 2 */}
+              <div>
+                <p className="section-label mb-2">② 3rd-Place Wildcards</p>
+                <p className="leading-relaxed mb-3">
+                  In the 48-team format, <span className="text-[#EBF0FF] font-medium">8 of the 12 third-place teams</span> also advance as wildcards. Each Round of 32 slot draws from a fixed set of eligible groups — you choose which 3rd-place team fills it. Each team can only fill one slot; once picked, it disappears from the other dropdowns.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                  {([
+                    ['M74', 'Group E Winner', 'A B C D F'],
+                    ['M77', 'Group I Winner', 'C D F G H'],
+                    ['M79', 'Group A Winner', 'C E F H I'],
+                    ['M80', 'Group L Winner', 'E H I J K'],
+                    ['M81', 'Group D Winner', 'B E F I J'],
+                    ['M82', 'Group G Winner', 'A E H I J'],
+                    ['M85', 'Group B Winner', 'E F G I J'],
+                    ['M87', 'Group K Winner', 'D E I J L'],
+                  ] as [string, string, string][]).map(([id, opp, groups]) => (
+                    <div key={id} className="flex items-center gap-2 rounded-lg bg-pitch-800 border border-pitch-700 px-2.5 py-1.5">
+                      <span className="font-mono text-[10px] text-pitch-400 w-7 shrink-0">{id}</span>
+                      <span className="text-pitch-300 shrink-0 text-[10px]">vs {opp}</span>
+                      <span className="ml-auto flex gap-1">
+                        {groups.split(' ').map(g => (
+                          <span key={g} className="rounded px-1 py-0.5 bg-pitch-700 text-[9px] font-bold text-pitch-200">{g}</span>
+                        ))}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Step 3 */}
+              <div>
+                <p className="section-label mb-2">③ Knockout Rounds</p>
+                <p className="leading-relaxed">
+                  Switch to the <span className="text-[#EBF0FF] font-medium">Knockouts tab</span> and pick the winner of every match — Round of 32, Quarterfinals, Semifinals, and the Final. Don't forget to pick the <span className="text-[#EBF0FF] font-medium">3rd Place</span> match too.
+                </p>
+              </div>
+
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}
