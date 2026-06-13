@@ -63,7 +63,7 @@ function SortableTeam({ teamCode, position, disabled, correct }: { teamCode: str
         {position + 1}
       </span>
       <span className="text-base leading-none">{team?.flag ?? '🏳️'}</span>
-      <span className="flex-1 text-xs font-medium text-[#EBF0FF] truncate">{team?.name ?? teamCode}</span>
+      <span className="flex-1 text-sm font-medium text-[#EBF0FF] truncate">{team?.name ?? teamCode}</span>
       {!disabled && <span className="text-pitch-500 text-xs select-none">⠿</span>}
     </div>
   )

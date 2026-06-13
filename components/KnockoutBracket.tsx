@@ -47,7 +47,7 @@ function teamOpt(code: string | null): DropdownOption | null {
 function TeamRow({ teamCode, label, correct }: { teamCode: string | null; label: string; correct?: boolean }) {
   const team = teamCode ? TEAMS[teamCode] : null
   return (
-    <div className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs ${
+    <div className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm ${
       correct && team
         ? 'bg-[#34D399]/10 border border-[#34D399]/40 text-[#34D399]'
         : 'bg-pitch-800 border border-pitch-600 text-[#EBF0FF]'
@@ -218,7 +218,7 @@ function ChampionsPodium({ picks, onPick, disabled, showValidation, correctPicks
 
       <div className="flex flex-col gap-1.5">
         <div className="text-[10px] font-bold text-[#C0C8D8] uppercase tracking-widest">🥈 Runner-up</div>
-        <div className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs ${
+        <div className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm ${
           runnerUp
             ? 'bg-[#C0C8D8]/10 border border-[#C0C8D8]/40 text-[#C0C8D8]'
             : 'bg-pitch-800 border border-pitch-600 text-[#EBF0FF]'

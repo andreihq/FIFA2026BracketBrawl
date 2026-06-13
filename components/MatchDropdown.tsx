@@ -122,7 +122,7 @@ export function MatchDropdown({
         onClick={() => isInteractable && setIsOpen(v => !v)}
         disabled={!isInteractable}
         className={[
-          'w-full flex items-center justify-between gap-1 rounded-lg px-2.5 py-1.5 text-xs',
+          'w-full flex items-center justify-between gap-1 rounded-lg px-2.5 py-1.5 text-sm',
           'border transition-all duration-150 outline-none text-left select-none',
           triggerClass,
           isInteractable ? styles.hover : '',
@@ -174,7 +174,7 @@ export function MatchDropdown({
               type="button"
               onClick={() => { onChange(opt.value); setIsOpen(false) }}
               className={[
-                'w-full flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-left transition-colors duration-100',
+                'w-full flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-left transition-colors duration-100',
                 opt.value === value ? styles.optSel : `text-[#EBF0FF] ${styles.optHover}`,
                 i > 0 ? 'border-t border-[#1A2840]' : '',
               ].join(' ')}
