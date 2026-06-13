@@ -80,3 +80,35 @@ export async function PUT(req: NextRequest) {
 
   return NextResponse.json({ ok: true })
 }
+
+export async function DELETE() {
+  const session = await getSession()
+  if (!session.playerId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const supabase = createServerClient()
+
+  const { data: deadlineSetting } = await supabase.from('settings').select('value').eq('key', 'deadline').single()
+  if (deadlineSetting && new Date() > new Date(deadlineSetting.value)) {
+    return NextResponse.json({ error: 'Submission deadline has passed' }, { status: 403 })
+  }
+
+  const { data: bracket } = await supabase
+    .from('brackets')
+    .select('id')
+    .eq('player_id', session.playerId)
+    .single()
+
+  if (!bracket) return NextResponse.json({ ok: true })
+
+  await Promise.all([
+    supabase.from('group_predictions').delete().eq('bracket_id', bracket.id),
+    supabase.from('knockout_predictions').delete().eq('bracket_id', bracket.id),
+  ])
+
+  await supabase
+    .from('brackets')
+    .update({ submitted_at: null })
+    .eq('id', bracket.id)
+
+  return NextResponse.json({ ok: true })
+}
