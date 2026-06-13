@@ -45,14 +45,22 @@ function teamOpt(code: string | null): DropdownOption | null {
   return { value: code, flag: t?.flag, teamName: t?.name ?? code }
 }
 
-function TeamRow({ teamCode, label, correct }: { teamCode: string | null; label: string; correct?: boolean }) {
+function TeamRow({ teamCode, label, correct, variant }: {
+  teamCode: string | null
+  label: string
+  correct?: boolean
+  variant?: 'gold' | 'bronze'
+}) {
   const team = teamCode ? TEAMS[teamCode] : null
-  return (
-    <div className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm ${
-      correct && team
-        ? 'bg-[#34D399]/10 border border-[#34D399]/40 text-[#34D399]'
+  const colorClass = correct && team
+    ? 'bg-[#34D399]/10 border border-[#34D399]/40 text-[#34D399]'
+    : variant === 'gold' && team
+      ? 'bg-[#F5A623]/10 border border-[#F5A623]/40 text-[#F5A623]'
+      : variant === 'bronze' && team
+        ? 'bg-[#3d2810]/40 border border-[#C4834A]/40 text-[#C4834A]'
         : 'bg-pitch-800 border border-pitch-600 text-[#EBF0FF]'
-    }`}>
+  return (
+    <div className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm ${colorClass}`}>
       {team
         ? <><span className="flex-shrink-0">{team.flag}</span><span className="truncate font-medium">{team.name}</span></>
         : <span className="text-pitch-300 truncate italic">{label}</span>}
@@ -203,7 +211,7 @@ function ChampionsPodium({ picks, onPick, disabled, showValidation, correctPicks
       <div className="flex flex-col gap-1.5">
         <div className="text-[10px] font-bold text-gold uppercase tracking-widest">🥇 Champion</div>
         {disabled ? (
-          <TeamRow teamCode={champion} label="TBD" correct={!!(champion && correctPicks?.['M104']?.winner === champion)} />
+          <TeamRow teamCode={champion} label="TBD" variant="gold" correct={!!(champion && correctPicks?.['M104']?.winner === champion)} />
         ) : (
           <MatchDropdown
             value={champion ?? ''}
@@ -233,7 +241,7 @@ function ChampionsPodium({ picks, onPick, disabled, showValidation, correctPicks
       <div className="flex flex-col gap-1.5">
         <div className="text-[10px] font-bold text-[#C4834A] uppercase tracking-widest">🥉 3rd Place</div>
         {disabled ? (
-          <TeamRow teamCode={thirdPlace} label="TBD" correct={!!(thirdPlace && correctPicks?.['M103']?.winner === thirdPlace)} />
+          <TeamRow teamCode={thirdPlace} label="TBD" variant="bronze" correct={!!(thirdPlace && correctPicks?.['M103']?.winner === thirdPlace)} />
         ) : (
           <MatchDropdown
             value={thirdPlace ?? ''}
