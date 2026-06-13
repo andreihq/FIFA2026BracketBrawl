@@ -119,7 +119,7 @@ function QualifierDropdown({ match, groupRankings, picks, onPick, showValidation
   )
 }
 
-function MatchCard({ match, groupRankings, picks, onPick, disabled, label, showValidation, correctPicks }: {
+function MatchCard({ match, groupRankings, picks, onPick, disabled, label, showValidation, correctPicks, dividerRef }: {
   match: KnockoutMatch
   groupRankings: Record<string, string[]>
   picks: Record<string, MatchPick>
@@ -128,6 +128,7 @@ function MatchCard({ match, groupRankings, picks, onPick, disabled, label, showV
   label?: string
   showValidation: boolean
   correctPicks?: Record<string, MatchPick>
+  dividerRef?: React.RefCallback<HTMLDivElement>
 }) {
   const isR32 = match.round === 'R32'
   const isBest3rdB = match.slotB.startsWith('Best 3rd')
@@ -158,7 +159,7 @@ function MatchCard({ match, groupRankings, picks, onPick, disabled, label, showV
         <WinnerDropdown srcMatchId={srcA} picks={picks} onPick={onPick} showValidation={showValidation} />
       )}
 
-      <div className="h-px bg-pitch-700 mx-1.5 my-0.5" />
+      <div ref={dividerRef} className="h-px bg-pitch-700 mx-1.5 my-0.5" />
 
       {disabled ? (
         <TeamRow
@@ -258,6 +259,7 @@ export function KnockoutBracket({ groupRankings, picks, onPick, disabled = false
   const errorRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const dividerRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const [segs, setSegs] = useState<Seg[]>([])
 
   useEffect(() => {
@@ -280,9 +282,14 @@ export function KnockoutBracket({ groupRankings, picks, onPick, disabled = false
         const tr = topEl.getBoundingClientRect()
         const br = botEl.getBoundingClientRect()
         const dr = destEl.getBoundingClientRect()
-        const y1 = tr.top + tr.height / 2 - base.top
-        const y2 = br.top + br.height / 2 - base.top
-        const yd = (y1 + y2) / 2
+        const divY = (el: HTMLDivElement | null) => {
+          if (!el) return 0
+          const r = el.getBoundingClientRect()
+          return r.top + r.height / 2 - base.top
+        }
+        const y1 = divY(dividerRefs.current[topId])   || (tr.top + tr.height / 2 - base.top)
+        const y2 = divY(dividerRefs.current[botId])   || (br.top + br.height / 2 - base.top)
+        const yd = divY(dividerRefs.current[destId])  || (y1 + y2) / 2
         const xSrc = tr.right - base.left
         const xDest = dr.left - base.left
         const xMid = (xSrc + xDest) / 2
@@ -313,7 +320,7 @@ export function KnockoutBracket({ groupRankings, picks, onPick, disabled = false
         <svg className="absolute inset-0 w-full h-full pointer-events-none" overflow="visible">
           {segs.map((s, i) => (
             <line key={i} x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2}
-              stroke="rgba(255,255,255,0.18)" strokeWidth={1.5} />
+              stroke="#3D4F6E" strokeWidth={1.5} />
           ))}
         </svg>
 
@@ -344,6 +351,7 @@ export function KnockoutBracket({ groupRankings, picks, onPick, disabled = false
                       disabled={disabled}
                       showValidation={showValidation}
                       correctPicks={correctPicks}
+                      dividerRef={el => { dividerRefs.current[match.id] = el }}
                     />
                   </div>
                 ))}
@@ -360,6 +368,7 @@ export function KnockoutBracket({ groupRankings, picks, onPick, disabled = false
                       disabled={disabled}
                       showValidation={showValidation}
                       correctPicks={correctPicks}
+                      dividerRef={el => { dividerRefs.current[match.id] = el }}
                     />
                   </div>
                 ))}
