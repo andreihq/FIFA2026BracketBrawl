@@ -161,7 +161,7 @@ export default function BracketPage() {
           </button>
 
           {showInstructions && (
-            <div className="mt-3 rounded-xl border border-pitch-700 bg-pitch-900/60 p-4 space-y-5 text-xs text-pitch-200 max-w-2xl">
+            <div className="mt-3 rounded-xl border border-pitch-700 bg-pitch-900/60 p-5 space-y-6 text-sm text-pitch-200 max-w-2xl">
 
               {/* Step 1 */}
               <div>
@@ -174,10 +174,10 @@ export default function BracketPage() {
               {/* Step 2 */}
               <div>
                 <p className="section-label mb-2">② 3rd-Place Wildcards</p>
-                <p className="leading-relaxed mb-3">
+                <p className="leading-relaxed mb-4">
                   In the 48-team format, <span className="text-[#EBF0FF] font-medium">8 of the 12 third-place teams</span> also advance as wildcards. Each Round of 32 slot draws from a fixed set of eligible groups — you choose which 3rd-place team fills it. Each team can only fill one slot; once picked, it disappears from the other dropdowns.
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {([
                     ['M74', 'Group E Winner', 'A B C D F'],
                     ['M77', 'Group I Winner', 'C D F G H'],
@@ -188,14 +188,18 @@ export default function BracketPage() {
                     ['M85', 'Group B Winner', 'E F G I J'],
                     ['M87', 'Group K Winner', 'D E I J L'],
                   ] as [string, string, string][]).map(([id, opp, groups]) => (
-                    <div key={id} className="flex items-center gap-2 rounded-lg bg-pitch-800 border border-pitch-700 px-2.5 py-1.5">
-                      <span className="font-mono text-[10px] text-pitch-400 w-7 shrink-0">{id}</span>
-                      <span className="text-pitch-300 shrink-0 text-[10px]">vs {opp}</span>
-                      <span className="ml-auto flex gap-1">
+                    <div key={id} className="rounded-lg bg-pitch-800 border border-pitch-600 px-3 py-2.5">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="font-mono text-[11px] font-bold text-[#EBF0FF] bg-pitch-600 rounded px-1.5 py-0.5">{id}</span>
+                        <span className="text-[#EBF0FF] font-medium text-xs">{opp}</span>
+                        <span className="text-pitch-400 text-xs">vs</span>
+                        <span className="text-pitch-300 text-xs">Best 3rd of</span>
+                      </div>
+                      <div className="flex gap-1.5 flex-wrap">
                         {groups.split(' ').map(g => (
-                          <span key={g} className="rounded px-1 py-0.5 bg-pitch-700 text-[9px] font-bold text-pitch-200">{g}</span>
+                          <span key={g} className="rounded-md px-2 py-0.5 bg-pitch-500 border border-pitch-400 text-[11px] font-bold text-[#EBF0FF]">Group {g}</span>
                         ))}
-                      </span>
+                      </div>
                     </div>
                   ))}
                 </div>
