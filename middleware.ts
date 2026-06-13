@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getIronSession } from 'iron-session'
 import type { SessionData } from '@/types'
 
-const PUBLIC_PATHS = ['/', '/register', '/login']
+const PUBLIC_PATHS = ['/', '/register', '/login', '/admin']
 const SESSION_OPTIONS = {
   password: process.env.SESSION_SECRET!,
   cookieName: 'fifa2026-session',
