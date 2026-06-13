@@ -18,7 +18,7 @@ const outfit = Outfit({
 })
 
 const APP_URL = 'https://fifa2026bracket.com'
-const TITLE = 'FIFA2026 World Cup Bracket Brawl'
+const TITLE = 'FIFA 2026 Bracket Brawl'
 const DESCRIPTION =
   'Predict the FIFA World Cup 2026 knockout bracket, compete in private leagues, and see how your picks stack up against friends.'
 
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
     default: TITLE,
-    template: `%s | FIFA2026 World Cup Bracket Brawl`,
+    template: `%s | FIFA 2026 Bracket Brawl`,
   },
   description: DESCRIPTION,
   keywords: [
@@ -39,8 +39,8 @@ export const metadata: Metadata = {
     'World Cup bracket',
     'Bracket Brawl',
   ],
-  authors: [{ name: 'FIFA2026 World Cup Bracket Brawl' }],
-  creator: 'FIFA2026 World Cup Bracket Brawl',
+  authors: [{ name: 'FIFA 2026 Bracket Brawl' }],
+  creator: 'FIFA 2026 Bracket Brawl',
   openGraph: {
     type: 'website',
     locale: 'en_US',
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
         url: '/bg.png',
         width: 1200,
         height: 630,
-        alt: 'FIFA 2026 Bracket Predictor',
+        alt: 'FIFA 2026 Bracket Brawl',
       },
     ],
   },

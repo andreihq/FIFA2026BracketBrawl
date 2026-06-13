@@ -23,7 +23,7 @@ export function Header({ isLoggedIn }: { isLoggedIn: boolean }) {
           <img src="/trophy.png" alt="FIFA World Cup trophy" className="w-9 h-9 object-contain flex-shrink-0" />
           <div>
             <p className="font-display text-base leading-none tracking-widest text-[#EBF0FF]">FIFA 2026</p>
-            <p className="text-[10px] leading-none mt-0.5 tracking-widest uppercase text-pitch-300">World Cup Predictor</p>
+            <p className="text-[10px] leading-none mt-0.5 tracking-widest uppercase text-pitch-300">Bracket Brawl</p>
           </div>
         </Link>
 
