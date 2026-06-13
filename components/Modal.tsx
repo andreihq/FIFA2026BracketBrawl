@@ -24,12 +24,15 @@ export function Modal({ title, onClose, children }: Props) {
       <div
         className="card w-full max-w-md p-6"
         onClick={e => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
       >
         <div className="flex items-center justify-between mb-5">
           <h2 className="font-display text-2xl tracking-wider text-[#EBF0FF] leading-none">{title}</h2>
           <button
             onClick={onClose}
             className="text-pitch-400 hover:text-[#EBF0FF] transition-colors text-lg leading-none"
+            aria-label="Close"
           >
             ✕
           </button>
