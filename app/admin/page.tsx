@@ -3,30 +3,61 @@ import { useState } from 'react'
 import { GROUP_CODES, GROUPS } from '@/data/groups'
 import { BracketEditor } from '@/components/BracketEditor'
 
-export default function AdminPage() {
-  const [password, setPassword] = useState('')
-  const [authed, setAuthed] = useState(false)
-  const [authError, setAuthError] = useState('')
-  const [activeSection, setActiveSection] = useState<'bracket' | 'settings'>('bracket')
-  const [bracketTab, setBracketTab] = useState<'groups' | 'knockouts'>('groups')
-  const [groupRankings, setGroupRankings] = useState<Record<string, string[]>>({})
-  const [qualifiers, setQualifiers] = useState<Record<string, string>>({})
-  const [winners, setWinners] = useState<Record<string, string>>({})
-  const [saving, setSaving] = useState(false)
-  const [msg, setMsg] = useState('')
-  const [deadlineInput, setDeadlineInput] = useState('')
+// ── Login gate ────────────────────────────────────────────────────────────────
+// Kept as a separate component so it fully unmounts (and its password input
+// disappears from the DOM) the moment the user authenticates.
 
-  async function checkPassword(e: React.FormEvent) {
+function AdminLogin({ onSuccess }: { onSuccess: (password: string, initialData: any) => void }) {
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const res = await fetch('/api/admin/results', {
       headers: { 'x-admin-password': password },
     })
-    if (res.status === 401) { setAuthError('Wrong password'); return }
+    if (res.status === 401) { setError('Wrong password'); return }
+    const data = await res.json()
+    onSuccess(password, data)
+  }
 
-    const { results } = await res.json()
+  return (
+    <main className="flex min-h-screen items-center justify-center p-8">
+      <div className="w-full max-w-xs anim-fade-up">
+        <div className="mb-6 text-center">
+          <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF]">Admin</h1>
+          <p className="text-sm text-pitch-300 mt-1">Enter results</p>
+        </div>
+        <form onSubmit={handleSubmit} className="card p-6 flex flex-col gap-4" autoComplete="off">
+          <input
+            type="password"
+            className="field"
+            placeholder="Admin password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            autoComplete="off"
+            data-1p-ignore
+            required
+          />
+          {error && <p className="text-sm text-[#F87171]">{error}</p>}
+          <button type="submit" className="btn-gold w-full uppercase tracking-widest text-xs">
+            Enter
+          </button>
+        </form>
+      </div>
+    </main>
+  )
+}
+
+// ── Admin panel ───────────────────────────────────────────────────────────────
+
+function AdminPanel({ password, initialResults }: { password: string; initialResults: any[] }) {
+  const [activeSection, setActiveSection] = useState<'bracket' | 'settings'>('bracket')
+  const [bracketTab, setBracketTab] = useState<'groups' | 'knockouts'>('groups')
+  const [groupRankings, setGroupRankings] = useState<Record<string, string[]>>(() => {
     const rankings: Record<string, string[]> = {}
     for (const group of GROUP_CODES) {
-      const rows = (results as any[]).filter(r => r.result_type === 'group' && r.ref_id === group)
+      const rows = initialResults.filter(r => r.result_type === 'group' && r.ref_id === group)
       if (rows.length > 0) {
         const arr: string[] = []
         for (const r of rows) arr[r.position - 1] = r.team_code
@@ -35,18 +66,23 @@ export default function AdminPage() {
         rankings[group] = GROUPS[group] ?? []
       }
     }
-    setGroupRankings(rankings)
-
+    return rankings
+  })
+  const [qualifiers, setQualifiers] = useState<Record<string, string>>(() => {
     const q: Record<string, string> = {}
+    for (const r of initialResults.filter(r => r.result_type === 'knockout' && r.ref_id.endsWith(':qualifier')))
+      q[r.ref_id.replace(':qualifier', '')] = r.team_code
+    return q
+  })
+  const [winners, setWinners] = useState<Record<string, string>>(() => {
     const w: Record<string, string> = {}
-    for (const r of (results as any[]).filter((r: any) => r.result_type === 'knockout')) {
-      if (r.ref_id.endsWith(':qualifier')) q[r.ref_id.replace(':qualifier', '')] = r.team_code
-      else w[r.ref_id] = r.team_code
-    }
-    setQualifiers(q)
-    setWinners(w)
-    setAuthed(true)
-  }
+    for (const r of initialResults.filter(r => r.result_type === 'knockout' && !r.ref_id.endsWith(':qualifier')))
+      w[r.ref_id] = r.team_code
+    return w
+  })
+  const [saving, setSaving] = useState(false)
+  const [msg, setMsg] = useState('')
+  const [deadlineInput, setDeadlineInput] = useState('')
 
   async function saveGroups() {
     setSaving(true); setMsg('')
@@ -92,35 +128,6 @@ export default function AdminPage() {
     })
     setMsg(res.ok ? 'Deadline saved ✓' : 'Error saving deadline')
     setSaving(false)
-  }
-
-  if (!authed) {
-    return (
-      <main className="flex min-h-screen items-center justify-center p-8">
-        <div className="w-full max-w-xs anim-fade-up">
-          <div className="mb-6 text-center">
-            <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF]">Admin</h1>
-            <p className="text-sm text-pitch-300 mt-1">Enter results</p>
-          </div>
-          <form onSubmit={checkPassword} className="card p-6 flex flex-col gap-4" autoComplete="off">
-            <input
-              type="password"
-              className="field"
-              placeholder="Admin password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              autoComplete="off"
-              data-1p-ignore
-              required
-            />
-            {authError && <p className="text-sm text-[#F87171]">{authError}</p>}
-            <button type="submit" className="btn-gold w-full uppercase tracking-widest text-xs">
-              Enter
-            </button>
-          </form>
-        </div>
-      </main>
-    )
   }
 
   return (
@@ -192,4 +199,20 @@ export default function AdminPage() {
       )}
     </div>
   )
+}
+
+// ── Page shell ────────────────────────────────────────────────────────────────
+
+export default function AdminPage() {
+  const [session, setSession] = useState<{ password: string; results: any[] } | null>(null)
+
+  if (!session) {
+    return (
+      <AdminLogin
+        onSuccess={(password, data) => setSession({ password, results: data.results })}
+      />
+    )
+  }
+
+  return <AdminPanel password={session.password} initialResults={session.results} />
 }
