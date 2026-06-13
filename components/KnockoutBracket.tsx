@@ -29,6 +29,7 @@ interface Props {
   onPick: (matchId: string, field: 'teamB' | 'winner', teamCode: string) => void
   disabled?: boolean
   showValidation?: boolean
+  submitAttempt?: number
   correctPicks?: Record<string, MatchPick>
 }
 
@@ -249,7 +250,7 @@ function ChampionsPodium({ picks, onPick, disabled, showValidation, correctPicks
   )
 }
 
-export function KnockoutBracket({ groupRankings, picks, onPick, disabled = false, showValidation = false, correctPicks }: Props) {
+export function KnockoutBracket({ groupRankings, picks, onPick, disabled = false, showValidation = false, submitAttempt = 0, correctPicks }: Props) {
   const finalMatches = KNOCKOUT_MATCHES.filter(m => m.round === 'FINAL' || m.round === '3RD')
   const allPicksMade = KNOCKOUT_MATCHES.every(m => !!picks[m.id]?.winner)
     && KNOCKOUT_MATCHES
@@ -266,7 +267,7 @@ export function KnockoutBracket({ groupRankings, picks, onPick, disabled = false
     if (showValidation && !allPicksMade) {
       errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
-  }, [showValidation]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [submitAttempt]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const measure = () => {

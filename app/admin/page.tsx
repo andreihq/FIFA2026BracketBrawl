@@ -119,6 +119,35 @@ function AdminPanel({ password, initialResults }: { password: string; initialRes
     setSaving(false)
   }
 
+  async function resetGroups() {
+    if (!confirm('Reset all group results? This cannot be undone.')) return
+    setSaving(true); setMsg('')
+    await fetch('/api/admin/results', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+      body: JSON.stringify({ result_type: 'group' }),
+    })
+    const fresh: Record<string, string[]> = {}
+    for (const group of GROUP_CODES) fresh[group] = GROUPS[group] ?? []
+    setGroupRankings(fresh)
+    setMsg('Group results reset ✓')
+    setSaving(false)
+  }
+
+  async function resetKnockout() {
+    if (!confirm('Reset all knockout results? This cannot be undone.')) return
+    setSaving(true); setMsg('')
+    await fetch('/api/admin/results', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+      body: JSON.stringify({ result_type: 'knockout' }),
+    })
+    setWinners({})
+    setQualifiers({})
+    setMsg('Knockout results reset ✓')
+    setSaving(false)
+  }
+
   async function saveDeadline(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true); setMsg('')
@@ -168,13 +197,23 @@ function AdminPanel({ password, initialResults }: { password: string; initialRes
           />
           <div className="flex items-center justify-end gap-3 mt-6 pt-5 border-t border-pitch-700">
             {bracketTab === 'groups' ? (
-              <button onClick={saveGroups} disabled={saving} className="btn-gold px-5 py-2.5 text-xs uppercase tracking-widest">
-                {saving ? 'Saving…' : 'Save Group Results'}
-              </button>
+              <>
+                <button onClick={resetGroups} disabled={saving} className="px-5 py-2.5 text-xs uppercase tracking-widest rounded-xl border border-[#F87171]/40 text-[#F87171] hover:bg-[#F87171]/10 transition-colors disabled:opacity-40">
+                  Reset Groups
+                </button>
+                <button onClick={saveGroups} disabled={saving} className="btn-gold px-5 py-2.5 text-xs uppercase tracking-widest">
+                  {saving ? 'Saving…' : 'Save Group Results'}
+                </button>
+              </>
             ) : (
-              <button onClick={saveKnockout} disabled={saving} className="btn-gold px-5 py-2.5 text-xs uppercase tracking-widest">
-                {saving ? 'Saving…' : 'Save Knockout Results'}
-              </button>
+              <>
+                <button onClick={resetKnockout} disabled={saving} className="px-5 py-2.5 text-xs uppercase tracking-widest rounded-xl border border-[#F87171]/40 text-[#F87171] hover:bg-[#F87171]/10 transition-colors disabled:opacity-40">
+                  Reset Knockouts
+                </button>
+                <button onClick={saveKnockout} disabled={saving} className="btn-gold px-5 py-2.5 text-xs uppercase tracking-widest">
+                  {saving ? 'Saving…' : 'Save Knockout Results'}
+                </button>
+              </>
             )}
           </div>
         </>

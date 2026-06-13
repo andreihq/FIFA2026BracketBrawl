@@ -12,6 +12,19 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ results: data })
 }
 
+export async function DELETE(req: NextRequest) {
+  const authHeader = req.headers.get('x-admin-password')
+  if (authHeader !== process.env.ADMIN_PASSWORD) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const { result_type } = await req.json() as { result_type: 'group' | 'knockout' }
+  const supabase = createServerClient()
+  const { error } = await supabase.from('actual_results').delete().eq('result_type', result_type)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ ok: true })
+}
+
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get('x-admin-password')
   if (authHeader !== process.env.ADMIN_PASSWORD) {

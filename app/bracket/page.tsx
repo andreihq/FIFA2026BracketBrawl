@@ -26,6 +26,7 @@ export default function BracketPage() {
   const [showInstructions, setShowInstructions] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
   const [showValidation, setShowValidation] = useState(false)
+  const [submitAttempt, setSubmitAttempt] = useState(0)
   const [bracketTab, setBracketTab] = useState<'groups' | 'knockouts'>('groups')
   const [deadline, setDeadline] = useState<string | null>(null)
 
@@ -117,6 +118,7 @@ export default function BracketPage() {
   const submitBracket = useCallback(async () => {
     if (!groupsComplete || !koComplete) {
       setShowValidation(true)
+      setSubmitAttempt(n => n + 1)
       if (!koComplete) setBracketTab('knockouts')
       return
     }
@@ -299,6 +301,7 @@ export default function BracketPage() {
           onPick={handlePick}
           disabled={isDisabled}
           showValidation={showValidation}
+          submitAttempt={submitAttempt}
           tab={bracketTab}
           onTabChange={setBracketTab}
         />

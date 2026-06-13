@@ -15,6 +15,7 @@ interface Props {
   onPick: (matchId: string, field: 'teamB' | 'winner', teamCode: string) => void
   disabled?: boolean
   showValidation?: boolean
+  submitAttempt?: number
   tab?: Tab
   onTabChange?: (tab: Tab) => void
 }
@@ -27,6 +28,7 @@ export function BracketEditor({
   onPick,
   disabled = false,
   showValidation = false,
+  submitAttempt = 0,
   tab: controlledTab,
   onTabChange,
 }: Props) {
@@ -76,6 +78,7 @@ export function BracketEditor({
             onPick={onPick}
             disabled={disabled}
             showValidation={showValidation}
+            submitAttempt={submitAttempt}
           />
         </div>
       )}
