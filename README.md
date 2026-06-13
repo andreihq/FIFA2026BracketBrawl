@@ -1,4 +1,4 @@
-# FIFA 2026 World Cup Bracket Predictor
+# FIFA2026 World Cup Bracket Brawl
 
 A web app for predicting the FIFA 2026 World Cup bracket. Users register, fill in their group stage rankings and knockout picks, join private leagues to compete with friends, and accumulate points as real results come in.
 

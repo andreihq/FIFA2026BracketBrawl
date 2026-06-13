@@ -30,7 +30,7 @@ export default async function LandingPage() {
         </div>
 
         <p className="anim-fade-up anim-delay-2 mt-5 text-xs uppercase tracking-[0.3em] text-pitch-300">
-          World Cup Bracket Predictor
+          World Cup Bracket Brawl
         </p>
 
         {/* CTA */}
