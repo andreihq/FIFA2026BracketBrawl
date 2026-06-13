@@ -2,16 +2,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { GROUP_CODES, GROUPS } from '@/data/groups'
 import { KNOCKOUT_MATCHES, buildPicks } from '@/data/bracket'
-import { GroupStageEditor } from '@/components/GroupStageEditor'
-import { KnockoutBracket } from '@/components/KnockoutBracket'
+import { BracketEditor } from '@/components/BracketEditor'
 import { DeadlineCountdown } from '@/components/DeadlineCountdown'
 import { ShareBracketModal } from '@/components/ShareBracketModal'
 import { Modal } from '@/components/Modal'
 
-type Tab = 'groups' | 'knockouts'
-
 export default function BracketPage() {
-  const [tab, setTab] = useState<Tab>('groups')
   const [groupRankings, setGroupRankings] = useState<Record<string, string[]>>({})
   const [qualifiers, setQualifiers] = useState<Record<string, string>>({})
   const [winners, setWinners] = useState<Record<string, string>>({})
@@ -261,43 +257,16 @@ export default function BracketPage() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="anim-fade-up anim-delay-1 flex gap-1.5 mb-6 px-5">
-        {(['groups', 'knockouts'] as Tab[]).map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`tab-btn ${tab === t ? 'tab-active' : 'tab-inactive'}`}
-          >
-            {t === 'groups' ? 'Group Stage' : 'Knockouts'}
-          </button>
-        ))}
-      </div>
-
-      <div className="anim-fade-up anim-delay-2">
-        {tab === 'groups' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-5">
-            {GROUP_CODES.map(g => (
-              <GroupStageEditor
-                key={g}
-                groupCode={g}
-                order={groupRankings[g] ?? []}
-                onChange={(code, order) => setGroupRankings(prev => ({ ...prev, [code]: order }))}
-                disabled={isDisabled}
-              />
-            ))}
-          </div>
-        )}
-
-        {tab === 'knockouts' && (
-          <KnockoutBracket
-            groupRankings={groupRankings}
-            picks={picks}
-            onPick={handlePick}
-            disabled={isDisabled}
-            showValidation={showValidation}
-          />
-        )}
+      <div className="anim-fade-up anim-delay-1 px-5">
+        <BracketEditor
+          groupRankings={groupRankings}
+          qualifiers={qualifiers}
+          winners={winners}
+          onGroupChange={(code, order) => setGroupRankings(prev => ({ ...prev, [code]: order }))}
+          onPick={handlePick}
+          disabled={isDisabled}
+          showValidation={showValidation}
+        />
       </div>
 
       {!isDisabled && (
@@ -307,7 +276,6 @@ export default function BracketPage() {
             onClick={async () => {
               if (!groupsComplete || !koComplete) {
                 setShowValidation(true)
-                if (tab !== 'knockouts') setTab('knockouts')
                 return
               }
               setShowValidation(false)

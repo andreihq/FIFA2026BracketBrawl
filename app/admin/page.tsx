@@ -1,26 +1,20 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { GROUP_CODES, GROUPS } from '@/data/groups'
-import { buildPicks } from '@/data/bracket'
-import { GroupStageEditor } from '@/components/GroupStageEditor'
-import { KnockoutBracket } from '@/components/KnockoutBracket'
+import { BracketEditor } from '@/components/BracketEditor'
 
 export default function AdminPage() {
   const [password, setPassword] = useState('')
   const [authed, setAuthed] = useState(false)
   const [authError, setAuthError] = useState('')
-  const [activeSection, setActiveSection] = useState<'groups' | 'knockout' | 'settings'>('groups')
+  const [activeSection, setActiveSection] = useState<'bracket' | 'settings'>('bracket')
+  const [bracketTab, setBracketTab] = useState<'groups' | 'knockouts'>('groups')
   const [groupRankings, setGroupRankings] = useState<Record<string, string[]>>({})
   const [qualifiers, setQualifiers] = useState<Record<string, string>>({})
   const [winners, setWinners] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
   const [deadlineInput, setDeadlineInput] = useState('')
-
-  const picks = useMemo(
-    () => buildPicks(groupRankings, qualifiers, winners),
-    [groupRankings, qualifiers, winners]
-  )
 
   async function checkPassword(e: React.FormEvent) {
     e.preventDefault()
@@ -141,48 +135,37 @@ export default function AdminPage() {
       )}
 
       <div className="flex gap-1.5 mb-6">
-        {(['groups', 'knockout', 'settings'] as const).map(s => (
+        {(['bracket', 'settings'] as const).map(s => (
           <button key={s} onClick={() => { setMsg(''); setActiveSection(s) }}
             className={`tab-btn ${activeSection === s ? 'tab-active' : 'tab-inactive'}`}>
-            {s === 'groups' ? 'Group Stage' : s === 'knockout' ? 'Knockout' : 'Settings'}
+            {s === 'bracket' ? 'Results' : 'Settings'}
           </button>
         ))}
       </div>
 
-      {activeSection === 'groups' && (
+      {activeSection === 'bracket' && (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
-            {GROUP_CODES.map(g => (
-              <GroupStageEditor
-                key={g}
-                groupCode={g}
-                order={groupRankings[g] ?? []}
-                onChange={(code, order) => setGroupRankings(prev => ({ ...prev, [code]: order }))}
-              />
-            ))}
-          </div>
-          <div className="flex items-center justify-end gap-3 pt-5 border-t border-pitch-700">
-            <button onClick={saveGroups} disabled={saving} className="btn-gold px-5 py-2.5 text-xs uppercase tracking-widest">
-              {saving ? 'Saving…' : 'Save Group Results'}
-            </button>
-          </div>
-        </>
-      )}
-
-      {activeSection === 'knockout' && (
-        <>
-          <KnockoutBracket
+          <BracketEditor
             groupRankings={groupRankings}
-            picks={picks}
+            qualifiers={qualifiers}
+            winners={winners}
+            onGroupChange={(code, order) => setGroupRankings(prev => ({ ...prev, [code]: order }))}
             onPick={(matchId, field, teamCode) => {
               if (field === 'teamB') setQualifiers(prev => ({ ...prev, [matchId]: teamCode }))
               else setWinners(prev => ({ ...prev, [matchId]: teamCode }))
             }}
+            onTabChange={setBracketTab}
           />
           <div className="flex items-center justify-end gap-3 mt-6 pt-5 border-t border-pitch-700">
-            <button onClick={saveKnockout} disabled={saving} className="btn-gold px-5 py-2.5 text-xs uppercase tracking-widest">
-              {saving ? 'Saving…' : 'Save Knockout Results'}
-            </button>
+            {bracketTab === 'groups' ? (
+              <button onClick={saveGroups} disabled={saving} className="btn-gold px-5 py-2.5 text-xs uppercase tracking-widest">
+                {saving ? 'Saving…' : 'Save Group Results'}
+              </button>
+            ) : (
+              <button onClick={saveKnockout} disabled={saving} className="btn-gold px-5 py-2.5 text-xs uppercase tracking-widest">
+                {saving ? 'Saving…' : 'Save Knockout Results'}
+              </button>
+            )}
           </div>
         </>
       )}
