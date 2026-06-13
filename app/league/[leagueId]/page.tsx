@@ -28,8 +28,8 @@ export default async function LeaguePage({ params }: { params: { leagueId: strin
     (members ?? []).map(async member => {
       const player = member.players as unknown as { id: string; username: string }
       const { data: bracket } = await supabase
-        .from('brackets').select('id').eq('player_id', player.id).single()
-      if (!bracket) return { username: player.username, groupPoints: 0, knockoutPoints: 0, total: 0 }
+        .from('brackets').select('id, submitted_at').eq('player_id', player.id).single()
+      if (!bracket?.submitted_at) return { username: player.username, groupPoints: 0, knockoutPoints: 0, total: 0 }
       const [{ data: gp }, { data: kp }] = await Promise.all([
         supabase.from('group_predictions').select('*').eq('bracket_id', bracket.id),
         supabase.from('knockout_predictions').select('*').eq('bracket_id', bracket.id),
