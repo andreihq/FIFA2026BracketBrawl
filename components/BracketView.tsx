@@ -3,7 +3,7 @@ import { GroupStageEditor } from './GroupStageEditor'
 import { KnockoutBracket } from './KnockoutBracket'
 import type { GroupPrediction, KnockoutPrediction, ActualResult } from '@/types'
 import { GROUP_CODES } from '@/data/groups'
-import { buildPicks } from '@/data/bracket'
+import { buildPicks, buildQualifiers } from '@/data/bracket'
 
 interface Props {
   groupPredictions: GroupPrediction[]
@@ -21,15 +21,18 @@ export function BracketView({ groupPredictions, knockoutPredictions, actualResul
       .map(p => p.team_code)
   }
 
-  const qualifiers: Record<string, string> = {}
+  // Parse WILDCARD_N records → set of advancing group codes
+  const advancingThirds = new Set<string>()
   const winners: Record<string, string> = {}
   for (const p of knockoutPredictions) {
-    if (p.match_id.endsWith(':qualifier')) qualifiers[p.match_id.replace(':qualifier', '')] = p.predicted_winner
+    if (p.match_id.startsWith('WILDCARD_')) advancingThirds.add(p.predicted_winner)
     else winners[p.match_id] = p.predicted_winner
   }
+
+  const qualifiers = buildQualifiers(groupRankings, advancingThirds)
   const picks = buildPicks(groupRankings, qualifiers, winners)
 
-  // correctPositions[groupCode] = set of 0-based indices where prediction matches actual result
+  // correctPositions[groupCode] = set of 0-based indices where prediction matches actual
   const correctPositions: Record<string, Set<number>> = {}
   const actualGroupRankings: Record<string, string[]> = {}
   for (const r of actualResults) {
@@ -46,14 +49,15 @@ export function BracketView({ groupPredictions, knockoutPredictions, actualResul
     }
   }
 
-  const actualQualifiers: Record<string, string> = {}
+  const actualAdvancingThirds = new Set<string>()
   const actualWinners: Record<string, string> = {}
   for (const r of actualResults) {
     if (r.result_type === 'knockout') {
-      if (r.ref_id.endsWith(':qualifier')) actualQualifiers[r.ref_id.replace(':qualifier', '')] = r.team_code
+      if (r.ref_id.startsWith('WILDCARD_')) actualAdvancingThirds.add(r.team_code)
       else actualWinners[r.ref_id] = r.team_code
     }
   }
+  const actualQualifiers = buildQualifiers(actualGroupRankings, actualAdvancingThirds)
   const correctPicks = buildPicks(actualGroupRankings, actualQualifiers, actualWinners, { skipQualifierValidation: true })
 
   if (tab === 'groups') {
@@ -67,6 +71,9 @@ export function BracketView({ groupPredictions, knockoutPredictions, actualResul
             onChange={() => {}}
             disabled
             correctPositions={correctPositions[g]}
+            advances={advancingThirds.has(g)}
+            onAdvancesChange={() => {}}
+            canAdvance={false}
           />
         ))}
       </div>
@@ -76,7 +83,6 @@ export function BracketView({ groupPredictions, knockoutPredictions, actualResul
   return (
     <div className="-mx-5">
       <KnockoutBracket
-        groupRankings={groupRankings}
         picks={picks}
         onPick={() => {}}
         disabled
