@@ -69,15 +69,15 @@ function AdminPanel({ password, initialResults }: { password: string; initialRes
     }
     return rankings
   })
-  const [qualifiers, setQualifiers] = useState<Record<string, string>>(() => {
-    const q: Record<string, string> = {}
-    for (const r of initialResults.filter(r => r.result_type === 'knockout' && r.ref_id.endsWith(':qualifier')))
-      q[r.ref_id.replace(':qualifier', '')] = r.team_code
-    return q
+  const [advancingThirds, setAdvancingThirds] = useState<Set<string>>(() => {
+    const s = new Set<string>()
+    for (const r of initialResults.filter(r => r.result_type === 'knockout' && r.ref_id.startsWith('WILDCARD_')))
+      s.add(r.team_code)
+    return s
   })
   const [winners, setWinners] = useState<Record<string, string>>(() => {
     const w: Record<string, string> = {}
-    for (const r of initialResults.filter(r => r.result_type === 'knockout' && !r.ref_id.endsWith(':qualifier')))
+    for (const r of initialResults.filter(r => r.result_type === 'knockout' && !r.ref_id.startsWith('WILDCARD_')))
       w[r.ref_id] = r.team_code
     return w
   })
@@ -104,7 +104,7 @@ function AdminPanel({ password, initialResults }: { password: string; initialRes
     setSaving(true); setMsg('')
     const entries = [
       ...Object.entries(winners).map(([ref_id, team_code]) => ({ ref_id, team_code })),
-      ...Object.entries(qualifiers).map(([ref_id, team_code]) => ({ ref_id: ref_id + ':qualifier', team_code })),
+      ...Array.from(advancingThirds).map((g, i) => ({ ref_id: `WILDCARD_${i + 1}`, team_code: g })),
     ]
     await Promise.all(
       entries.map(({ ref_id, team_code }) =>
@@ -143,7 +143,7 @@ function AdminPanel({ password, initialResults }: { password: string; initialRes
       body: JSON.stringify({ result_type: 'knockout' }),
     })
     setWinners({})
-    setQualifiers({})
+    setAdvancingThirds(new Set())
     setMsg('Knockout results reset ✓')
     setSaving(false)
   }
@@ -186,13 +186,18 @@ function AdminPanel({ password, initialResults }: { password: string; initialRes
         <div className="px-5">
           <BracketEditor
             groupRankings={groupRankings}
-            qualifiers={qualifiers}
+            advancingThirds={advancingThirds}
             winners={winners}
             onGroupChange={(code, order) => setGroupRankings(prev => ({ ...prev, [code]: order }))}
-            onPick={(matchId, field, teamCode) => {
-              if (field === 'teamB') setQualifiers(prev => ({ ...prev, [matchId]: teamCode }))
-              else setWinners(prev => ({ ...prev, [matchId]: teamCode }))
+            onAdvancingThirdsChange={(code, val) => {
+              setAdvancingThirds(prev => {
+                const next = new Set(prev)
+                if (val) next.add(code)
+                else next.delete(code)
+                return next
+              })
             }}
+            onPick={(matchId, winner) => setWinners(prev => ({ ...prev, [matchId]: winner }))}
             onTabChange={setBracketTab}
           />
           <div className="flex items-center justify-end gap-3 mt-6 pt-5 border-t border-pitch-700">
