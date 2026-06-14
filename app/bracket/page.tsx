@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import type { GroupPrediction, KnockoutPrediction } from '@/types'
 import { GROUP_CODES, GROUPS } from '@/data/groups'
-import { KNOCKOUT_MATCHES, buildPicks } from '@/data/bracket'
+import { KNOCKOUT_MATCHES, buildPicks, buildQualifiers } from '@/data/bracket'
 import { BracketEditor } from '@/components/BracketEditor'
 import { DeadlineCountdown } from '@/components/DeadlineCountdown'
 import { ShareBracketModal } from '@/components/ShareBracketModal'
@@ -12,7 +12,7 @@ import { Modal } from '@/components/Modal'
 export default function BracketPage() {
   const router = useRouter()
   const [groupRankings, setGroupRankings] = useState<Record<string, string[]>>({})
-  const [qualifiers, setQualifiers] = useState<Record<string, string>>({})
+  const [advancingThirds, setAdvancingThirds] = useState<Set<string>>(new Set())
   const [winners, setWinners] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const [savingAction, setSavingAction] = useState<'save' | 'submit' | null>(null)
@@ -30,6 +30,10 @@ export default function BracketPage() {
   const [bracketTab, setBracketTab] = useState<'groups' | 'knockouts'>('groups')
   const [deadline, setDeadline] = useState<string | null>(null)
 
+  const qualifiers = useMemo(
+    () => buildQualifiers(groupRankings, advancingThirds),
+    [groupRankings, advancingThirds]
+  )
   const picks = useMemo(
     () => buildPicks(groupRankings, qualifiers, winners),
     [groupRankings, qualifiers, winners]
@@ -59,13 +63,13 @@ export default function BracketPage() {
         }
         setGroupRankings(rankings)
 
-        const q: Record<string, string> = {}
+        const advancing = new Set<string>()
         const w: Record<string, string> = {}
         for (const p of data.knockoutPredictions as KnockoutPrediction[]) {
-          if (p.match_id.endsWith(':qualifier')) q[p.match_id.replace(':qualifier', '')] = p.predicted_winner
+          if (p.match_id.startsWith('WILDCARD_')) advancing.add(p.predicted_winner)
           else w[p.match_id] = p.predicted_winner
         }
-        setQualifiers(q)
+        setAdvancingThirds(advancing)
         setWinners(w)
         setLoading(false)
       })
@@ -81,14 +85,20 @@ export default function BracketPage() {
   const badgeLabel = { empty: 'Not Submitted', draft: 'Draft', active: 'Submitted', locked: 'Locked ✓' }[bracketState]
 
   const groupsComplete = GROUP_CODES.every(g => (groupRankings[g]?.length ?? 0) >= 4)
+  const thirdsComplete = advancingThirds.size === 8
   const koComplete = KNOCKOUT_MATCHES.every(m => !!picks[m.id]?.winner)
-    && KNOCKOUT_MATCHES
-      .filter(m => m.round === 'R32' && m.slotB.startsWith('Best 3rd'))
-      .every(m => !!picks[m.id]?.teamB)
 
-  const handlePick = useCallback((matchId: string, field: 'teamB' | 'winner', teamCode: string) => {
-    if (field === 'teamB') setQualifiers(prev => ({ ...prev, [matchId]: teamCode }))
-    else setWinners(prev => ({ ...prev, [matchId]: teamCode }))
+  const handlePick = useCallback((matchId: string, winner: string) => {
+    setWinners(prev => ({ ...prev, [matchId]: winner }))
+  }, [])
+
+  const handleAdvancingThirdsChange = useCallback((code: string, val: boolean) => {
+    setAdvancingThirds(prev => {
+      const next = new Set(prev)
+      if (val) next.add(code)
+      else next.delete(code)
+      return next
+    })
   }, [])
 
   const buildPayload = useCallback((doSubmit: boolean) => {
@@ -97,10 +107,10 @@ export default function BracketPage() {
     )
     const knockoutPredictions = [
       ...Object.entries(winners).map(([match_id, predicted_winner]) => ({ match_id, predicted_winner })),
-      ...Object.entries(qualifiers).map(([match_id, predicted_winner]) => ({ match_id: match_id + ':qualifier', predicted_winner })),
+      ...Array.from(advancingThirds).map((g, i) => ({ match_id: `WILDCARD_${i + 1}`, predicted_winner: g })),
     ]
     return { groupPredictions, knockoutPredictions, submit: doSubmit }
-  }, [groupRankings, winners, qualifiers])
+  }, [groupRankings, winners, advancingThirds])
 
   const saveDraft = useCallback(async () => {
     setSavingAction('save')
@@ -116,10 +126,11 @@ export default function BracketPage() {
   }, [buildPayload])
 
   const submitBracket = useCallback(async () => {
-    if (!groupsComplete || !koComplete) {
+    if (!groupsComplete || !thirdsComplete || !koComplete) {
       setShowValidation(true)
       setSubmitAttempt(n => n + 1)
-      if (!koComplete) setBracketTab('knockouts')
+      if (!thirdsComplete) setBracketTab('groups')
+      else if (!koComplete) setBracketTab('knockouts')
       return
     }
     setShowValidation(false)
@@ -133,7 +144,7 @@ export default function BracketPage() {
     setSaveMsg(res.ok ? 'Submitted ✓' : 'Submit failed')
     setSavingAction(null)
     setTimeout(() => setSaveMsg(''), 3000)
-  }, [buildPayload, groupsComplete, koComplete])
+  }, [buildPayload, groupsComplete, thirdsComplete, koComplete])
 
   const resetBracket = useCallback(async () => {
     setResetting(true)
@@ -144,7 +155,7 @@ export default function BracketPage() {
         defaultRankings[group] = GROUPS[group] ?? []
       }
       setGroupRankings(defaultRankings)
-      setQualifiers({})
+      setAdvancingThirds(new Set())
       setWinners({})
       setHasBracket(false)
       setSubmitted(false)
@@ -295,9 +306,10 @@ export default function BracketPage() {
       <div className="anim-fade-up anim-delay-1 px-5">
         <BracketEditor
           groupRankings={groupRankings}
-          qualifiers={qualifiers}
+          advancingThirds={advancingThirds}
           winners={winners}
           onGroupChange={(code, order) => setGroupRankings(prev => ({ ...prev, [code]: order }))}
+          onAdvancingThirdsChange={handleAdvancingThirdsChange}
           onPick={handlePick}
           disabled={isDisabled}
           showValidation={showValidation}
