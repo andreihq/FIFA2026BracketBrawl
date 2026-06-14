@@ -130,3 +130,39 @@ export function buildPicks(
 
   return result
 }
+
+// R32 "Best 3rd" match IDs in ascending numeric order (M74 < M77 < M79 …)
+const BEST_3RD_MATCH_IDS: string[] = KNOCKOUT_MATCHES
+  .filter(m => m.round === 'R32' && m.slotB.startsWith('Best 3rd'))
+  .sort((a, b) => parseInt(a.id.slice(1)) - parseInt(b.id.slice(1)))
+  .map(m => m.id)
+
+// Derives matchId→teamCode qualifier map from the set of advancing group codes.
+// Processes matches in numeric order; for each match, picks the alphabetically
+// first selected group that is eligible and not yet used.
+export function buildQualifiers(
+  groupRankings: Record<string, string[]>,
+  advancingThirds: Set<string>,
+): Record<string, string> {
+  const result: Record<string, string> = {}
+  const used = new Set<string>()
+
+  for (const matchId of BEST_3RD_MATCH_IDS) {
+    const match = KNOCKOUT_MATCHES.find(m => m.id === matchId)!
+    const eligibleGroups = match.slotB.replace('Best 3rd ', '').split('')
+    const candidates = eligibleGroups
+      .filter(g => advancingThirds.has(g) && !used.has(g))
+      .sort()
+
+    if (candidates.length > 0) {
+      const group = candidates[0]
+      const team = groupRankings[group]?.[2]
+      if (team) {
+        result[matchId] = team
+        used.add(group)
+      }
+    }
+  }
+
+  return result
+}
