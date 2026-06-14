@@ -24,6 +24,9 @@ interface Props {
   onChange: (groupCode: string, newOrder: string[]) => void
   disabled?: boolean
   correctPositions?: Set<number>
+  advances?: boolean
+  onAdvancesChange?: (groupCode: string, val: boolean) => void
+  canAdvance?: boolean
 }
 
 // Left-border accent colors per position
@@ -69,7 +72,7 @@ function SortableTeam({ teamCode, position, disabled, correct }: { teamCode: str
   )
 }
 
-export function GroupStageEditor({ groupCode, order, onChange, disabled = false, correctPositions }: Props) {
+export function GroupStageEditor({ groupCode, order, onChange, disabled = false, correctPositions, advances, onAdvancesChange, canAdvance = true }: Props) {
   const sensors = useSensors(
     useSensor(MouseSensor),
     useSensor(TouchSensor, { activationConstraint: { delay: 100, tolerance: 5 } })
@@ -102,6 +105,30 @@ export function GroupStageEditor({ groupCode, order, onChange, disabled = false,
           </div>
         </SortableContext>
       </DndContext>
+      {advances !== undefined && (
+        <div className="mt-3 pt-3 border-t border-pitch-700">
+          <label className={`flex items-center gap-2.5 select-none ${disabled || (!advances && !canAdvance) ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:opacity-80 transition-opacity'}`}>
+            <input
+              type="checkbox"
+              checked={advances}
+              disabled={disabled || (!advances && !canAdvance)}
+              onChange={e => onAdvancesChange?.(groupCode, e.target.checked)}
+              className="w-4 h-4 rounded border-pitch-500 bg-pitch-800 accent-[#CD7F32] cursor-pointer disabled:cursor-not-allowed"
+            />
+            <span className="text-xs">
+              {teams[2] ? (
+                <>
+                  <span className="mr-1">{TEAMS[teams[2]]?.flag ?? '🏳️'}</span>
+                  <span className="font-medium text-[#EBF0FF]">{TEAMS[teams[2]]?.name ?? teams[2]}</span>
+                  <span className="ml-1 text-pitch-400">advances</span>
+                </>
+              ) : (
+                <span className="italic text-pitch-400">3rd place TBD</span>
+              )}
+            </span>
+          </label>
+        </div>
+      )}
     </div>
   )
 }
