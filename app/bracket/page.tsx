@@ -247,56 +247,33 @@ export default function BracketPage() {
           </button>
 
           {showInstructions && (
-            <div className="mt-3 rounded-xl border border-pitch-700 bg-pitch-900/60 p-5 space-y-6 text-sm text-pitch-200">
+            <div className="mt-3 rounded-xl border border-pitch-700 bg-pitch-900/60 p-5 space-y-5 text-sm text-pitch-200">
 
               {/* Step 1 */}
-              <div>
-                <p className="section-label mb-2">① Group Stage</p>
-                <p className="leading-relaxed">
-                  Drag and drop the teams within each group to rank them <span className="text-[#EBF0FF] font-medium">1st through 4th</span> in the order you predict they&apos;ll finish. The <span className="text-[#EBF0FF] font-medium">top 2</span> from each group advance to the Round of 32 automatically.
-                </p>
+              <div className="flex gap-3">
+                <span className="section-label mt-0.5 shrink-0">①</span>
+                <div>
+                  <p className="text-[#EBF0FF] font-semibold mb-1">Rank each group</p>
+                  <p className="leading-relaxed">Drag teams 1st–4th in each group. The top 2 advance automatically.</p>
+                </div>
               </div>
 
               {/* Step 2 */}
-              <div>
-                <p className="section-label mb-2">② 3rd-Place Wildcards</p>
-                <p className="leading-relaxed mb-4">
-                  In the 48-team format, <span className="text-[#EBF0FF] font-medium">8 of the 12 third-place teams</span> also advance as wildcards. Each Round of 32 slot draws from a fixed set of eligible groups — you choose which 3rd-place team fills it. Each team can only fill one slot; once picked, it disappears from the other dropdowns.
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {([
-                    ['M74', 'Group E Winner', 'A B C D F'],
-                    ['M77', 'Group I Winner', 'C D F G H'],
-                    ['M79', 'Group A Winner', 'C E F H I'],
-                    ['M80', 'Group L Winner', 'E H I J K'],
-                    ['M81', 'Group D Winner', 'B E F I J'],
-                    ['M82', 'Group G Winner', 'A E H I J'],
-                    ['M85', 'Group B Winner', 'E F G I J'],
-                    ['M87', 'Group K Winner', 'D E I J L'],
-                  ] as [string, string, string][]).map(([id, opp, groups]) => (
-                    <div key={id} className="rounded-lg bg-pitch-800 border border-pitch-600 px-3 py-2.5">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <span className="font-mono text-[11px] font-bold text-[#EBF0FF] bg-pitch-600 rounded px-1.5 py-0.5">{id}</span>
-                        <span className="text-pitch-200 text-xs">{opp}</span>
-                        <span className="text-pitch-300 text-xs">vs</span>
-                        <span className="text-[#EBF0FF] font-semibold text-xs">Best 3rd Place of</span>
-                      </div>
-                      <div className="flex gap-1.5 flex-wrap">
-                        {groups.split(' ').map(g => (
-                          <span key={g} className="rounded-md px-2 py-0.5 bg-pitch-500 border border-pitch-400 text-[11px] font-bold text-[#EBF0FF]">Group {g}</span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+              <div className="flex gap-3">
+                <span className="section-label mt-0.5 shrink-0">②</span>
+                <div>
+                  <p className="text-[#EBF0FF] font-semibold mb-1">Pick 8 wildcard 3rd-place teams</p>
+                  <p className="leading-relaxed">All 12 groups produce a 3rd-place team, but only <span className="text-[#EBF0FF] font-medium">8 advance to the Round of 32</span>. FIFA ranks the 12 third-place teams using official tiebreakers — points, goal difference, goals scored, and so on — and the best 8 qualify. Under each group card you&apos;ll see a <span className="text-[#CD7F32] font-medium">3rd Place Wildcard</span> checkbox. Check exactly 8 groups whose 3rd-place team you think will make the cut. FIFA&apos;s official table then assigns each to the correct R32 match automatically.</p>
                 </div>
               </div>
 
               {/* Step 3 */}
-              <div>
-                <p className="section-label mb-2">③ Knockout Rounds</p>
-                <p className="leading-relaxed">
-                  Switch to the <span className="text-[#EBF0FF] font-medium">Knockouts tab</span> and pick the winner of every match — Round of 32, Quarterfinals, Semifinals, and the Final. Don&apos;t forget to pick the <span className="text-[#EBF0FF] font-medium">3rd Place</span> match too.
-                </p>
+              <div className="flex gap-3">
+                <span className="section-label mt-0.5 shrink-0">③</span>
+                <div>
+                  <p className="text-[#EBF0FF] font-semibold mb-1">Pick knockout winners</p>
+                  <p className="leading-relaxed">Switch to the <span className="text-[#EBF0FF] font-medium">Knockouts</span> tab and pick the winner of every match through to the Final and 3rd-place play-off.</p>
+                </div>
               </div>
 
             </div>

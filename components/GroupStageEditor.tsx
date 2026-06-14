@@ -1,4 +1,5 @@
 'use client'
+import { useEffect, useRef, useState } from 'react'
 import {
   DndContext,
   closestCenter,
@@ -73,6 +74,22 @@ function SortableTeam({ teamCode, position, disabled, correct }: { teamCode: str
 }
 
 export function GroupStageEditor({ groupCode, order, onChange, disabled = false, correctPositions, advances, onAdvancesChange, canAdvance = true }: Props) {
+  const [tooltipOpen, setTooltipOpen] = useState(false)
+  const tooltipRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!tooltipOpen) return
+    function handleClick(e: Event) {
+      if (!tooltipRef.current?.contains(e.target as Node)) setTooltipOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    document.addEventListener('touchstart', handleClick)
+    return () => {
+      document.removeEventListener('mousedown', handleClick)
+      document.removeEventListener('touchstart', handleClick)
+    }
+  }, [tooltipOpen])
+
   const sensors = useSensors(
     useSensor(MouseSensor),
     useSensor(TouchSensor, { activationConstraint: { delay: 100, tolerance: 5 } })
@@ -109,12 +126,18 @@ export function GroupStageEditor({ groupCode, order, onChange, disabled = false,
         <div className="mt-3 pt-3 border-t border-pitch-700">
           <div className="flex items-center gap-1.5 mb-1.5">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-[#CD7F32]">3rd Place Wildcard</p>
-            <div className="relative group">
-              <button type="button" className="w-3.5 h-3.5 rounded-full border border-pitch-500 text-pitch-400 text-[9px] flex items-center justify-center leading-none font-bold hover:border-pitch-400 hover:text-pitch-300 transition-colors cursor-help">?</button>
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 rounded-lg bg-pitch-700 border border-pitch-600 px-3 py-2.5 text-[11px] text-pitch-200 leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 normal-case tracking-normal font-normal shadow-lg">
-                In FIFA 2026, only 8 of the 12 third-place teams advance to the Round of 32. Check this box if you predict this group&apos;s 3rd-place team is one of the 8 that qualify.
-                <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-pitch-600" />
-              </div>
+            <div ref={tooltipRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setTooltipOpen(o => !o)}
+                className={`w-3.5 h-3.5 rounded-full border text-[9px] flex items-center justify-center leading-none font-bold transition-colors cursor-pointer ${tooltipOpen ? 'border-pitch-300 text-pitch-200' : 'border-pitch-500 text-pitch-400 hover:border-pitch-400 hover:text-pitch-300'}`}
+              >?</button>
+              {tooltipOpen && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 rounded-lg bg-pitch-700 border border-pitch-600 px-3 py-2.5 text-[11px] text-pitch-200 leading-relaxed z-20 normal-case tracking-normal font-normal shadow-lg">
+                  In FIFA 2026, only 8 of the 12 third-place teams advance to the Round of 32. Check this box if you predict this group&apos;s 3rd-place team is one of the 8 that qualify.
+                  <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-pitch-600" />
+                </div>
+              )}
             </div>
           </div>
           <label className={`flex items-center gap-3 rounded-xl border-l-[3px] px-3 py-2.5 select-none transition-colors
@@ -126,7 +149,7 @@ export function GroupStageEditor({ groupCode, order, onChange, disabled = false,
               checked={advances}
               disabled={disabled || (!advances && !canAdvance)}
               onChange={e => onAdvancesChange?.(groupCode, e.target.checked)}
-              className={`w-3.5 h-3.5 flex-shrink-0 rounded cursor-pointer disabled:cursor-not-allowed ${advances ? 'accent-[#34D399]' : 'accent-[#CD7F32]'}`}
+              className={`w-3 h-3 flex-shrink-0 rounded cursor-pointer disabled:cursor-not-allowed ${advances ? 'accent-[#34D399]' : 'accent-[#CD7F32]'}`}
             />
             {teams[2] ? (
               <>
