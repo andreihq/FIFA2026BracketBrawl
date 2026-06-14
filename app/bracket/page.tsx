@@ -159,6 +159,7 @@ export default function BracketPage() {
       setWinners({})
       setHasBracket(false)
       setSubmitted(false)
+      setShowValidation(false)
       router.refresh()
     }
     setResetting(false)
@@ -308,7 +309,14 @@ export default function BracketPage() {
           groupRankings={groupRankings}
           advancingThirds={advancingThirds}
           winners={winners}
-          onGroupChange={(code, order) => setGroupRankings(prev => ({ ...prev, [code]: order }))}
+          onGroupChange={(code, order) => {
+            setGroupRankings(prev => {
+              if (prev[code]?.[2] !== order[2] && advancingThirds.has(code)) {
+                setAdvancingThirds(s => { const n = new Set(s); n.delete(code); return n })
+              }
+              return { ...prev, [code]: order }
+            })
+          }}
           onAdvancingThirdsChange={handleAdvancingThirdsChange}
           onPick={handlePick}
           disabled={isDisabled}

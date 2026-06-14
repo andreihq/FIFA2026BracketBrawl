@@ -1,3 +1,5 @@
+import { ANNEX_C } from './annex-c'
+
 export interface KnockoutMatch {
   id: string
   round: 'R32' | 'R16' | 'QF' | 'SF' | '3RD' | 'FINAL'
@@ -14,34 +16,31 @@ export interface MatchPick {
 }
 
 // Slot label conventions:
-//   "Group X Winner"      — 1st place in group X
-//   "Group X Runner-up"   — 2nd place in group X
-//   "Best 3rd XXXXX"      — best 3rd-place wildcard from one of groups XXXXX (user picks)
-//   "Winner MXX"          — winner of match MXX
-//   "Loser MXX"           — loser of match MXX (used for 3rd-place match)
+//   "1X"        — 1st place (winner) of group X
+//   "2X"        — 2nd place (runner-up) of group X
+//   "W"         — 3rd-place wildcard (assigned via Annex C lookup table)
+//   "Winner MXX" — winner of match MXX
+//   "Loser MXX"  — loser of match MXX (3rd-place match only)
 
 // Matches are ordered to match the visual bracket tree (top to bottom per round).
-// R32 pairs that feed the same R16 slot are adjacent; R16 pairs feeding the same QF slot
-// are adjacent; and so on — this lets justify-around centering align each match with
-// its two upstream matches automatically.
 export const KNOCKOUT_MATCHES: KnockoutMatch[] = [
   // Round of 32 — bracket order derived from M104 tree
-  { id: 'M74',  round: 'R32', slotA: 'Group E Winner',    slotB: 'Best 3rd ABCDF',     feedsInto: 'M89',  feedsSlot: 'A' },
-  { id: 'M77',  round: 'R32', slotA: 'Group I Winner',    slotB: 'Best 3rd CDFGH',     feedsInto: 'M89',  feedsSlot: 'B' },
-  { id: 'M73',  round: 'R32', slotA: 'Group A Runner-up', slotB: 'Group B Runner-up',  feedsInto: 'M90',  feedsSlot: 'A' },
-  { id: 'M75',  round: 'R32', slotA: 'Group F Winner',    slotB: 'Group C Runner-up',  feedsInto: 'M90',  feedsSlot: 'B' },
-  { id: 'M83',  round: 'R32', slotA: 'Group K Runner-up', slotB: 'Group L Runner-up',  feedsInto: 'M93',  feedsSlot: 'A' },
-  { id: 'M84',  round: 'R32', slotA: 'Group H Winner',    slotB: 'Group J Runner-up',  feedsInto: 'M93',  feedsSlot: 'B' },
-  { id: 'M81',  round: 'R32', slotA: 'Group D Winner',    slotB: 'Best 3rd BEFIJ',     feedsInto: 'M94',  feedsSlot: 'A' },
-  { id: 'M82',  round: 'R32', slotA: 'Group G Winner',    slotB: 'Best 3rd AEHIJ',     feedsInto: 'M94',  feedsSlot: 'B' },
-  { id: 'M76',  round: 'R32', slotA: 'Group C Winner',    slotB: 'Group F Runner-up',  feedsInto: 'M91',  feedsSlot: 'A' },
-  { id: 'M78',  round: 'R32', slotA: 'Group E Runner-up', slotB: 'Group I Runner-up',  feedsInto: 'M91',  feedsSlot: 'B' },
-  { id: 'M79',  round: 'R32', slotA: 'Group A Winner',    slotB: 'Best 3rd CEFHI',     feedsInto: 'M92',  feedsSlot: 'A' },
-  { id: 'M80',  round: 'R32', slotA: 'Group L Winner',    slotB: 'Best 3rd EHIJK',     feedsInto: 'M92',  feedsSlot: 'B' },
-  { id: 'M86',  round: 'R32', slotA: 'Group J Winner',    slotB: 'Group H Runner-up',  feedsInto: 'M95',  feedsSlot: 'A' },
-  { id: 'M88',  round: 'R32', slotA: 'Group D Runner-up', slotB: 'Group G Runner-up',  feedsInto: 'M95',  feedsSlot: 'B' },
-  { id: 'M85',  round: 'R32', slotA: 'Group B Winner',    slotB: 'Best 3rd EFGIJ',     feedsInto: 'M96',  feedsSlot: 'A' },
-  { id: 'M87',  round: 'R32', slotA: 'Group K Winner',    slotB: 'Best 3rd DEIJL',     feedsInto: 'M96',  feedsSlot: 'B' },
+  { id: 'M74',  round: 'R32', slotA: '1E', slotB: 'W',   feedsInto: 'M89',  feedsSlot: 'A' },
+  { id: 'M77',  round: 'R32', slotA: '1I', slotB: 'W',   feedsInto: 'M89',  feedsSlot: 'B' },
+  { id: 'M73',  round: 'R32', slotA: '2A', slotB: '2B',  feedsInto: 'M90',  feedsSlot: 'A' },
+  { id: 'M75',  round: 'R32', slotA: '1F', slotB: '2C',  feedsInto: 'M90',  feedsSlot: 'B' },
+  { id: 'M83',  round: 'R32', slotA: '2K', slotB: '2L',  feedsInto: 'M93',  feedsSlot: 'A' },
+  { id: 'M84',  round: 'R32', slotA: '1H', slotB: '2J',  feedsInto: 'M93',  feedsSlot: 'B' },
+  { id: 'M81',  round: 'R32', slotA: '1D', slotB: 'W',   feedsInto: 'M94',  feedsSlot: 'A' },
+  { id: 'M82',  round: 'R32', slotA: '1G', slotB: 'W',   feedsInto: 'M94',  feedsSlot: 'B' },
+  { id: 'M76',  round: 'R32', slotA: '1C', slotB: '2F',  feedsInto: 'M91',  feedsSlot: 'A' },
+  { id: 'M78',  round: 'R32', slotA: '2E', slotB: '2I',  feedsInto: 'M91',  feedsSlot: 'B' },
+  { id: 'M79',  round: 'R32', slotA: '1A', slotB: 'W',   feedsInto: 'M92',  feedsSlot: 'A' },
+  { id: 'M80',  round: 'R32', slotA: '1L', slotB: 'W',   feedsInto: 'M92',  feedsSlot: 'B' },
+  { id: 'M86',  round: 'R32', slotA: '1J', slotB: '2H',  feedsInto: 'M95',  feedsSlot: 'A' },
+  { id: 'M88',  round: 'R32', slotA: '2D', slotB: '2G',  feedsInto: 'M95',  feedsSlot: 'B' },
+  { id: 'M85',  round: 'R32', slotA: '1B', slotB: 'W',   feedsInto: 'M96',  feedsSlot: 'A' },
+  { id: 'M87',  round: 'R32', slotA: '1K', slotB: 'W',   feedsInto: 'M96',  feedsSlot: 'B' },
   // Round of 16 — bracket order
   { id: 'M89',  round: 'R16', slotA: 'Winner M74', slotB: 'Winner M77', feedsInto: 'M97',  feedsSlot: 'A' },
   { id: 'M90',  round: 'R16', slotA: 'Winner M73', slotB: 'Winner M75', feedsInto: 'M97',  feedsSlot: 'B' },
@@ -67,17 +66,17 @@ export const KNOCKOUT_MATCHES: KnockoutMatch[] = [
 export const MATCH_IDS = KNOCKOUT_MATCHES.map(m => m.id)
 
 // Resolves a deterministic slot label to a team code using already-built upstream picks.
-// Does not handle "Best 3rd" — that is handled separately in buildPicks.
+// 'W' (wildcard) slots are handled separately in buildPicks.
 function resolveSlot(
   slotLabel: string,
   groupRankings: Record<string, string[]>,
   built: Record<string, MatchPick>,
 ): string | null {
-  const winnerOf = slotLabel.match(/^Group ([A-L]) Winner$/)
-  if (winnerOf) return groupRankings[winnerOf[1]]?.[0] ?? null
+  const winner = slotLabel.match(/^1([A-L])$/)
+  if (winner) return groupRankings[winner[1]]?.[0] ?? null
 
-  const runnerOf = slotLabel.match(/^Group ([A-L]) Runner-up$/)
-  if (runnerOf) return groupRankings[runnerOf[1]]?.[1] ?? null
+  const runner = slotLabel.match(/^2([A-L])$/)
+  if (runner) return groupRankings[runner[1]]?.[1] ?? null
 
   const prevWinner = slotLabel.match(/^Winner (M\d+)$/)
   if (prevWinner) return built[prevWinner[1]]?.winner ?? null
@@ -93,10 +92,9 @@ function resolveSlot(
 }
 
 // Builds the full bracket state from user inputs.
-// qualifiers: matchId → Best 3rd qualifier team chosen by user
+// qualifiers: matchId → wildcard team code (from buildQualifiers)
 // winners: matchId → winner chosen by user
-// teamA is always auto-populated; teamB is auto-populated except for Best 3rd slots.
-// Winners that no longer match either resolved team are set to null automatically.
+// Winners that no longer match either resolved team are cleared automatically.
 export function buildPicks(
   groupRankings: Record<string, string[]>,
   qualifiers: Record<string, string>,
@@ -109,15 +107,8 @@ export function buildPicks(
     const teamA = resolveSlot(match.slotA, groupRankings, result)
 
     let teamB: string | null
-    if (match.slotB.startsWith('Best 3rd')) {
-      const q = qualifiers[match.id] ?? null
-      if (skipQualifierValidation) {
-        teamB = q
-      } else {
-        const groups = match.slotB.replace('Best 3rd ', '').split('')
-        const eligible = groups.map(g => groupRankings[g]?.[2]).filter((c): c is string => !!c)
-        teamB = (q && eligible.includes(q)) ? q : null
-      }
+    if (match.slotB === 'W') {
+      teamB = qualifiers[match.id] ?? null
     } else {
       teamB = resolveSlot(match.slotB, groupRankings, result)
     }
@@ -131,38 +122,22 @@ export function buildPicks(
   return result
 }
 
-// R32 "Best 3rd" match IDs in ascending numeric order (M74 < M77 < M79 …)
-const BEST_3RD_MATCH_IDS: string[] = KNOCKOUT_MATCHES
-  .filter(m => m.round === 'R32' && m.slotB.startsWith('Best 3rd'))
-  .sort((a, b) => parseInt(a.id.slice(1)) - parseInt(b.id.slice(1)))
-  .map(m => m.id)
-
-// Derives matchId→teamCode qualifier map from the set of advancing group codes.
-// Processes matches in numeric order; for each match, picks the alphabetically
-// first selected group that is eligible and not yet used.
+// Looks up the official FIFA Annex C table to determine which group's 3rd-place
+// team plays in each wildcard R32 match, given the set of 8 advancing groups.
 export function buildQualifiers(
   groupRankings: Record<string, string[]>,
   advancingThirds: Set<string>,
 ): Record<string, string> {
+  if (advancingThirds.size !== 8) return {}
+
+  const key = Array.from(advancingThirds).sort().join(' ')
+  const assignment = ANNEX_C[key]
+  if (!assignment) return {}
+
   const result: Record<string, string> = {}
-  const used = new Set<string>()
-
-  for (const matchId of BEST_3RD_MATCH_IDS) {
-    const match = KNOCKOUT_MATCHES.find(m => m.id === matchId)!
-    const eligibleGroups = match.slotB.replace('Best 3rd ', '').split('')
-    const candidates = eligibleGroups
-      .filter(g => advancingThirds.has(g) && !used.has(g))
-      .sort()
-
-    if (candidates.length > 0) {
-      const group = candidates[0]
-      const team = groupRankings[group]?.[2]
-      if (team) {
-        result[matchId] = team
-        used.add(group)
-      }
-    }
+  for (const [matchId, groupCode] of Object.entries(assignment)) {
+    const team = groupRankings[groupCode]?.[2]
+    if (team) result[matchId] = team
   }
-
   return result
 }

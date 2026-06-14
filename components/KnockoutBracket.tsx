@@ -104,16 +104,14 @@ function MatchCard({ match, picks, onPick, disabled, label, showValidation, corr
   dividerRef?: React.RefCallback<HTMLDivElement>
 }) {
   const isR32 = match.round === 'R32'
-  const isBest3rdB = match.slotB.startsWith('Best 3rd')
+  const isBest3rdB = match.slotB === 'W'
   const mp = picks[match.id] ?? { teamA: null, teamB: null, winner: null }
   const cp = correctPicks?.[match.id]
 
   const srcA = match.slotA.match(/^Winner (M\d+)$/)?.[1] ?? null
   const srcB = match.slotB.match(/^Winner (M\d+)$/)?.[1] ?? null
 
-  const slotBLabel = isBest3rdB
-    ? `3rd: ${match.slotB.replace('Best 3rd ', '').split('').join('/')}`
-    : match.slotB
+  const slotBLabel = isBest3rdB ? '3rd Place Wildcard' : match.slotB
 
   return (
     <div className="flex flex-col gap-0.5">

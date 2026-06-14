@@ -107,25 +107,35 @@ export function GroupStageEditor({ groupCode, order, onChange, disabled = false,
       </DndContext>
       {advances !== undefined && (
         <div className="mt-3 pt-3 border-t border-pitch-700">
-          <label className={`flex items-center gap-2.5 select-none ${disabled || (!advances && !canAdvance) ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:opacity-80 transition-opacity'}`}>
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-[#CD7F32]">3rd Place Wildcard</p>
+            <div className="relative group">
+              <button type="button" className="w-3.5 h-3.5 rounded-full border border-pitch-500 text-pitch-400 text-[9px] flex items-center justify-center leading-none font-bold hover:border-pitch-400 hover:text-pitch-300 transition-colors cursor-help">?</button>
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 rounded-lg bg-pitch-700 border border-pitch-600 px-3 py-2.5 text-[11px] text-pitch-200 leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 normal-case tracking-normal font-normal shadow-lg">
+                In FIFA 2026, only 8 of the 12 third-place teams advance to the Round of 32. Check this box if you predict this group&apos;s 3rd-place team is one of the 8 that qualify.
+                <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-pitch-600" />
+              </div>
+            </div>
+          </div>
+          <label className={`flex items-center gap-3 rounded-xl border-l-[3px] px-3 py-2.5 select-none transition-colors
+            ${advances ? 'border-l-[#34D399] bg-[#34D399]/10' : 'border-l-[#CD7F32] bg-pitch-800'}
+            ${disabled || (!advances && !canAdvance) ? 'opacity-40 cursor-not-allowed' : advances ? 'cursor-pointer hover:bg-[#34D399]/20' : 'cursor-pointer hover:bg-pitch-700'}
+          `}>
             <input
               type="checkbox"
               checked={advances}
               disabled={disabled || (!advances && !canAdvance)}
               onChange={e => onAdvancesChange?.(groupCode, e.target.checked)}
-              className="w-4 h-4 rounded border-pitch-500 bg-pitch-800 accent-[#CD7F32] cursor-pointer disabled:cursor-not-allowed"
+              className={`w-3.5 h-3.5 flex-shrink-0 rounded cursor-pointer disabled:cursor-not-allowed ${advances ? 'accent-[#34D399]' : 'accent-[#CD7F32]'}`}
             />
-            <span className="text-xs">
-              {teams[2] ? (
-                <>
-                  <span className="mr-1">{TEAMS[teams[2]]?.flag ?? '🏳️'}</span>
-                  <span className="font-medium text-[#EBF0FF]">{TEAMS[teams[2]]?.name ?? teams[2]}</span>
-                  <span className="ml-1 text-pitch-400">advances</span>
-                </>
-              ) : (
-                <span className="italic text-pitch-400">3rd place TBD</span>
-              )}
-            </span>
+            {teams[2] ? (
+              <>
+                <span className="text-base leading-none">{TEAMS[teams[2]]?.flag ?? '🏳️'}</span>
+                <span className={`flex-1 text-sm font-medium truncate ${advances ? 'text-[#34D399]' : 'text-[#EBF0FF]'}`}>{TEAMS[teams[2]]?.name ?? teams[2]}</span>
+              </>
+            ) : (
+              <span className="flex-1 text-sm italic text-pitch-400">3rd place TBD</span>
+            )}
           </label>
         </div>
       )}

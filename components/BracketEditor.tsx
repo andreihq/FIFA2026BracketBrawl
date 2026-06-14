@@ -64,7 +64,7 @@ export function BracketEditor({
         <>
           {showValidation && !thirdsComplete && (
             <div className="mb-4 rounded-xl border border-red-700/50 bg-red-950/30 px-4 py-3 text-sm font-medium text-[#F87171]">
-              Select exactly 8 third-place teams to advance — {advancingThirds.size}/8 selected.
+              Select exactly 8 third-place teams to advance to Knockout Stage — {advancingThirds.size}/8 selected.
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
