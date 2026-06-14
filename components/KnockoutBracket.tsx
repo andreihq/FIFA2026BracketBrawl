@@ -24,9 +24,8 @@ const CONNECTOR_PAIRS: [string, string, string][] = (() => {
 interface Seg { x1: number; y1: number; x2: number; y2: number }
 
 interface Props {
-  groupRankings: Record<string, string[]>
   picks: Record<string, MatchPick>
-  onPick: (matchId: string, field: 'teamB' | 'winner', teamCode: string) => void
+  onPick: (matchId: string, winner: string) => void
   disabled?: boolean
   showValidation?: boolean
   submitAttempt?: number
@@ -71,7 +70,7 @@ function TeamRow({ teamCode, label, correct, variant }: {
 function WinnerDropdown({ srcMatchId, picks, onPick, showValidation }: {
   srcMatchId: string
   picks: Record<string, MatchPick>
-  onPick: (matchId: string, field: 'teamB' | 'winner', teamCode: string) => void
+  onPick: (matchId: string, winner: string) => void
   showValidation: boolean
 }) {
   const src = picks[srcMatchId]
@@ -87,52 +86,17 @@ function WinnerDropdown({ srcMatchId, picks, onPick, showValidation }: {
       value={picked ?? ''}
       options={options}
       placeholder={`Pick ${srcMatchId} Winner`}
-      onChange={code => onPick(srcMatchId, 'winner', code)}
+      onChange={code => onPick(srcMatchId, code)}
       disabled={!teamA || !teamB}
       isError={isError}
     />
   )
 }
 
-function QualifierDropdown({ match, groupRankings, picks, onPick, showValidation }: {
+function MatchCard({ match, picks, onPick, disabled, label, showValidation, correctPicks, dividerRef }: {
   match: KnockoutMatch
-  groupRankings: Record<string, string[]>
   picks: Record<string, MatchPick>
-  onPick: (matchId: string, field: 'teamB' | 'winner', teamCode: string) => void
-  showValidation: boolean
-}) {
-  const groups = match.slotB.replace('Best 3rd ', '').split('')
-  const pickedElsewhere = new Set(
-    KNOCKOUT_MATCHES
-      .filter(m => m.round === 'R32' && m.slotB.startsWith('Best 3rd') && m.id !== match.id)
-      .map(m => picks[m.id]?.teamB)
-      .filter(Boolean) as string[]
-  )
-  const eligible = groups
-    .map(g => groupRankings[g]?.[2])
-    .filter((c): c is string => !!c && !pickedElsewhere.has(c))
-
-  const picked = picks[match.id]?.teamB ?? ''
-  const isError = showValidation && !picked
-  const options = eligible.map(code => teamOpt(code)).filter((o): o is DropdownOption => !!o)
-
-  return (
-    <MatchDropdown
-      value={picked}
-      options={options}
-      placeholder={`3rd: ${groups.join('/')}…`}
-      onChange={code => onPick(match.id, 'teamB', code)}
-      disabled={eligible.length === 0}
-      isError={isError}
-    />
-  )
-}
-
-function MatchCard({ match, groupRankings, picks, onPick, disabled, label, showValidation, correctPicks, dividerRef }: {
-  match: KnockoutMatch
-  groupRankings: Record<string, string[]>
-  picks: Record<string, MatchPick>
-  onPick: (matchId: string, field: 'teamB' | 'winner', teamCode: string) => void
+  onPick: (matchId: string, winner: string) => void
   disabled: boolean
   label?: string
   showValidation: boolean
@@ -176,8 +140,6 @@ function MatchCard({ match, groupRankings, picks, onPick, disabled, label, showV
           label={slotBLabel}
           correct={(!isR32 || isBest3rdB) && !!mp.teamB && mp.teamB === cp?.teamB}
         />
-      ) : isR32 && isBest3rdB ? (
-        <QualifierDropdown match={match} groupRankings={groupRankings} picks={picks} onPick={onPick} showValidation={showValidation} />
       ) : isR32 || !srcB ? (
         <TeamRow teamCode={mp.teamB} label={slotBLabel} />
       ) : (
@@ -189,7 +151,7 @@ function MatchCard({ match, groupRankings, picks, onPick, disabled, label, showV
 
 function ChampionsPodium({ picks, onPick, disabled, showValidation, correctPicks }: {
   picks: Record<string, MatchPick>
-  onPick: (matchId: string, field: 'teamB' | 'winner', teamCode: string) => void
+  onPick: (matchId: string, winner: string) => void
   disabled: boolean
   showValidation: boolean
   correctPicks?: Record<string, MatchPick>
@@ -217,7 +179,7 @@ function ChampionsPodium({ picks, onPick, disabled, showValidation, correctPicks
             value={champion ?? ''}
             options={championOptions}
             placeholder="Pick Champion…"
-            onChange={code => onPick('M104', 'winner', code)}
+            onChange={code => onPick('M104', code)}
             disabled={!finalistA || !finalistB}
             isError={showValidation && !champion && !!finalistA && !!finalistB}
             variant="gold"
@@ -247,7 +209,7 @@ function ChampionsPodium({ picks, onPick, disabled, showValidation, correctPicks
             value={thirdPlace ?? ''}
             options={thirdOptions}
             placeholder="Pick 3rd Place…"
-            onChange={code => onPick('M103', 'winner', code)}
+            onChange={code => onPick('M103', code)}
             disabled={!loserA || !loserB}
             isError={showValidation && !thirdPlace && !!loserA && !!loserB}
             variant="bronze"
@@ -258,12 +220,9 @@ function ChampionsPodium({ picks, onPick, disabled, showValidation, correctPicks
   )
 }
 
-export function KnockoutBracket({ groupRankings, picks, onPick, disabled = false, showValidation = false, submitAttempt = 0, correctPicks }: Props) {
+export function KnockoutBracket({ picks, onPick, disabled = false, showValidation = false, submitAttempt = 0, correctPicks }: Props) {
   const finalMatches = KNOCKOUT_MATCHES.filter(m => m.round === 'FINAL' || m.round === '3RD')
   const allPicksMade = KNOCKOUT_MATCHES.every(m => !!picks[m.id]?.winner)
-    && KNOCKOUT_MATCHES
-      .filter(m => m.round === 'R32' && m.slotB.startsWith('Best 3rd'))
-      .every(m => !!picks[m.id]?.teamB)
 
   const errorRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -354,7 +313,6 @@ export function KnockoutBracket({ groupRankings, picks, onPick, disabled = false
                     <MatchCard
                       match={match}
                       label={match.round === 'FINAL' ? `Finals · ${match.id}` : `3rd Place · ${match.id}`}
-                      groupRankings={groupRankings}
                       picks={picks}
                       onPick={onPick}
                       disabled={disabled}
@@ -371,7 +329,6 @@ export function KnockoutBracket({ groupRankings, picks, onPick, disabled = false
                   <div key={match.id} ref={el => { cardRefs.current[match.id] = el }}>
                     <MatchCard
                       match={match}
-                      groupRankings={groupRankings}
                       picks={picks}
                       onPick={onPick}
                       disabled={disabled}
