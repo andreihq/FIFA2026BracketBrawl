@@ -74,6 +74,7 @@ export function BracketView({ groupPredictions, knockoutPredictions, actualResul
             advances={advancingThirds.has(g)}
             onAdvancesChange={() => {}}
             canAdvance={false}
+            wildcardCorrect={advancingThirds.has(g) && actualAdvancingThirds.has(g)}
           />
         ))}
       </div>

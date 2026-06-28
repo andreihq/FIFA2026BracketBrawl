@@ -15,11 +15,12 @@ export async function GET() {
     .eq('player_id', session.playerId)
     .single()
 
-  if (!bracket) return NextResponse.json({ bracket: null, groupPredictions: [], knockoutPredictions: [] })
+  if (!bracket) return NextResponse.json({ bracket: null, groupPredictions: [], knockoutPredictions: [], actualResults: [] })
 
-  const [{ data: groupPredictions }, { data: knockoutPredictions }] = await Promise.all([
+  const [{ data: groupPredictions }, { data: knockoutPredictions }, { data: actualResults }] = await Promise.all([
     supabase.from('group_predictions').select('*').eq('bracket_id', bracket.id),
     supabase.from('knockout_predictions').select('*').eq('bracket_id', bracket.id),
+    supabase.from('actual_results').select('*'),
   ])
 
   return NextResponse.json({
@@ -27,6 +28,7 @@ export async function GET() {
     username: session.username,
     groupPredictions: groupPredictions ?? [],
     knockoutPredictions: knockoutPredictions ?? [],
+    actualResults: actualResults ?? [],
   })
 }
 

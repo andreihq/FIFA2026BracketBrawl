@@ -23,7 +23,7 @@ export function Leaderboard({ rows, currentUsername, leagueId }: Props) {
       <div className="grid grid-cols-[2rem_1fr_3rem_3rem_3.5rem] text-[10px] uppercase tracking-widest text-pitch-400 border-b border-pitch-600 px-4 py-2.5">
         <div>#</div>
         <div>Player</div>
-        <div className="text-right" title="Group Stage points">GS</div>
+        <div className="text-right" title="Group Stage + Wildcard points">GS</div>
         <div className="text-right" title="Knockout points">KO</div>
         <div className="text-right">Total</div>
       </div>

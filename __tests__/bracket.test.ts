@@ -1,4 +1,4 @@
-import { buildQualifiers } from '@/data/bracket'
+import { buildQualifiers, isKnockoutSlotCorrect } from '@/data/bracket'
 
 // Rankings mirrors the actual GROUPS data (index 2 = 3rd place)
 const rankings: Record<string, string[]> = {
@@ -69,5 +69,32 @@ describe('buildQualifiers', () => {
     // Any valid 8-from-12 combo IS in Annex C, so this tests a fabricated invalid key
     const fakeSet = new Set(['A', 'A', 'B', 'C', 'D', 'E', 'F', 'G']) // only 7 unique
     expect(buildQualifiers(rankings, fakeSet)).toEqual({})
+  })
+})
+
+describe('isKnockoutSlotCorrect', () => {
+  // Green highlighting in the knockout bracket marks a team that PROGRESSED
+  // (won its feeding match), not a team that merely qualified into R32.
+
+  it('never marks an R32 slot correct, even when the prediction matches the actual team', () => {
+    // This is the wildcard bug: a 3rd-place wildcard fills an R32 slotB the moment
+    // advancing thirds are known (end of group stage), before the R32 match is played.
+    expect(isKnockoutSlotCorrect('R32', 'MAR', 'MAR')).toBe(false)
+  })
+
+  it('marks an R16 slot correct when the predicted progressing team matches the actual winner', () => {
+    expect(isKnockoutSlotCorrect('R16', 'MAR', 'MAR')).toBe(true)
+  })
+
+  it('does not mark an R16 slot correct when the prediction differs from the actual winner', () => {
+    expect(isKnockoutSlotCorrect('R16', 'MAR', 'BRA')).toBe(false)
+  })
+
+  it('does not mark a slot correct when there is no predicted team', () => {
+    expect(isKnockoutSlotCorrect('QF', null, 'BRA')).toBe(false)
+  })
+
+  it('does not mark a slot correct when the actual team is unknown', () => {
+    expect(isKnockoutSlotCorrect('FINAL', 'BRA', undefined)).toBe(false)
   })
 })

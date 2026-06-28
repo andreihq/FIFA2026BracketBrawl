@@ -1,10 +1,12 @@
 'use client'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import type { GroupPrediction, KnockoutPrediction } from '@/types'
+import type { GroupPrediction, KnockoutPrediction, ActualResult } from '@/types'
 import { GROUP_CODES, GROUPS } from '@/data/groups'
 import { KNOCKOUT_MATCHES, buildPicks, buildQualifiers } from '@/data/bracket'
+import { computeScore } from '@/lib/scoring'
 import { BracketEditor } from '@/components/BracketEditor'
+import { BracketView } from '@/components/BracketView'
 import { DeadlineCountdown } from '@/components/DeadlineCountdown'
 import { ShareBracketModal } from '@/components/ShareBracketModal'
 import { Modal } from '@/components/Modal'
@@ -14,6 +16,9 @@ export default function BracketPage() {
   const [groupRankings, setGroupRankings] = useState<Record<string, string[]>>({})
   const [advancingThirds, setAdvancingThirds] = useState<Set<string>>(new Set())
   const [winners, setWinners] = useState<Record<string, string>>({})
+  const [savedGroupPredictions, setSavedGroupPredictions] = useState<GroupPrediction[]>([])
+  const [savedKnockoutPredictions, setSavedKnockoutPredictions] = useState<KnockoutPrediction[]>([])
+  const [actualResults, setActualResults] = useState<ActualResult[]>([])
   const [loading, setLoading] = useState(true)
   const [savingAction, setSavingAction] = useState<'save' | 'submit' | null>(null)
   const [resetting, setResetting] = useState(false)
@@ -41,6 +46,12 @@ export default function BracketPage() {
 
   const isPastDeadline = deadline ? new Date() > new Date(deadline) : false
   const isDisabled = locked || isPastDeadline
+  // Read-only "Locked ✓" state: bracket is submitted and can no longer be edited.
+  const showLockedView = submitted && isDisabled
+  const score = useMemo(
+    () => computeScore(savedGroupPredictions, savedKnockoutPredictions, actualResults),
+    [savedGroupPredictions, savedKnockoutPredictions, actualResults]
+  )
 
   useEffect(() => {
     fetch('/api/settings').then(r => r.json()).then(d => setDeadline(d.deadline))
@@ -51,6 +62,9 @@ export default function BracketPage() {
         setSubmitted(!!data.bracket?.submitted_at)
         setLocked(!!data.bracket?.locked)
         setUsername(data.username ?? '')
+        setSavedGroupPredictions(data.groupPredictions ?? [])
+        setSavedKnockoutPredictions(data.knockoutPredictions ?? [])
+        setActualResults(data.actualResults ?? [])
 
         const rankings: Record<string, string[]> = {}
         for (const group of GROUP_CODES) {
@@ -229,7 +243,26 @@ export default function BracketPage() {
         </span>
         {deadline && !isDisabled && <div><DeadlineCountdown deadline={deadline} /></div>}
 
-        {/* How to play */}
+        {/* Read-only: scorecard. Editable: how-to-play instructions. */}
+        {showLockedView ? (
+          <div className="mt-6">
+            <p className="section-label mb-3">Points Scored</p>
+            <div className="card grid grid-cols-3">
+              <div className="flex flex-col items-center py-4 border-r border-pitch-600">
+                <p className="section-label mb-1">Group Stage</p>
+                <span className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">{score.groupPoints}</span>
+              </div>
+              <div className="flex flex-col items-center py-4 border-r border-pitch-600">
+                <p className="section-label mb-1">Knockout</p>
+                <span className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">{score.knockoutPoints}</span>
+              </div>
+              <div className="flex flex-col items-center py-4">
+                <p className="section-label mb-1">Total</p>
+                <span className="font-display text-4xl tracking-wider text-gold leading-none">{score.total}</span>
+              </div>
+            </div>
+          </div>
+        ) : (
         <div className="mt-6">
           <button
             onClick={() => setShowInstructions(s => !s)}
@@ -279,29 +312,52 @@ export default function BracketPage() {
             </div>
           )}
         </div>
+        )}
       </div>
 
       <div className="anim-fade-up anim-delay-1 px-5">
-        <BracketEditor
-          groupRankings={groupRankings}
-          advancingThirds={advancingThirds}
-          winners={winners}
-          onGroupChange={(code, order) => {
-            setGroupRankings(prev => {
-              if (prev[code]?.[2] !== order[2] && advancingThirds.has(code)) {
-                setAdvancingThirds(s => { const n = new Set(s); n.delete(code); return n })
-              }
-              return { ...prev, [code]: order }
-            })
-          }}
-          onAdvancingThirdsChange={handleAdvancingThirdsChange}
-          onPick={handlePick}
-          disabled={isDisabled}
-          showValidation={showValidation}
-          submitAttempt={submitAttempt}
-          tab={bracketTab}
-          onTabChange={setBracketTab}
-        />
+        {showLockedView ? (
+          <>
+            <div className="flex gap-1.5 mb-6">
+              {(['groups', 'knockouts'] as const).map(t => (
+                <button
+                  key={t}
+                  onClick={() => setBracketTab(t)}
+                  className={`tab-btn ${bracketTab === t ? 'tab-active' : 'tab-inactive'}`}
+                >
+                  {t === 'groups' ? 'Group Stage' : 'Knockouts'}
+                </button>
+              ))}
+            </div>
+            <BracketView
+              groupPredictions={savedGroupPredictions}
+              knockoutPredictions={savedKnockoutPredictions}
+              actualResults={actualResults}
+              tab={bracketTab}
+            />
+          </>
+        ) : (
+          <BracketEditor
+            groupRankings={groupRankings}
+            advancingThirds={advancingThirds}
+            winners={winners}
+            onGroupChange={(code, order) => {
+              setGroupRankings(prev => {
+                if (prev[code]?.[2] !== order[2] && advancingThirds.has(code)) {
+                  setAdvancingThirds(s => { const n = new Set(s); n.delete(code); return n })
+                }
+                return { ...prev, [code]: order }
+              })
+            }}
+            onAdvancingThirdsChange={handleAdvancingThirdsChange}
+            onPick={handlePick}
+            disabled={isDisabled}
+            showValidation={showValidation}
+            submitAttempt={submitAttempt}
+            tab={bracketTab}
+            onTabChange={setBracketTab}
+          />
+        )}
       </div>
 
       {!isDisabled && (

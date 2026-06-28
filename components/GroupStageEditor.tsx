@@ -28,6 +28,7 @@ interface Props {
   advances?: boolean
   onAdvancesChange?: (groupCode: string, val: boolean) => void
   canAdvance?: boolean
+  wildcardCorrect?: boolean
 }
 
 // Left-border accent colors per position
@@ -67,13 +68,13 @@ function SortableTeam({ teamCode, position, disabled, correct }: { teamCode: str
         {position + 1}
       </span>
       <span className="text-base leading-none">{team?.flag ?? '🏳️'}</span>
-      <span className="flex-1 text-sm font-medium text-[#EBF0FF] truncate">{team?.name ?? teamCode}</span>
+      <span className={`flex-1 text-sm font-medium truncate ${correct ? 'text-[#34D399]' : 'text-[#EBF0FF]'}`}>{team?.name ?? teamCode}</span>
       {!disabled && <span className="text-pitch-500 text-xs select-none">⠿</span>}
     </div>
   )
 }
 
-export function GroupStageEditor({ groupCode, order, onChange, disabled = false, correctPositions, advances, onAdvancesChange, canAdvance = true }: Props) {
+export function GroupStageEditor({ groupCode, order, onChange, disabled = false, correctPositions, advances, onAdvancesChange, canAdvance = true, wildcardCorrect = false }: Props) {
   const [tooltipOpen, setTooltipOpen] = useState(false)
   const tooltipRef = useRef<HTMLDivElement>(null)
 
@@ -141,20 +142,32 @@ export function GroupStageEditor({ groupCode, order, onChange, disabled = false,
             </div>
           </div>
           <label className={`flex items-center gap-3 rounded-xl border-l-[3px] px-3 py-2.5 select-none transition-colors
-            ${advances ? 'border-l-[#34D399] bg-[#34D399]/10' : 'border-l-[#CD7F32] bg-pitch-800'}
-            ${disabled || (!advances && !canAdvance) ? 'opacity-40 cursor-not-allowed' : advances ? 'cursor-pointer hover:bg-[#34D399]/20' : 'cursor-pointer hover:bg-pitch-700'}
+            ${wildcardCorrect ? 'border-l-[#34D399] bg-[#34D399]/10' : 'border-l-[#CD7F32] bg-pitch-800'}
+            ${disabled ? 'cursor-default' : !advances && !canAdvance ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:bg-pitch-700'}
           `}>
             <input
               type="checkbox"
               checked={advances}
               disabled={disabled || (!advances && !canAdvance)}
               onChange={e => onAdvancesChange?.(groupCode, e.target.checked)}
-              className={`w-3 h-3 flex-shrink-0 rounded cursor-pointer disabled:cursor-not-allowed ${advances ? 'accent-[#34D399]' : 'accent-[#CD7F32]'}`}
+              className="sr-only peer"
             />
+            <span
+              aria-hidden="true"
+              className={`flex-shrink-0 w-4 h-4 rounded-[5px] flex items-center justify-center border transition-colors
+                peer-focus-visible:ring-2 peer-focus-visible:ring-[#34D399]/60
+                ${advances ? 'bg-[#34D399] border-[#34D399]' : 'bg-pitch-700 border-pitch-500'}`}
+            >
+              {advances && (
+                <svg viewBox="0 0 16 16" className="w-3 h-3" fill="none" stroke="#FFFFFF" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3.5 8.5 L6.5 11.5 L12.5 5" />
+                </svg>
+              )}
+            </span>
             {teams[2] ? (
               <>
                 <span className="text-base leading-none">{TEAMS[teams[2]]?.flag ?? '🏳️'}</span>
-                <span className={`flex-1 text-sm font-medium truncate ${advances ? 'text-[#34D399]' : 'text-[#EBF0FF]'}`}>{TEAMS[teams[2]]?.name ?? teams[2]}</span>
+                <span className={`flex-1 text-sm font-medium truncate ${wildcardCorrect ? 'text-[#34D399]' : 'text-[#EBF0FF]'}`}>{TEAMS[teams[2]]?.name ?? teams[2]}</span>
               </>
             ) : (
               <span className="flex-1 text-sm italic text-pitch-400">3rd place TBD</span>

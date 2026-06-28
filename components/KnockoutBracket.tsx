@@ -1,6 +1,6 @@
 'use client'
 import { useRef, useEffect, useState } from 'react'
-import { KNOCKOUT_MATCHES, KnockoutMatch, MatchPick } from '@/data/bracket'
+import { KNOCKOUT_MATCHES, KnockoutMatch, MatchPick, isKnockoutSlotCorrect } from '@/data/bracket'
 import { TEAMS } from '@/data/teams'
 import { MatchDropdown, DropdownOption } from './MatchDropdown'
 
@@ -124,7 +124,7 @@ function MatchCard({ match, picks, onPick, disabled, label, showValidation, corr
         <TeamRow
           teamCode={mp.teamA}
           label={match.slotA}
-          correct={disabled && !isR32 && !!mp.teamA && mp.teamA === cp?.teamA}
+          correct={disabled && isKnockoutSlotCorrect(match.round, mp.teamA, cp?.teamA)}
         />
       ) : (
         <WinnerDropdown srcMatchId={srcA} picks={picks} onPick={onPick} showValidation={showValidation} />
@@ -136,7 +136,7 @@ function MatchCard({ match, picks, onPick, disabled, label, showValidation, corr
         <TeamRow
           teamCode={mp.teamB}
           label={slotBLabel}
-          correct={(!isR32 || isBest3rdB) && !!mp.teamB && mp.teamB === cp?.teamB}
+          correct={isKnockoutSlotCorrect(match.round, mp.teamB, cp?.teamB)}
         />
       ) : isR32 || !srcB ? (
         <TeamRow teamCode={mp.teamB} label={slotBLabel} />
