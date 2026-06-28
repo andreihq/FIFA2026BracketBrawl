@@ -49,26 +49,38 @@ describe('computeScore', () => {
   })
 
   it('awards wildcard points into groupPoints (not knockoutPoints)', () => {
+    const gPreds: GroupPrediction[] = [
+      { id: 'gc', bracket_id: 'b1', group_code: 'C', team_code: 'GHA', predicted_pos: 3 },
+      { id: 'gd', bracket_id: 'b1', group_code: 'D', team_code: 'KOR', predicted_pos: 3 },
+    ]
     const preds: KnockoutPrediction[] = [
       { id: 'w1', bracket_id: 'b1', match_id: 'WILDCARD_1', predicted_winner: 'C' },
       { id: 'w2', bracket_id: 'b1', match_id: 'WILDCARD_2', predicted_winner: 'D' },
     ]
     const results: ActualResult[] = [
+      { id: 'gc3', result_type: 'group', ref_id: 'C', team_code: 'GHA', position: 3, entered_at: '' },
+      { id: 'gd3', result_type: 'group', ref_id: 'D', team_code: 'KOR', position: 3, entered_at: '' },
       { id: 'a1', result_type: 'knockout', ref_id: 'WILDCARD_1', team_code: 'C', position: null, entered_at: '' },
       { id: 'a2', result_type: 'knockout', ref_id: 'WILDCARD_2', team_code: 'D', position: null, entered_at: '' },
     ]
-    expect(computeScore(groupPreds, preds, results)).toEqual({ groupPoints: 2, knockoutPoints: 0, total: 2 })
+    // 2 correct 3rd-place ranks (GHA, KOR) + 2 correct wildcards, all in groupPoints; none in knockoutPoints.
+    expect(computeScore(gPreds, preds, results)).toEqual({ groupPoints: 4, knockoutPoints: 0, total: 4 })
   })
 
-  it('scores wildcards by set membership regardless of WILDCARD index', () => {
+  it('scores wildcards regardless of the WILDCARD index they are stored under', () => {
+    const gPreds: GroupPrediction[] = [
+      { id: 'gc', bracket_id: 'b1', group_code: 'C', team_code: 'GHA', predicted_pos: 3 },
+    ]
     const preds: KnockoutPrediction[] = [
       { id: 'w1', bracket_id: 'b1', match_id: 'WILDCARD_1', predicted_winner: 'C' },
     ]
-    // Actual stored same group under a different index
+    // Actual wildcard for group C stored under a different index
     const results: ActualResult[] = [
+      { id: 'gc3', result_type: 'group', ref_id: 'C', team_code: 'GHA', position: 3, entered_at: '' },
       { id: 'a1', result_type: 'knockout', ref_id: 'WILDCARD_5', team_code: 'C', position: null, entered_at: '' },
     ]
-    expect(computeScore(groupPreds, preds, results)).toEqual({ groupPoints: 1, knockoutPoints: 0, total: 1 })
+    // 1 correct 3rd-place rank (GHA) + 1 correct wildcard.
+    expect(computeScore(gPreds, preds, results)).toEqual({ groupPoints: 2, knockoutPoints: 0, total: 2 })
   })
 
   it('does not award wildcard points for a wrong pick', () => {
@@ -81,19 +93,62 @@ describe('computeScore', () => {
     expect(computeScore(groupPreds, preds, results)).toEqual({ groupPoints: 0, knockoutPoints: 0, total: 0 })
   })
 
+  it('does not award wildcard points when the nominated 3rd-place team advanced as 1st or 2nd', () => {
+    // Player nominates group C's predicted 3rd-place team (GHA) as a wildcard.
+    const gPreds: GroupPrediction[] = [
+      { id: 'gc', bracket_id: 'b1', group_code: 'C', team_code: 'GHA', predicted_pos: 3 },
+    ]
+    const preds: KnockoutPrediction[] = [
+      { id: 'w1', bracket_id: 'b1', match_id: 'WILDCARD_1', predicted_winner: 'C' },
+    ]
+    const results: ActualResult[] = [
+      // GHA actually WON group C — it advanced directly, not as a wildcard.
+      { id: 'gc1', result_type: 'group', ref_id: 'C', team_code: 'GHA', position: 1, entered_at: '' },
+      // Group C's actual 3rd-place team (CIV) is the one that advanced as a wildcard.
+      { id: 'gc3', result_type: 'group', ref_id: 'C', team_code: 'CIV', position: 3, entered_at: '' },
+      { id: 'a1', result_type: 'knockout', ref_id: 'WILDCARD_1', team_code: 'C', position: null, entered_at: '' },
+    ]
+    expect(computeScore(gPreds, preds, results)).toEqual({ groupPoints: 0, knockoutPoints: 0, total: 0 })
+  })
+
+  it('awards a wildcard point only when the nominated 3rd-place team actually finished 3rd and advanced', () => {
+    const gPreds: GroupPrediction[] = [
+      { id: 'gc', bracket_id: 'b1', group_code: 'C', team_code: 'GHA', predicted_pos: 3 },
+    ]
+    const preds: KnockoutPrediction[] = [
+      { id: 'w1', bracket_id: 'b1', match_id: 'WILDCARD_1', predicted_winner: 'C' },
+    ]
+    const results: ActualResult[] = [
+      { id: 'gc3', result_type: 'group', ref_id: 'C', team_code: 'GHA', position: 3, entered_at: '' },
+      { id: 'a1', result_type: 'knockout', ref_id: 'WILDCARD_1', team_code: 'C', position: null, entered_at: '' },
+    ]
+    // 1 point for correctly ranking GHA 3rd + 1 point for the correct wildcard.
+    expect(computeScore(gPreds, preds, results)).toEqual({ groupPoints: 2, knockoutPoints: 0, total: 2 })
+  })
+
   it('does not count WILDCARD results toward knockoutPoints', () => {
+    const gPreds: GroupPrediction[] = [
+      { id: 'gc', bracket_id: 'b1', group_code: 'C', team_code: 'GHA', predicted_pos: 3 },
+    ]
     const preds: KnockoutPrediction[] = [
       { id: 'w1', bracket_id: 'b1', match_id: 'WILDCARD_1', predicted_winner: 'C' },
       { id: 'k1', bracket_id: 'b1', match_id: 'R32-M1', predicted_winner: 'BRA' },
     ]
     const results: ActualResult[] = [
+      { id: 'gc3', result_type: 'group', ref_id: 'C', team_code: 'GHA', position: 3, entered_at: '' },
       { id: 'a1', result_type: 'knockout', ref_id: 'WILDCARD_1', team_code: 'C', position: null, entered_at: '' },
       { id: 'a2', result_type: 'knockout', ref_id: 'R32-M1', team_code: 'BRA', position: null, entered_at: '' },
     ]
-    expect(computeScore(groupPreds, preds, results)).toEqual({ groupPoints: 1, knockoutPoints: 1, total: 2 })
+    // rank GHA#3 (1) + wildcard C (1) -> groupPoints 2; only R32-M1 -> knockoutPoints 1 (wildcard excluded).
+    expect(computeScore(gPreds, preds, results)).toEqual({ groupPoints: 2, knockoutPoints: 1, total: 3 })
   })
 
   it('accumulates group ranks, wildcards, and knockout progressions into the right buckets', () => {
+    const gPreds: GroupPrediction[] = [
+      ...groupPreds,
+      { id: 'gc', bracket_id: 'b1', group_code: 'C', team_code: 'GHA', predicted_pos: 3 },
+      { id: 'gd', bracket_id: 'b1', group_code: 'D', team_code: 'KOR', predicted_pos: 3 },
+    ]
     const preds: KnockoutPrediction[] = [
       { id: 'w1', bracket_id: 'b1', match_id: 'WILDCARD_1', predicted_winner: 'C' },
       { id: 'w2', bracket_id: 'b1', match_id: 'WILDCARD_2', predicted_winner: 'D' },
@@ -103,13 +158,15 @@ describe('computeScore', () => {
     const results: ActualResult[] = [
       { id: 'g1', result_type: 'group',    ref_id: 'A',          team_code: 'BRA', position: 1,    entered_at: '' },
       { id: 'g2', result_type: 'group',    ref_id: 'A',          team_code: 'ARG', position: 2,    entered_at: '' },
+      { id: 'gc3', result_type: 'group',   ref_id: 'C',          team_code: 'GHA', position: 3,    entered_at: '' },
+      { id: 'gd3', result_type: 'group',   ref_id: 'D',          team_code: 'KOR', position: 3,    entered_at: '' },
       { id: 'a1', result_type: 'knockout', ref_id: 'WILDCARD_3', team_code: 'C',   position: null, entered_at: '' },
       { id: 'a2', result_type: 'knockout', ref_id: 'WILDCARD_4', team_code: 'D',   position: null, entered_at: '' },
       { id: 'a3', result_type: 'knockout', ref_id: 'R32-M1',     team_code: 'BRA', position: null, entered_at: '' },
       { id: 'a4', result_type: 'knockout', ref_id: 'FINAL',      team_code: 'FRA', position: null, entered_at: '' },
     ]
-    // group ranks: BRA#1 + ARG#2 = 2; wildcards: C,D = 2 -> groupPoints 4
+    // group ranks: BRA#1 + ARG#2 + GHA#3 + KOR#3 = 4; wildcards: C,D = 2 -> groupPoints 6
     // knockout: R32-M1 BRA correct = 1; FINAL predicted ARG but FRA won = 0 -> knockoutPoints 1
-    expect(computeScore(groupPreds, preds, results)).toEqual({ groupPoints: 4, knockoutPoints: 1, total: 5 })
+    expect(computeScore(gPreds, preds, results)).toEqual({ groupPoints: 6, knockoutPoints: 1, total: 7 })
   })
 })

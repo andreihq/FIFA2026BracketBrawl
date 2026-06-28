@@ -23,19 +23,33 @@ export function computeScore(
     }
   }
 
-  // Wildcards (advancing 3rd-place groups): set-membership, fold into groupPoints.
-  const predictedThirds = new Set(
+  // Wildcards (advancing 3rd-place teams), folded into groupPoints. A pick is
+  // correct only when the SPECIFIC team the player nominated — their predicted
+  // 3rd-place team of the group — is the team that actually finished 3rd AND
+  // advanced as a wildcard. Group-level membership alone is not enough: if the
+  // nominated team instead placed 1st/2nd (advanced directly) or 4th (out), the
+  // pick is wrong even though some team from that group advanced.
+  const predictedThirdGroups = new Set(
     knockoutPredictions
       .filter(p => p.match_id.startsWith(WILDCARD_PREFIX))
       .map(p => p.predicted_winner)
   )
-  const actualThirds = new Set(
+  const actualAdvancingGroups = new Set(
     actualResults
       .filter(r => r.result_type === 'knockout' && r.ref_id.startsWith(WILDCARD_PREFIX))
       .map(r => r.team_code)
   )
-  predictedThirds.forEach(group => {
-    if (actualThirds.has(group)) groupPoints++
+  const predicted3rd = (group: string) =>
+    groupPredictions.find(p => p.group_code === group && p.predicted_pos === 3)?.team_code ?? null
+  const actual3rd = (group: string) =>
+    actualResults.find(
+      r => r.result_type === 'group' && r.ref_id === group && r.position === 3
+    )?.team_code ?? null
+
+  predictedThirdGroups.forEach(group => {
+    if (!actualAdvancingGroups.has(group)) return
+    const nominated = predicted3rd(group)
+    if (nominated !== null && nominated === actual3rd(group)) groupPoints++
   })
 
   // Knockout progression: 1 point per real match (non-wildcard) where the
