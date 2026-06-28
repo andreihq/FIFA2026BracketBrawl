@@ -63,12 +63,31 @@ describe('mapKnockout', () => {
       const comps = ev.competitions?.[0]?.competitors ?? []
       const abbrs = comps.map((c: any) => c.team?.abbreviation)
       if (abbrs.includes('GER') && abbrs.includes('PAR')) {
-        ev.status.type.name = 'STATUS_FINAL'
+        ev.status.type.name = 'STATUS_FULL_TIME'
+        ev.status.type.completed = true
         for (const c of comps) c.winner = c.team.abbreviation === 'GER'
       }
     }
     const { winners, unmapped } = mapKnockout(sim, groupRankings)
     expect(winners['M74']).toBe('GER') // 1E (GER) vs W (PAR, group D 3rd via Annex C)
+    expect(unmapped).toEqual([])
+  })
+
+  it('treats a real soccer finish (STATUS_FULL_TIME, completed) as final', () => {
+    // ESPN soccer marks finished matches STATUS_FULL_TIME with completed:true —
+    // NOT STATUS_FINAL. Mirror the real RSA vs CAN R32 result (Canada won).
+    const sim = JSON.parse(JSON.stringify(scoreboard))
+    for (const ev of sim.events) {
+      const comps = ev.competitions?.[0]?.competitors ?? []
+      const abbrs = comps.map((c: any) => c.team?.abbreviation)
+      if (abbrs.includes('RSA') && abbrs.includes('CAN')) {
+        ev.status.type.name = 'STATUS_FULL_TIME'
+        ev.status.type.completed = true
+        for (const c of comps) c.winner = c.team.abbreviation === 'CAN'
+      }
+    }
+    const { winners, unmapped } = mapKnockout(sim, groupRankings)
+    expect(winners['M73']).toBe('CAN') // 2A (RSA) vs 2B (CAN)
     expect(unmapped).toEqual([])
   })
 })

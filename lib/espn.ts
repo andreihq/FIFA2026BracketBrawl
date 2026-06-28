@@ -16,7 +16,7 @@ interface EspnCompetition { competitors?: EspnCompetitor[] }
 interface EspnScoreEvent {
   season?: { slug?: string }
   competitions?: EspnCompetition[]
-  status?: { type?: { name?: string } }
+  status?: { type?: { name?: string; completed?: boolean } }
 }
 interface EspnScoreboard { events?: EspnScoreEvent[] }
 
@@ -85,7 +85,10 @@ function parseEvents(rawInput: unknown): KoEvent[] {
     if (!teamA || !teamB) continue
     const teams: [string, string] = [teamA, teamB]
     const winner = comps.find((c) => c?.winner)?.team?.abbreviation ?? null
-    const final = ev?.status?.type?.name === 'STATUS_FINAL'
+    // ESPN soccer marks finished matches with completed:true (STATUS_FULL_TIME,
+    // STATUS_FINAL_AET, penalty finishes, …) — not the STATUS_FINAL name used by
+    // US sports. Trust the canonical boolean so every knockout result is caught.
+    const final = ev?.status?.type?.completed === true
     out.push({ round, teams, winner, final, label: `${teams[0]} vs ${teams[1]} (${slug})` })
   }
   return out
