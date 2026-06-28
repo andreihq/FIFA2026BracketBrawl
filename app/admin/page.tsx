@@ -119,6 +119,29 @@ function AdminPanel({ password, initialResults }: { password: string; initialRes
     setSaving(false)
   }
 
+  async function syncFromEspn() {
+    setSaving(true); setMsg('')
+    const res = await fetch('/api/admin/sync-espn', {
+      headers: { 'x-admin-password': password },
+    })
+    if (!res.ok) {
+      setMsg('ESPN sync failed — enter results manually')
+      setSaving(false)
+      return
+    }
+    const r = await res.json()
+    setGroupRankings(r.groupRankings)
+    setAdvancingThirds(new Set<string>(r.advancingThirds))
+    setWinners(r.winners)
+    setMsg(
+      `Synced from ESPN: ${r.meta.groupsWithData} groups, ` +
+      `${r.advancingThirds.length} wildcards, ${r.meta.knockoutFinalCount} knockout winners. ` +
+      `Review, then Save.` +
+      (r.meta.unmapped.length ? ` Unmapped: ${r.meta.unmapped.join('; ')}.` : ''),
+    )
+    setSaving(false)
+  }
+
   async function resetGroups() {
     if (!confirm('Reset all group results? This cannot be undone.')) return
     setSaving(true); setMsg('')
@@ -200,7 +223,11 @@ function AdminPanel({ password, initialResults }: { password: string; initialRes
             onPick={(matchId, winner) => setWinners(prev => ({ ...prev, [matchId]: winner }))}
             onTabChange={setBracketTab}
           />
-          <div className="flex items-center justify-end gap-3 mt-6 pt-5 border-t border-pitch-700">
+          <div className="flex items-center justify-between gap-3 mt-6 pt-5 border-t border-pitch-700">
+            <button onClick={syncFromEspn} disabled={saving} className="px-5 py-2.5 text-xs uppercase tracking-widest rounded-xl border border-pitch-600 text-pitch-200 hover:bg-pitch-700/40 transition-colors disabled:opacity-40">
+              {saving ? 'Syncing…' : 'Sync from ESPN'}
+            </button>
+            <div className="flex items-center gap-3">
             {bracketTab === 'groups' ? (
               <>
                 <button onClick={resetGroups} disabled={saving} className="px-5 py-2.5 text-xs uppercase tracking-widest rounded-xl border border-[#F87171]/40 text-[#F87171] hover:bg-[#F87171]/10 transition-colors disabled:opacity-40">
@@ -220,6 +247,7 @@ function AdminPanel({ password, initialResults }: { password: string; initialRes
                 </button>
               </>
             )}
+            </div>
           </div>
         </div>
       )}
