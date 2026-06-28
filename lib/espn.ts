@@ -3,16 +3,34 @@
 
 import { buildPicks, buildQualifiers, KNOCKOUT_MATCHES } from '@/data/bracket'
 
-function statVal(stats: any[], name: string): number {
+// Minimal shapes for the parts of ESPN's JSON we actually read. Everything is
+// optional because the payload is third-party and defensively accessed.
+interface EspnStat { name?: string; value?: number }
+interface EspnTeam { abbreviation?: string }
+interface EspnEntry { team?: EspnTeam; stats?: EspnStat[] }
+interface EspnGroup { name?: string; standings?: { entries?: EspnEntry[] } }
+interface EspnStandings { children?: EspnGroup[] }
+
+interface EspnCompetitor { winner?: boolean; team?: EspnTeam }
+interface EspnCompetition { competitors?: EspnCompetitor[] }
+interface EspnScoreEvent {
+  season?: { slug?: string }
+  competitions?: EspnCompetition[]
+  status?: { type?: { name?: string } }
+}
+interface EspnScoreboard { events?: EspnScoreEvent[] }
+
+function statVal(stats: EspnStat[] | undefined, name: string): number {
   const s = stats?.find((x) => x?.name === name)
   return typeof s?.value === 'number' ? s.value : 0
 }
 
-export function mapStandings(raw: any): {
+export function mapStandings(rawInput: unknown): {
   groupRankings: Record<string, string[]>
   groupStageComplete: boolean
   groupsWithData: number
 } {
+  const raw = rawInput as EspnStandings
   const groupRankings: Record<string, string[]> = {}
   let groupsWithData = 0
   let groupStageComplete = true
@@ -53,7 +71,8 @@ interface KoEvent {
   label: string
 }
 
-function parseEvents(raw: any): KoEvent[] {
+function parseEvents(rawInput: unknown): KoEvent[] {
+  const raw = rawInput as EspnScoreboard
   const out: KoEvent[] = []
   for (const ev of raw?.events ?? []) {
     const slug = ev?.season?.slug ?? ''
@@ -61,12 +80,11 @@ function parseEvents(raw: any): KoEvent[] {
     if (!round) continue
     const comps = ev?.competitions?.[0]?.competitors ?? []
     if (comps.length !== 2) continue
-    const teams: [string, string] = [
-      comps[0]?.team?.abbreviation,
-      comps[1]?.team?.abbreviation,
-    ]
-    if (!teams[0] || !teams[1]) continue
-    const winner = comps.find((c: any) => c?.winner)?.team?.abbreviation ?? null
+    const teamA = comps[0]?.team?.abbreviation
+    const teamB = comps[1]?.team?.abbreviation
+    if (!teamA || !teamB) continue
+    const teams: [string, string] = [teamA, teamB]
+    const winner = comps.find((c) => c?.winner)?.team?.abbreviation ?? null
     const final = ev?.status?.type?.name === 'STATUS_FINAL'
     out.push({ round, teams, winner, final, label: `${teams[0]} vs ${teams[1]} (${slug})` })
   }
@@ -78,7 +96,7 @@ function samePair(a: [string, string], b: [string, string]): boolean {
 }
 
 export function mapKnockout(
-  raw: any,
+  raw: unknown,
   groupRankings: Record<string, string[]>,
 ): { advancingThirds: string[]; winners: Record<string, string>; unmapped: string[] } {
   const events = parseEvents(raw)
@@ -141,7 +159,7 @@ export interface EspnSyncResult {
 
 export class EspnFetchError extends Error {}
 
-async function getJson(url: string): Promise<any> {
+async function getJson(url: string): Promise<unknown> {
   let res: Response
   try {
     res = await fetch(url, {
