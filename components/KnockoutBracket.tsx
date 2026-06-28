@@ -1,6 +1,6 @@
 'use client'
 import { useRef, useEffect, useState } from 'react'
-import { KNOCKOUT_MATCHES, KnockoutMatch, MatchPick, isKnockoutSlotCorrect } from '@/data/bracket'
+import { KNOCKOUT_MATCHES, KnockoutMatch, MatchPick, isKnockoutWinnerCorrect } from '@/data/bracket'
 import { TEAMS } from '@/data/teams'
 import { MatchDropdown, DropdownOption } from './MatchDropdown'
 
@@ -108,6 +108,12 @@ function MatchCard({ match, picks, onPick, disabled, label, showValidation, corr
   const mp = picks[match.id] ?? { teamA: null, teamB: null, winner: null }
   const cp = correctPicks?.[match.id]
 
+  // Highlight the winner of THIS match (green) when the player's predicted winner
+  // matches the actual winner — so the green lands in the match's own column.
+  const winnerCorrect = isKnockoutWinnerCorrect(mp.winner, cp?.winner)
+  const teamAWon = winnerCorrect && !!mp.teamA && mp.teamA === mp.winner
+  const teamBWon = winnerCorrect && !!mp.teamB && mp.teamB === mp.winner
+
   const srcA = match.slotA.match(/^Winner (M\d+)$/)?.[1] ?? null
   const srcB = match.slotB.match(/^Winner (M\d+)$/)?.[1] ?? null
 
@@ -124,7 +130,7 @@ function MatchCard({ match, picks, onPick, disabled, label, showValidation, corr
         <TeamRow
           teamCode={mp.teamA}
           label={match.slotA}
-          correct={disabled && isKnockoutSlotCorrect(match.round, mp.teamA, cp?.teamA)}
+          correct={disabled && teamAWon}
         />
       ) : (
         <WinnerDropdown srcMatchId={srcA} picks={picks} onPick={onPick} showValidation={showValidation} />
@@ -136,7 +142,7 @@ function MatchCard({ match, picks, onPick, disabled, label, showValidation, corr
         <TeamRow
           teamCode={mp.teamB}
           label={slotBLabel}
-          correct={isKnockoutSlotCorrect(match.round, mp.teamB, cp?.teamB)}
+          correct={teamBWon}
         />
       ) : isR32 || !srcB ? (
         <TeamRow teamCode={mp.teamB} label={slotBLabel} />

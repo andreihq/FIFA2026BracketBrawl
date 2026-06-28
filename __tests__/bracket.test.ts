@@ -1,4 +1,4 @@
-import { buildQualifiers, isKnockoutSlotCorrect } from '@/data/bracket'
+import { buildQualifiers, isKnockoutWinnerCorrect } from '@/data/bracket'
 
 // Rankings mirrors the actual GROUPS data (index 2 = 3rd place)
 const rankings: Record<string, string[]> = {
@@ -72,29 +72,30 @@ describe('buildQualifiers', () => {
   })
 })
 
-describe('isKnockoutSlotCorrect', () => {
-  // Green highlighting in the knockout bracket marks a team that PROGRESSED
-  // (won its feeding match), not a team that merely qualified into R32.
+describe('isKnockoutWinnerCorrect', () => {
+  // Green highlighting marks the WINNER of a match inside that match's own card,
+  // when the predicted winner matches the actual winner. It mirrors scoring:
+  // one point per correctly predicted match winner.
 
-  it('never marks an R32 slot correct, even when the prediction matches the actual team', () => {
-    // This is the wildcard bug: a 3rd-place wildcard fills an R32 slotB the moment
-    // advancing thirds are known (end of group stage), before the R32 match is played.
-    expect(isKnockoutSlotCorrect('R32', 'MAR', 'MAR')).toBe(false)
+  it('marks an R32 winner correct in its own match (the CAN vs SA case)', () => {
+    // Canada won the R32 match, so Canada is highlighted in the R32 card itself,
+    // not one column to the right in R16.
+    expect(isKnockoutWinnerCorrect('CAN', 'CAN')).toBe(true)
   })
 
-  it('marks an R16 slot correct when the predicted progressing team matches the actual winner', () => {
-    expect(isKnockoutSlotCorrect('R16', 'MAR', 'MAR')).toBe(true)
+  it('marks any-round winner correct when the predicted winner matches the actual winner', () => {
+    expect(isKnockoutWinnerCorrect('MAR', 'MAR')).toBe(true)
   })
 
-  it('does not mark an R16 slot correct when the prediction differs from the actual winner', () => {
-    expect(isKnockoutSlotCorrect('R16', 'MAR', 'BRA')).toBe(false)
+  it('does not mark a winner correct when the prediction differs from the actual winner', () => {
+    expect(isKnockoutWinnerCorrect('MAR', 'BRA')).toBe(false)
   })
 
-  it('does not mark a slot correct when there is no predicted team', () => {
-    expect(isKnockoutSlotCorrect('QF', null, 'BRA')).toBe(false)
+  it('does not mark a winner correct when there is no predicted winner', () => {
+    expect(isKnockoutWinnerCorrect(null, 'BRA')).toBe(false)
   })
 
-  it('does not mark a slot correct when the actual team is unknown', () => {
-    expect(isKnockoutSlotCorrect('FINAL', 'BRA', undefined)).toBe(false)
+  it('does not mark a winner correct when the actual winner is unknown', () => {
+    expect(isKnockoutWinnerCorrect('BRA', undefined)).toBe(false)
   })
 })

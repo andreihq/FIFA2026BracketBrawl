@@ -65,18 +65,16 @@ export const KNOCKOUT_MATCHES: KnockoutMatch[] = [
 
 export const MATCH_IDS = KNOCKOUT_MATCHES.map(m => m.id)
 
-// A knockout slot is highlighted as correctly predicted (green) only when the
-// team that PROGRESSED into it was guessed right — i.e. it won its feeding
-// match. R32 slots are never highlighted: their teams arrive via group results
-// or 3rd-place wildcard qualification, not a knockout win, so a match must be
-// played (and won) before a team counts as a correct progression.
-export function isKnockoutSlotCorrect(
-  round: KnockoutMatch['round'],
-  predictedTeam: string | null,
-  correctTeam: string | null | undefined,
+// The green highlight marks the WINNER of a match inside that match's own card,
+// when the player's predicted winner matches the actual winner. The highlight
+// therefore lives in the column where the match is played — an R32 winner is
+// highlighted in the R32 column, not one column to the right in R16. This
+// mirrors knockout scoring: one point per correctly predicted match winner.
+export function isKnockoutWinnerCorrect(
+  predictedWinner: string | null | undefined,
+  actualWinner: string | null | undefined,
 ): boolean {
-  if (round === 'R32') return false
-  return !!predictedTeam && predictedTeam === correctTeam
+  return !!predictedWinner && predictedWinner === actualWinner
 }
 
 // Resolves a deterministic slot label to a team code using already-built upstream picks.
