@@ -8,8 +8,8 @@ const groupPreds: GroupPrediction[] = [
 ]
 
 const koPreds: KnockoutPrediction[] = [
-  { id: '4', bracket_id: 'b1', match_id: 'R32-M1', predicted_winner: 'BRA' },
-  { id: '5', bracket_id: 'b1', match_id: 'FINAL',  predicted_winner: 'ARG' },
+  { id: '4', bracket_id: 'b1', match_id: 'M74',  predicted_winner: 'BRA' }, // R32 -> 2
+  { id: '5', bracket_id: 'b1', match_id: 'M104', predicted_winner: 'ARG' }, // FINAL -> 16
 ]
 
 describe('computeScore', () => {
@@ -31,21 +31,37 @@ describe('computeScore', () => {
     expect(computeScore(groupPreds, koPreds, results)).toEqual({ groupPoints: 0, knockoutPoints: 0, total: 0 })
   })
 
-  it('awards 1pt for correct knockout winner', () => {
+  it('awards R32 weight (2pt) for a correct Round of 32 winner', () => {
     const results: ActualResult[] = [
-      { id: 'r2', result_type: 'knockout', ref_id: 'R32-M1', team_code: 'BRA', position: null, entered_at: '' },
+      { id: 'r2', result_type: 'knockout', ref_id: 'M74', team_code: 'BRA', position: null, entered_at: '' },
     ]
-    expect(computeScore(groupPreds, koPreds, results)).toEqual({ groupPoints: 0, knockoutPoints: 1, total: 1 })
+    expect(computeScore(groupPreds, koPreds, results)).toEqual({ groupPoints: 0, knockoutPoints: 2, total: 2 })
+  })
+
+  it('weights each knockout round (R32/R16=2, QF=4, SF=8, 3rd/Final=16)', () => {
+    const preds: KnockoutPrediction[] = [
+      { id: 'a', bracket_id: 'b1', match_id: 'M74',  predicted_winner: 'T1' }, // R32   -> 2
+      { id: 'b', bracket_id: 'b1', match_id: 'M89',  predicted_winner: 'T2' }, // R16   -> 2
+      { id: 'c', bracket_id: 'b1', match_id: 'M97',  predicted_winner: 'T3' }, // QF    -> 4
+      { id: 'd', bracket_id: 'b1', match_id: 'M101', predicted_winner: 'T4' }, // SF    -> 8
+      { id: 'e', bracket_id: 'b1', match_id: 'M103', predicted_winner: 'T5' }, // 3RD   -> 16
+      { id: 'f', bracket_id: 'b1', match_id: 'M104', predicted_winner: 'T6' }, // FINAL -> 16
+    ]
+    const results: ActualResult[] = preds.map((p, i) => ({
+      id: `r${i}`, result_type: 'knockout', ref_id: p.match_id, team_code: p.predicted_winner, position: null, entered_at: '',
+    }))
+    // 2 + 2 + 4 + 8 + 16 + 16 = 48
+    expect(computeScore([], preds, results)).toEqual({ groupPoints: 0, knockoutPoints: 48, total: 48 })
   })
 
   it('accumulates group and knockout points correctly', () => {
     const results: ActualResult[] = [
-      { id: 'r1', result_type: 'group',    ref_id: 'A',      team_code: 'BRA', position: 1,    entered_at: '' },
-      { id: 'r2', result_type: 'group',    ref_id: 'A',      team_code: 'ARG', position: 2,    entered_at: '' },
-      { id: 'r3', result_type: 'knockout', ref_id: 'R32-M1', team_code: 'BRA', position: null, entered_at: '' },
-      { id: 'r4', result_type: 'knockout', ref_id: 'FINAL',  team_code: 'FRA', position: null, entered_at: '' },
+      { id: 'r1', result_type: 'group',    ref_id: 'A',    team_code: 'BRA', position: 1,    entered_at: '' },
+      { id: 'r2', result_type: 'group',    ref_id: 'A',    team_code: 'ARG', position: 2,    entered_at: '' },
+      { id: 'r3', result_type: 'knockout', ref_id: 'M74',  team_code: 'BRA', position: null, entered_at: '' }, // R32 hit -> 2
+      { id: 'r4', result_type: 'knockout', ref_id: 'M104', team_code: 'FRA', position: null, entered_at: '' }, // FINAL miss -> 0
     ]
-    expect(computeScore(groupPreds, koPreds, results)).toEqual({ groupPoints: 2, knockoutPoints: 1, total: 3 })
+    expect(computeScore(groupPreds, koPreds, results)).toEqual({ groupPoints: 2, knockoutPoints: 2, total: 4 })
   })
 
   it('awards wildcard points into groupPoints (not knockoutPoints)', () => {
@@ -132,15 +148,15 @@ describe('computeScore', () => {
     ]
     const preds: KnockoutPrediction[] = [
       { id: 'w1', bracket_id: 'b1', match_id: 'WILDCARD_1', predicted_winner: 'C' },
-      { id: 'k1', bracket_id: 'b1', match_id: 'R32-M1', predicted_winner: 'BRA' },
+      { id: 'k1', bracket_id: 'b1', match_id: 'M74', predicted_winner: 'BRA' },
     ]
     const results: ActualResult[] = [
       { id: 'gc3', result_type: 'group', ref_id: 'C', team_code: 'GHA', position: 3, entered_at: '' },
       { id: 'a1', result_type: 'knockout', ref_id: 'WILDCARD_1', team_code: 'C', position: null, entered_at: '' },
-      { id: 'a2', result_type: 'knockout', ref_id: 'R32-M1', team_code: 'BRA', position: null, entered_at: '' },
+      { id: 'a2', result_type: 'knockout', ref_id: 'M74', team_code: 'BRA', position: null, entered_at: '' },
     ]
-    // rank GHA#3 (1) + wildcard C (1) -> groupPoints 2; only R32-M1 -> knockoutPoints 1 (wildcard excluded).
-    expect(computeScore(gPreds, preds, results)).toEqual({ groupPoints: 2, knockoutPoints: 1, total: 3 })
+    // rank GHA#3 (1) + wildcard C (1) -> groupPoints 2; only M74 (R32) -> knockoutPoints 2 (wildcard excluded).
+    expect(computeScore(gPreds, preds, results)).toEqual({ groupPoints: 2, knockoutPoints: 2, total: 4 })
   })
 
   it('accumulates group ranks, wildcards, and knockout progressions into the right buckets', () => {
@@ -152,8 +168,8 @@ describe('computeScore', () => {
     const preds: KnockoutPrediction[] = [
       { id: 'w1', bracket_id: 'b1', match_id: 'WILDCARD_1', predicted_winner: 'C' },
       { id: 'w2', bracket_id: 'b1', match_id: 'WILDCARD_2', predicted_winner: 'D' },
-      { id: 'k1', bracket_id: 'b1', match_id: 'R32-M1', predicted_winner: 'BRA' },
-      { id: 'k2', bracket_id: 'b1', match_id: 'FINAL', predicted_winner: 'ARG' },
+      { id: 'k1', bracket_id: 'b1', match_id: 'M74', predicted_winner: 'BRA' },
+      { id: 'k2', bracket_id: 'b1', match_id: 'M104', predicted_winner: 'ARG' },
     ]
     const results: ActualResult[] = [
       { id: 'g1', result_type: 'group',    ref_id: 'A',          team_code: 'BRA', position: 1,    entered_at: '' },
@@ -162,11 +178,11 @@ describe('computeScore', () => {
       { id: 'gd3', result_type: 'group',   ref_id: 'D',          team_code: 'KOR', position: 3,    entered_at: '' },
       { id: 'a1', result_type: 'knockout', ref_id: 'WILDCARD_3', team_code: 'C',   position: null, entered_at: '' },
       { id: 'a2', result_type: 'knockout', ref_id: 'WILDCARD_4', team_code: 'D',   position: null, entered_at: '' },
-      { id: 'a3', result_type: 'knockout', ref_id: 'R32-M1',     team_code: 'BRA', position: null, entered_at: '' },
-      { id: 'a4', result_type: 'knockout', ref_id: 'FINAL',      team_code: 'FRA', position: null, entered_at: '' },
+      { id: 'a3', result_type: 'knockout', ref_id: 'M74',        team_code: 'BRA', position: null, entered_at: '' },
+      { id: 'a4', result_type: 'knockout', ref_id: 'M104',       team_code: 'FRA', position: null, entered_at: '' },
     ]
     // group ranks: BRA#1 + ARG#2 + GHA#3 + KOR#3 = 4; wildcards: C,D = 2 -> groupPoints 6
-    // knockout: R32-M1 BRA correct = 1; FINAL predicted ARG but FRA won = 0 -> knockoutPoints 1
-    expect(computeScore(gPreds, preds, results)).toEqual({ groupPoints: 6, knockoutPoints: 1, total: 7 })
+    // knockout: M74 (R32) BRA correct = 2; M104 (FINAL) predicted ARG but FRA won = 0 -> knockoutPoints 2
+    expect(computeScore(gPreds, preds, results)).toEqual({ groupPoints: 6, knockoutPoints: 2, total: 8 })
   })
 })

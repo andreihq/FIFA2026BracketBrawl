@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase'
 import { computeScore } from '@/lib/scoring'
 import { BracketView } from '@/components/BracketView'
+import { ScoreCard } from '@/components/ScoreCard'
 import Link from 'next/link'
 
 export default async function PlayerPage({ params, searchParams }: {
@@ -54,21 +55,7 @@ export default async function PlayerPage({ params, searchParams }: {
       ) : (
         <div>
           <div className="anim-fade-up anim-delay-1 mb-6 px-5">
-            <p className="section-label mb-3">Points Scored</p>
-            <div className="card grid grid-cols-3">
-              <div className="flex flex-col items-center py-4 border-r border-pitch-600">
-                <p className="section-label mb-1">Group Stage</p>
-                <span className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">{score.groupPoints}</span>
-              </div>
-              <div className="flex flex-col items-center py-4 border-r border-pitch-600">
-                <p className="section-label mb-1">Knockout</p>
-                <span className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">{score.knockoutPoints}</span>
-              </div>
-              <div className="flex flex-col items-center py-4">
-                <p className="section-label mb-1">Total</p>
-                <span className="font-display text-4xl tracking-wider text-gold leading-none">{score.total}</span>
-              </div>
-            </div>
+            <ScoreCard score={score} />
           </div>
 
           <div className="anim-fade-up anim-delay-2 flex gap-1.5 mb-6 px-5">

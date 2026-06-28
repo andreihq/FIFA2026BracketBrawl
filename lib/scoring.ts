@@ -1,6 +1,29 @@
 import type { GroupPrediction, KnockoutPrediction, ActualResult } from '@/types'
+import { KNOCKOUT_MATCHES, type KnockoutMatch } from '@/data/bracket'
 
 const WILDCARD_PREFIX = 'WILDCARD_'
+
+// Points awarded for a correct pick, by phase. Group-stage ranks and wildcard
+// (3rd-place qualifier) picks are each worth 1. Knockout winners are worth more
+// the deeper the round, doubling roughly every round so late-stage picks decide
+// the standings. These constants are the single source of truth — the in-app
+// "How Points are Calculated" guide renders straight from them.
+export const GROUP_STAGE_POINTS = 1
+export const WILDCARD_POINTS = 1
+
+export const KNOCKOUT_ROUND_POINTS: Record<KnockoutMatch['round'], number> = {
+  R32: 2,
+  R16: 2,
+  QF: 4,
+  SF: 8,
+  '3RD': 16,
+  FINAL: 16,
+}
+
+// match id (e.g. 'M74') -> points for correctly predicting that match's winner.
+const MATCH_POINTS = new Map<string, number>(
+  KNOCKOUT_MATCHES.map(m => [m.id, KNOCKOUT_ROUND_POINTS[m.round]])
+)
 
 export function computeScore(
   groupPredictions: GroupPrediction[],
@@ -52,14 +75,15 @@ export function computeScore(
     if (nominated !== null && nominated === actual3rd(group)) groupPoints++
   })
 
-  // Knockout progression: 1 point per real match (non-wildcard) where the
-  // picked team won and therefore progressed.
+  // Knockout progression: round-weighted points per real match (non-wildcard)
+  // where the picked team won and therefore progressed. Deeper rounds are worth
+  // more (see KNOCKOUT_ROUND_POINTS).
   for (const result of actualResults) {
     if (result.result_type === 'knockout' && !result.ref_id.startsWith(WILDCARD_PREFIX)) {
       const hit = knockoutPredictions.find(
         p => p.match_id === result.ref_id && p.predicted_winner === result.team_code
       )
-      if (hit) knockoutPoints++
+      if (hit) knockoutPoints += MATCH_POINTS.get(result.ref_id) ?? 0
     }
   }
 
