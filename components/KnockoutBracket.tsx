@@ -1,6 +1,6 @@
 'use client'
 import { useRef, useEffect, useState } from 'react'
-import { KNOCKOUT_MATCHES, KnockoutMatch, MatchPick, isKnockoutWinnerCorrect, isKnockoutWinnerWrong } from '@/data/bracket'
+import { KNOCKOUT_MATCHES, KnockoutMatch, MatchPick, isKnockoutWinnerCorrect, teamsEliminatedInRound } from '@/data/bracket'
 import { TEAMS } from '@/data/teams'
 import { MatchDropdown, DropdownOption } from './MatchDropdown'
 
@@ -117,11 +117,15 @@ function MatchCard({ match, picks, onPick, disabled, label, showValidation, corr
   const teamAWon = winnerCorrect && !!mp.teamA && mp.teamA === mp.winner
   const teamBWon = winnerCorrect && !!mp.teamB && mp.teamB === mp.winner
 
-  // Highlight the player's backed team (red) when the match was actually won by
-  // someone else — the team they picked was knocked out here and never advanced.
-  const winnerWrong = isKnockoutWinnerWrong(mp.winner, cp?.winner)
-  const teamAWrong = winnerWrong && !!mp.teamA && mp.teamA === mp.winner
-  const teamBWrong = winnerWrong && !!mp.teamB && mp.teamB === mp.winner
+  // Highlight the player's backed team (red) only when that team was actually
+  // eliminated in THIS round — it lost a real match at this stage. A team the
+  // player merely routed through the wrong slot but which is still alive (or went
+  // out in an earlier round) is left unhighlighted, so red always means "the team
+  // you picked to advance got knocked out here". See teamsEliminatedInRound.
+  const eliminatedThisRound = teamsEliminatedInRound(match.round, correctPicks ?? {})
+  const pickEliminated = !!mp.winner && eliminatedThisRound.has(mp.winner)
+  const teamAWrong = pickEliminated && mp.teamA === mp.winner
+  const teamBWrong = pickEliminated && mp.teamB === mp.winner
 
   const srcA = match.slotA.match(/^Winner (M\d+)$/)?.[1] ?? null
   const srcB = match.slotB.match(/^Winner (M\d+)$/)?.[1] ?? null

@@ -1,4 +1,4 @@
-import { buildQualifiers, isKnockoutWinnerCorrect, isKnockoutWinnerWrong } from '@/data/bracket'
+import { buildQualifiers, isKnockoutWinnerCorrect, teamsEliminatedInRound } from '@/data/bracket'
 
 // Rankings mirrors the actual GROUPS data (index 2 = 3rd place)
 const rankings: Record<string, string[]> = {
@@ -100,27 +100,43 @@ describe('isKnockoutWinnerCorrect', () => {
   })
 })
 
-describe('isKnockoutWinnerWrong', () => {
-  // Red highlighting marks the team the player BACKED to win a match when the
-  // actual winner of that match turned out to be someone else — i.e. the picked
-  // team was knocked out here and did not progress to the next round.
+describe('teamsEliminatedInRound', () => {
+  // Red highlighting keys off REAL elimination at a round, not the bracket slot a
+  // player routed a team through. A team that lost a round-R match is "out at
+  // round R" — even if the player predicted it in a different round-R match. A
+  // team still alive (won its round-R match) or one that never reached round R is
+  // never flagged, so a wrong upstream prediction alone does not paint it red.
 
-  it('marks a pick wrong when the predicted winner lost to the other team (GER vs TUR case)', () => {
-    // Player picked Germany, but Turkey actually won the match, so Germany is
-    // highlighted red in that match's card.
-    expect(isKnockoutWinnerWrong('GER', 'TUR')).toBe(true)
+  const pick = (teamA: string | null, teamB: string | null, winner: string | null) => ({ teamA, teamB, winner })
+
+  it('includes the loser of a decided match in that round (GER vs TUR case)', () => {
+    const actual = { M74: pick('GER', 'TUR', 'TUR') }
+    const out = teamsEliminatedInRound('R32', actual)
+    expect(out.has('GER')).toBe(true)
+    expect(out.has('TUR')).toBe(false)
   })
 
-  it('does not mark a pick wrong when the predicted winner actually won', () => {
-    expect(isKnockoutWinnerWrong('TUR', 'TUR')).toBe(false)
+  it('aggregates losers across every match of the round (different-match elimination)', () => {
+    const actual = { M74: pick('GER', 'TUR', 'TUR'), M77: pick('FRA', 'ENG', 'FRA') }
+    const out = teamsEliminatedInRound('R32', actual)
+    expect(out.has('GER')).toBe(true)
+    expect(out.has('ENG')).toBe(true)
+    expect(out.has('FRA')).toBe(false)
+    expect(out.has('TUR')).toBe(false)
   })
 
-  it('does not mark a pick wrong when there is no predicted winner', () => {
-    expect(isKnockoutWinnerWrong(null, 'TUR')).toBe(false)
+  it('ignores matches that have not been decided yet', () => {
+    expect(teamsEliminatedInRound('R32', { M74: pick('GER', 'TUR', null) }).size).toBe(0)
   })
 
-  it('does not mark a pick wrong when the actual winner is unknown (match not yet decided)', () => {
-    expect(isKnockoutWinnerWrong('GER', undefined)).toBe(false)
-    expect(isKnockoutWinnerWrong('GER', null)).toBe(false)
+  it('does not report a team eliminated in a different round (the misrouted-pick bug)', () => {
+    // GER actually went out in R32; it must NOT be flagged red in an R16 card,
+    // because it never played at R16 at all.
+    const actual = { M74: pick('GER', 'TUR', 'TUR') }
+    expect(teamsEliminatedInRound('R16', actual).has('GER')).toBe(false)
+  })
+
+  it('returns an empty set when there are no results', () => {
+    expect(teamsEliminatedInRound('R32', {}).size).toBe(0)
   })
 })

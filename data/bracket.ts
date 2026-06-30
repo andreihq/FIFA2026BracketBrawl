@@ -77,16 +77,27 @@ export function isKnockoutWinnerCorrect(
   return !!predictedWinner && predictedWinner === actualWinner
 }
 
-// The red highlight marks the team the player BACKED to win a match when the
-// match has actually been decided in favour of the other team. It lives in the
-// same match card as the pick, signalling that the player's team was knocked
-// out here and never reached the next round. Only fires once the real result is
-// known — an undecided match is neither correct nor wrong.
-export function isKnockoutWinnerWrong(
-  predictedWinner: string | null | undefined,
-  actualWinner: string | null | undefined,
-): boolean {
-  return !!predictedWinner && !!actualWinner && predictedWinner !== actualWinner
+// Teams that were ACTUALLY eliminated in a given knockout round — they played a
+// real match at that stage and lost it. This drives the red highlight: a team a
+// player backed is only "wrong here" when it genuinely went out at this round,
+// in this match OR another match of the same round. It deliberately keys off
+// real elimination rather than the bracket slot the player routed the team
+// through, so a team that is still alive (won its round match) or that never
+// reached this round at all — both the result of an earlier wrong prediction —
+// is never flagged. Undecided matches contribute nothing.
+export function teamsEliminatedInRound(
+  round: KnockoutMatch['round'],
+  actual: Record<string, MatchPick>,
+): Set<string> {
+  const eliminated = new Set<string>()
+  for (const match of KNOCKOUT_MATCHES) {
+    if (match.round !== round) continue
+    const result = actual[match.id]
+    if (!result?.winner) continue
+    if (result.teamA && result.teamA !== result.winner) eliminated.add(result.teamA)
+    if (result.teamB && result.teamB !== result.winner) eliminated.add(result.teamB)
+  }
+  return eliminated
 }
 
 // Resolves a deterministic slot label to a team code using already-built upstream picks.
