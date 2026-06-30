@@ -1,4 +1,4 @@
-import { buildQualifiers, isKnockoutWinnerCorrect } from '@/data/bracket'
+import { buildQualifiers, isKnockoutWinnerCorrect, isKnockoutWinnerWrong } from '@/data/bracket'
 
 // Rankings mirrors the actual GROUPS data (index 2 = 3rd place)
 const rankings: Record<string, string[]> = {
@@ -97,5 +97,30 @@ describe('isKnockoutWinnerCorrect', () => {
 
   it('does not mark a winner correct when the actual winner is unknown', () => {
     expect(isKnockoutWinnerCorrect('BRA', undefined)).toBe(false)
+  })
+})
+
+describe('isKnockoutWinnerWrong', () => {
+  // Red highlighting marks the team the player BACKED to win a match when the
+  // actual winner of that match turned out to be someone else — i.e. the picked
+  // team was knocked out here and did not progress to the next round.
+
+  it('marks a pick wrong when the predicted winner lost to the other team (GER vs TUR case)', () => {
+    // Player picked Germany, but Turkey actually won the match, so Germany is
+    // highlighted red in that match's card.
+    expect(isKnockoutWinnerWrong('GER', 'TUR')).toBe(true)
+  })
+
+  it('does not mark a pick wrong when the predicted winner actually won', () => {
+    expect(isKnockoutWinnerWrong('TUR', 'TUR')).toBe(false)
+  })
+
+  it('does not mark a pick wrong when there is no predicted winner', () => {
+    expect(isKnockoutWinnerWrong(null, 'TUR')).toBe(false)
+  })
+
+  it('does not mark a pick wrong when the actual winner is unknown (match not yet decided)', () => {
+    expect(isKnockoutWinnerWrong('GER', undefined)).toBe(false)
+    expect(isKnockoutWinnerWrong('GER', null)).toBe(false)
   })
 })

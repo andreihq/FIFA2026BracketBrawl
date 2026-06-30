@@ -77,6 +77,18 @@ export function isKnockoutWinnerCorrect(
   return !!predictedWinner && predictedWinner === actualWinner
 }
 
+// The red highlight marks the team the player BACKED to win a match when the
+// match has actually been decided in favour of the other team. It lives in the
+// same match card as the pick, signalling that the player's team was knocked
+// out here and never reached the next round. Only fires once the real result is
+// known — an undecided match is neither correct nor wrong.
+export function isKnockoutWinnerWrong(
+  predictedWinner: string | null | undefined,
+  actualWinner: string | null | undefined,
+): boolean {
+  return !!predictedWinner && !!actualWinner && predictedWinner !== actualWinner
+}
+
 // Resolves a deterministic slot label to a team code using already-built upstream picks.
 // 'W' (wildcard) slots are handled separately in buildPicks.
 function resolveSlot(

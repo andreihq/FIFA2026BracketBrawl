@@ -1,6 +1,6 @@
 'use client'
 import { useRef, useEffect, useState } from 'react'
-import { KNOCKOUT_MATCHES, KnockoutMatch, MatchPick, isKnockoutWinnerCorrect } from '@/data/bracket'
+import { KNOCKOUT_MATCHES, KnockoutMatch, MatchPick, isKnockoutWinnerCorrect, isKnockoutWinnerWrong } from '@/data/bracket'
 import { TEAMS } from '@/data/teams'
 import { MatchDropdown, DropdownOption } from './MatchDropdown'
 
@@ -44,24 +44,27 @@ function teamOpt(code: string | null): DropdownOption | null {
   return { value: code, flag: t?.flag, teamName: t?.name ?? code }
 }
 
-function TeamRow({ teamCode, label, correct, variant }: {
+function TeamRow({ teamCode, label, correct, wrong, variant }: {
   teamCode: string | null
   label: string
   correct?: boolean
+  wrong?: boolean
   variant?: 'gold' | 'bronze'
 }) {
   const team = teamCode ? TEAMS[teamCode] : null
   const colorClass = correct && team
     ? 'bg-[#34D399]/10 border border-[#34D399]/40 text-[#34D399]'
-    : variant === 'gold' && team
-      ? 'bg-[#F5A623]/10 border border-[#F5A623]/40 text-[#F5A623]'
-      : variant === 'bronze' && team
-        ? 'bg-[#3d2810]/40 border border-[#C4834A]/40 text-[#C4834A]'
-        : 'bg-pitch-800 border border-pitch-600 text-[#EBF0FF]'
+    : wrong && team
+      ? 'bg-[#F87171]/10 border border-[#F87171]/40 text-[#F87171]'
+      : variant === 'gold' && team
+        ? 'bg-[#F5A623]/10 border border-[#F5A623]/40 text-[#F5A623]'
+        : variant === 'bronze' && team
+          ? 'bg-[#3d2810]/40 border border-[#C4834A]/40 text-[#C4834A]'
+          : 'bg-pitch-800 border border-pitch-600 text-[#EBF0FF]'
   return (
     <div className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm ${colorClass}`}>
       {team
-        ? <><span className="flex-shrink-0">{team.flag}</span><span className="truncate font-medium">{team.name}</span></>
+        ? <><span className="flex-shrink-0">{team.flag}</span><span className={`truncate font-medium ${wrong ? 'line-through decoration-[#F87171]/60' : ''}`}>{team.name}</span></>
         : <span className="text-pitch-300 truncate italic">{label}</span>}
     </div>
   )
@@ -114,6 +117,12 @@ function MatchCard({ match, picks, onPick, disabled, label, showValidation, corr
   const teamAWon = winnerCorrect && !!mp.teamA && mp.teamA === mp.winner
   const teamBWon = winnerCorrect && !!mp.teamB && mp.teamB === mp.winner
 
+  // Highlight the player's backed team (red) when the match was actually won by
+  // someone else — the team they picked was knocked out here and never advanced.
+  const winnerWrong = isKnockoutWinnerWrong(mp.winner, cp?.winner)
+  const teamAWrong = winnerWrong && !!mp.teamA && mp.teamA === mp.winner
+  const teamBWrong = winnerWrong && !!mp.teamB && mp.teamB === mp.winner
+
   const srcA = match.slotA.match(/^Winner (M\d+)$/)?.[1] ?? null
   const srcB = match.slotB.match(/^Winner (M\d+)$/)?.[1] ?? null
 
@@ -131,6 +140,7 @@ function MatchCard({ match, picks, onPick, disabled, label, showValidation, corr
           teamCode={mp.teamA}
           label={match.slotA}
           correct={disabled && teamAWon}
+          wrong={disabled && teamAWrong}
         />
       ) : (
         <WinnerDropdown srcMatchId={srcA} picks={picks} onPick={onPick} showValidation={showValidation} />
@@ -143,6 +153,7 @@ function MatchCard({ match, picks, onPick, disabled, label, showValidation, corr
           teamCode={mp.teamB}
           label={slotBLabel}
           correct={teamBWon}
+          wrong={teamBWrong}
         />
       ) : isR32 || !srcB ? (
         <TeamRow teamCode={mp.teamB} label={slotBLabel} />
