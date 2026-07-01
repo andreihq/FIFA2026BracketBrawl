@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { fetchEspnResults } from '@/lib/espn'
+import { isAdminRequest } from '@/lib/session'
 
-export async function GET(req: NextRequest) {
-  if (req.headers.get('x-admin-password') !== process.env.ADMIN_PASSWORD) {
+export async function GET() {
+  if (!(await isAdminRequest())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   try {

@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getIronSession } from 'iron-session'
+import { sessionOptions } from '@/lib/session'
 import type { SessionData } from '@/types'
 
 const PUBLIC_PATHS = ['/', '/register', '/login', '/admin']
-const SESSION_OPTIONS = {
-  password: process.env.SESSION_SECRET!,
-  cookieName: 'fifa2026-session',
-}
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
@@ -23,7 +20,7 @@ export async function middleware(req: NextRequest) {
   }
 
   const res = NextResponse.next()
-  const session = await getIronSession<SessionData>(req, res, SESSION_OPTIONS)
+  const session = await getIronSession<SessionData>(req, res, sessionOptions)
 
   if (!session.playerId) {
     return NextResponse.redirect(new URL('/', req.url))

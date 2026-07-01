@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
+import { isAdminRequest } from '@/lib/session'
+import { requireSameOrigin } from '@/lib/csrf'
 
 export async function POST(req: NextRequest) {
-  if (req.headers.get('x-admin-password') !== process.env.ADMIN_PASSWORD) {
+  if (!(await isAdminRequest())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  const csrfError = requireSameOrigin(req)
+  if (csrfError) return csrfError
 
   const { deadline } = await req.json()
   if (!deadline || isNaN(Date.parse(deadline))) {

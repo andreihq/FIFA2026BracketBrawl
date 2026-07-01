@@ -52,3 +52,7 @@ export interface SessionData {
   playerId: string
   username: string
 }
+
+export interface AdminSessionData {
+  isAdmin: boolean
+}

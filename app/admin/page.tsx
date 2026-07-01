@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { GROUP_CODES, GROUPS } from '@/data/groups'
 import { BracketEditor } from '@/components/BracketEditor'
 import type { ActualResult } from '@/types'
@@ -8,18 +8,24 @@ import type { ActualResult } from '@/types'
 // Kept as a separate component so it fully unmounts (and its password input
 // disappears from the DOM) the moment the user authenticates.
 
-function AdminLogin({ onSuccess }: { onSuccess: (password: string, initialData: { results: ActualResult[] }) => void }) {
+function AdminLogin({ onSuccess }: { onSuccess: (initialData: { results: ActualResult[] }) => void }) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const res = await fetch('/api/admin/results', {
-      headers: { 'x-admin-password': password },
+    // Establish the persistent admin session cookie (valid for 30 days).
+    const login = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
     })
-    if (res.status === 401) { setError('Wrong password'); return }
+    if (login.status === 401) { setError('Wrong password'); return }
+    if (!login.ok) { setError('Login failed'); return }
+    // Cookie is now set — load results without sending the password.
+    const res = await fetch('/api/admin/results')
     const data = await res.json()
-    onSuccess(password, data)
+    onSuccess(data)
   }
 
   return (
@@ -52,7 +58,7 @@ function AdminLogin({ onSuccess }: { onSuccess: (password: string, initialData: 
 
 // ── Admin panel ───────────────────────────────────────────────────────────────
 
-function AdminPanel({ password, initialResults }: { password: string; initialResults: ActualResult[] }) {
+function AdminPanel({ initialResults, onLogout }: { initialResults: ActualResult[]; onLogout: () => void }) {
   const [activeSection, setActiveSection] = useState<'bracket' | 'settings'>('bracket')
   const [bracketTab, setBracketTab] = useState<'groups' | 'knockouts'>('groups')
   const [groupRankings, setGroupRankings] = useState<Record<string, string[]>>(() => {
@@ -92,7 +98,7 @@ function AdminPanel({ password, initialResults }: { password: string; initialRes
       const entries = order.map((team_code, i) => ({ team_code, position: i + 1 }))
       return fetch('/api/admin/results', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ result_type: 'group', ref_id: group, entries }),
       })
     }))
@@ -110,7 +116,7 @@ function AdminPanel({ password, initialResults }: { password: string; initialRes
       entries.map(({ ref_id, team_code }) =>
         fetch('/api/admin/results', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ result_type: 'knockout', ref_id, entries: [{ team_code }] }),
         })
       )
@@ -121,9 +127,7 @@ function AdminPanel({ password, initialResults }: { password: string; initialRes
 
   async function syncFromEspn() {
     setSaving(true); setMsg('')
-    const res = await fetch('/api/admin/sync-espn', {
-      headers: { 'x-admin-password': password },
-    })
+    const res = await fetch('/api/admin/sync-espn')
     if (!res.ok) {
       setMsg('ESPN sync failed — enter results manually')
       setSaving(false)
@@ -147,7 +151,7 @@ function AdminPanel({ password, initialResults }: { password: string; initialRes
     setSaving(true); setMsg('')
     await fetch('/api/admin/results', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ result_type: 'group' }),
     })
     const fresh: Record<string, string[]> = {}
@@ -162,7 +166,7 @@ function AdminPanel({ password, initialResults }: { password: string; initialRes
     setSaving(true); setMsg('')
     await fetch('/api/admin/results', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ result_type: 'knockout' }),
     })
     setWinners({})
@@ -176,18 +180,29 @@ function AdminPanel({ password, initialResults }: { password: string; initialRes
     setSaving(true); setMsg('')
     const res = await fetch('/api/admin/settings', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ deadline: deadlineInput }),
     })
     setMsg(res.ok ? 'Deadline saved ✓' : 'Error saving deadline')
     setSaving(false)
   }
 
+  async function handleLogout() {
+    await fetch('/api/admin/logout', { method: 'POST' })
+    onLogout()
+  }
+
   return (
     <div className="min-h-screen px-0 py-5 max-w-[1202px] mx-auto">
-      <div className="anim-fade-up pt-2 mb-7 px-5">
-        <p className="section-label mb-1">Admin Panel</p>
-        <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">Enter Results</h1>
+      <div className="anim-fade-up pt-2 mb-7 px-5 flex items-start justify-between gap-4">
+        <div>
+          <p className="section-label mb-1">Admin Panel</p>
+          <h1 className="font-display text-4xl tracking-wider text-[#EBF0FF] leading-none">Enter Results</h1>
+        </div>
+        <button onClick={handleLogout}
+          className="shrink-0 px-4 py-2 text-xs uppercase tracking-widest rounded-xl border border-pitch-600 text-pitch-200 hover:bg-pitch-700/40 transition-colors">
+          Log out
+        </button>
       </div>
 
       {msg && (
@@ -279,15 +294,43 @@ function AdminPanel({ password, initialResults }: { password: string; initialRes
 // ── Page shell ────────────────────────────────────────────────────────────────
 
 export default function AdminPage() {
-  const [session, setSession] = useState<{ password: string; results: ActualResult[] } | null>(null)
+  const [session, setSession] = useState<{ results: ActualResult[] } | null>(null)
+  // null = still checking the persisted admin session cookie
+  const [checking, setChecking] = useState(true)
+
+  // On mount, see if a valid admin session cookie already exists (set within
+  // the last 30 days) and skip the password prompt if so.
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch('/api/admin/results')
+        if (!cancelled && res.ok) {
+          const data = await res.json()
+          setSession({ results: data.results })
+        }
+      } finally {
+        if (!cancelled) setChecking(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [])
+
+  if (checking) {
+    return (
+      <main className="flex min-h-screen items-center justify-center p-8">
+        <p className="text-sm text-pitch-300">Loading…</p>
+      </main>
+    )
+  }
 
   if (!session) {
     return (
       <AdminLogin
-        onSuccess={(password, data) => setSession({ password, results: data.results })}
+        onSuccess={(data) => setSession({ results: data.results })}
       />
     )
   }
 
-  return <AdminPanel password={session.password} initialResults={session.results} />
+  return <AdminPanel initialResults={session.results} onLogout={() => setSession(null)} />
 }

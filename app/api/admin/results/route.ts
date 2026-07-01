@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
+import { isAdminRequest } from '@/lib/session'
+import { requireSameOrigin } from '@/lib/csrf'
 
-export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get('x-admin-password')
-  if (authHeader !== process.env.ADMIN_PASSWORD) {
+export async function GET() {
+  if (!(await isAdminRequest())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   const supabase = createServerClient()
@@ -13,10 +14,12 @@ export async function GET(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const authHeader = req.headers.get('x-admin-password')
-  if (authHeader !== process.env.ADMIN_PASSWORD) {
+  if (!(await isAdminRequest())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  const csrfError = requireSameOrigin(req)
+  if (csrfError) return csrfError
 
   const { result_type } = await req.json() as { result_type: 'group' | 'knockout' }
   const supabase = createServerClient()
@@ -26,10 +29,12 @@ export async function DELETE(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const authHeader = req.headers.get('x-admin-password')
-  if (authHeader !== process.env.ADMIN_PASSWORD) {
+  if (!(await isAdminRequest())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  const csrfError = requireSameOrigin(req)
+  if (csrfError) return csrfError
 
   const { result_type, ref_id, entries } = await req.json() as {
     result_type: 'group' | 'knockout'
